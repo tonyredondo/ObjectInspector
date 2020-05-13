@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>An efficient .NET object inspector/accesor to avoid reflection</Description>
+  </PropertyGroup>
+
+</Project>
