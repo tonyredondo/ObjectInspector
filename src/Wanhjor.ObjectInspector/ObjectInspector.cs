@@ -12,14 +12,24 @@ namespace Wanhjor.ObjectInspector
     {
         private readonly InspectName[] _names;
         private readonly Dictionary<Type, TypeStructure> _structures = new Dictionary<Type, TypeStructure>();
+        private readonly bool _autoGrow;
 
+        /// <summary>
+        /// Creates a new object inspector
+        /// </summary>
+        public ObjectInspector()
+        {
+            _autoGrow = true;
+        }
+        
         /// <summary>
         /// Creates a new object inspector for a number of names
         /// </summary>
         /// <param name="names">Names to inspect inside an object</param>
         public ObjectInspector(params string[] names)
         {
-            Contract.Requires(!(names is null));
+            if (names is null)
+                throw new ArgumentException("Names is null", nameof(names));
             _names = new InspectName[names.Length];
             for (var i=0; i<names.Length;i++)
                 _names[i] = new InspectName(names[i], BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -31,7 +41,8 @@ namespace Wanhjor.ObjectInspector
         /// <param name="names">Names to inspect inside an object</param>
         public ObjectInspector(params InspectName[] names)
         {
-            Contract.Requires(!(names is null));
+            if (names is null)
+                throw new ArgumentException("Names is null", nameof(names));
             _names = new InspectName[names.Length];
             for (var i = 0; i < names.Length; i++)
                 _names[i] = names[i];
@@ -48,12 +59,11 @@ namespace Wanhjor.ObjectInspector
                 return default;
 
             var iType = instance.GetType();
-            if (!_structures.TryGetValue(iType, out var structure))
-            {
-                structure = new TypeStructure(_names);
-                _structures[iType] = structure;
-            }
-
+            if (_structures.TryGetValue(iType, out var structure)) 
+                return structure.GetObjectData(instance);
+            
+            structure = new TypeStructure(_names, _autoGrow);
+            _structures[iType] = structure;
             return structure.GetObjectData(instance);
         }
 
@@ -62,14 +72,18 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         internal class TypeStructure
         {
-            public Dictionary<string, Fetcher> Fetchers = new Dictionary<string, Fetcher>();
+            public readonly Dictionary<string, Fetcher> Fetchers;
+            public readonly bool AutoGrow;
 
             /// <summary>
             /// Creates an internal type structure based on the inspect names
             /// </summary>
             /// <param name="names">Names to inspect</param>
-            internal TypeStructure(InspectName[] names)
+            /// <param name="autoGrow">Auto grow with new fetchers on demand</param>
+            internal TypeStructure(InspectName[] names, bool autoGrow)
             {
+                AutoGrow = autoGrow;
+                Fetchers = new Dictionary<string, Fetcher>();
                 foreach (var name in names)
                     Fetchers[name.Name] = new DynamicFetcher(name.Name, name.BindingFlags);
             }
