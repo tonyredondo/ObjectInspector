@@ -1,4 +1,6 @@
-﻿namespace Wanhjor.ObjectInspector
+﻿using System.Runtime.CompilerServices;
+
+namespace Wanhjor.ObjectInspector
 {
     /// <summary>
     /// Inspector base class for an object inspector
@@ -21,6 +23,7 @@
         /// Sets an object instance to inspect
         /// </summary>
         /// <param name="instance">Object instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetInstance(object instance)
         {
             _instanceData = _inspector.With(instance);

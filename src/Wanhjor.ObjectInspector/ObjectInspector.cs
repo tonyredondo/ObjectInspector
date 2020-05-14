@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Wanhjor.ObjectInspector
 {
@@ -21,7 +22,7 @@ namespace Wanhjor.ObjectInspector
         {
             _autoGrow = true;
         }
-        
+
         /// <summary>
         /// Creates a new object inspector for a number of names
         /// </summary>
@@ -31,7 +32,7 @@ namespace Wanhjor.ObjectInspector
             if (names is null)
                 throw new ArgumentException("Names is null", nameof(names));
             _names = new InspectName[names.Length];
-            for (var i=0; i<names.Length;i++)
+            for (var i = 0; i < names.Length; i++)
                 _names[i] = new InspectName(names[i], BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
@@ -53,15 +54,16 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="instance">Object instance</param>
         /// <returns>Object data viewer to inspect</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ObjectData With(object instance)
         {
             if (instance is null)
                 return default;
 
             var iType = instance.GetType();
-            if (_structures.TryGetValue(iType, out var structure)) 
+            if (_structures.TryGetValue(iType, out var structure))
                 return structure.GetObjectData(instance);
-            
+
             structure = new TypeStructure(_names, _autoGrow);
             _structures[iType] = structure;
             return structure.GetObjectData(instance);
@@ -84,6 +86,7 @@ namespace Wanhjor.ObjectInspector
             {
                 AutoGrow = autoGrow;
                 Fetchers = new Dictionary<string, Fetcher>();
+                if (names is null) return;
                 foreach (var name in names)
                     Fetchers[name.Name] = new DynamicFetcher(name.Name, name.BindingFlags);
             }
@@ -93,11 +96,12 @@ namespace Wanhjor.ObjectInspector
             /// </summary>
             /// <param name="instance">Object instance</param>
             /// <returns>Object data viewer to inspect</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ObjectData GetObjectData(object instance)
             {
                 return new ObjectData(this, instance);
             }
-        }   
+        }
 
         /// <summary>
         /// Object data viewer struct
@@ -119,14 +123,49 @@ namespace Wanhjor.ObjectInspector
             }
 
             /// <summary>
+            /// Try Get or Create Fetcher (if autogrow)
+            /// </summary>
+            /// <param name="name">Name</param>
+            /// <param name="fetcher">Fetcher</param>
+            /// <returns>True if the fetcher was found or created; otherwise, false</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private bool TryGetOrCreateFetcher(string name, out Fetcher fetcher)
+            {
+                if (_structure.Fetchers.TryGetValue(name, out fetcher))
+                    return fetcher != null;
+
+                if (!_structure.AutoGrow)
+                    return false;
+
+                var df = new DynamicFetcher(name);
+                df.Load(_instance);
+                fetcher = df.Type != FetcherType.None ? df : null;
+                _structure.Fetchers[name] = fetcher;
+                return fetcher != null;
+            }
+
+            /// <summary>
             /// Gets or sets values from the object instance
             /// </summary>
             /// <param name="name">Name to access in the object instance</param>
             /// <returns>Value of that name inside the object</returns>
             public object this[string name]
             {
-                get => _structure.Fetchers[name].Fetch(_instance);
-                set => _structure.Fetchers[name].Shove(_instance, value);
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get
+                {
+                    if (TryGetOrCreateFetcher(name, out var fetcher))
+                        return fetcher.Fetch(_instance);
+                    throw new NullReferenceException("Fetcher is null");
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                set
+                {
+                    if (TryGetOrCreateFetcher(name, out var fetcher))
+                        fetcher.Shove(_instance, value);
+                    else
+                        throw new NullReferenceException("Fetcher is null");
+                }
             }
 
             /// <summary>
@@ -135,9 +174,10 @@ namespace Wanhjor.ObjectInspector
             /// <param name="name">Name to access in the object instance</param>
             /// <param name="value">Value of that name inside the object</param>
             /// <returns>True if the name exist; otherwise, false</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryGetValue(string name, out object value)
             {
-                if (_structure.Fetchers.TryGetValue(name, out var fetcher))
+                if (TryGetOrCreateFetcher(name, out var fetcher))
                 {
                     value = fetcher.Fetch(_instance);
                     return true;
@@ -151,15 +191,17 @@ namespace Wanhjor.ObjectInspector
             /// </summary>
             /// <param name="name">Name to locate</param>
             /// <returns>True if the name exist in the type structure; otherwise, false.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool ContainsName(string name)
             {
-                return _structure.Fetchers.ContainsKey(name);
+                return TryGetOrCreateFetcher(name, out var _);
             }
 
             /// <summary>
             /// String representation of the object type structure with the values from the current object instance
             /// </summary>
             /// <returns>String value</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override string ToString()
             {
                 var lst = new List<string>();

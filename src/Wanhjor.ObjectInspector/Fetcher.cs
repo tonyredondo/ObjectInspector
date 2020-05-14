@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Wanhjor.ObjectInspector
 {
@@ -14,11 +15,17 @@ namespace Wanhjor.ObjectInspector
         public string Name { get; }
 
         /// <summary>
+        /// Fetcher type
+        /// </summary>
+        public FetcherType Type { get; protected set; }
+
+        /// <summary>
         /// .ctor
         /// </summary>
         internal Fetcher(string name)
         {
             Name = name;
+            Type = FetcherType.None;
         }
 
         /// <summary>
@@ -39,6 +46,7 @@ namespace Wanhjor.ObjectInspector
         /// Create a property fetcher from a .NET Reflection PropertyInfo class that
         /// represents a property of a particular type.  
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static Fetcher FetcherForProperty(PropertyInfo propertyInfo)
         {
             if (propertyInfo == null)
@@ -54,6 +62,7 @@ namespace Wanhjor.ObjectInspector
         /// Create a property fetcher from a .NET Reflection PropertyInfo class that
         /// represents a property of a particular type.  
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static Fetcher FetcherForField(FieldInfo fieldInfo)
         {
             if (fieldInfo == null)

@@ -78,6 +78,28 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Equal("My private name", iTuple2.Item3);
             Assert.Equal("my private value", iTuple2.Item4);
         }
+
+        [Fact]
+        public void ObjectInspectorAutogrowTest()
+        {
+            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+
+            var objInsp = new ObjectInspector();
+            var objData = objInsp.With(tObject);
+
+            Assert.Equal("Tony", objData["Name"]);
+            Assert.Equal("Redondo", objData["Value"]);
+            Assert.Equal("My private name", objData["PrivateName"]);
+            Assert.Equal("my private value", objData["_privateValue"]);
+
+            objData["Name"] = "Hola Mundo";
+            objData["Value"] = "My Value";
+            objData["PrivateName"] = "Changed!";
+
+            Assert.Equal("Hola Mundo", objData["Name"]);
+            Assert.Equal("My Value", objData["Value"]);
+            Assert.Equal("Changed!", objData["PrivateName"]);
+        }
     }
 
 

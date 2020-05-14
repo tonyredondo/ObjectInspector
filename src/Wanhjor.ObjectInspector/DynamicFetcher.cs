@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Wanhjor.ObjectInspector
 {
@@ -33,6 +34,7 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Fetcher</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Fetcher CreateFetcher(object obj)
         {
             var typeInfo = obj.GetType().GetTypeInfo();
@@ -48,14 +50,27 @@ namespace Wanhjor.ObjectInspector
         }
 
         /// <summary>
+        /// Load fetcher
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Load(object obj)
+        {
+            if (_fetcher is null)
+            {
+                _fetcher = CreateFetcher(obj);
+                Type = _fetcher.Type;
+            }
+        }
+
+        /// <summary>
         /// Fetch value
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Fetch(object obj)
         {
-            if (_fetcher is null)
-                _fetcher = CreateFetcher(obj);
+            Load(obj);
             return _fetcher.Fetch(obj);
         }
 
@@ -64,10 +79,10 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Shove(object obj, object value)
         {
-            if (_fetcher is null)
-                _fetcher = CreateFetcher(obj);
+            Load(obj);
             _fetcher.Shove(obj, value);
         }
     }
