@@ -7,7 +7,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     /// <typeparam name="TObject">Object type</typeparam>
     /// <typeparam name="TField">Field type</typeparam>
-    class TypedFetchField<TObject, TField> : Fetcher
+    class TypedFetchField : Fetcher
     {
         private readonly FieldInfo _field;
 

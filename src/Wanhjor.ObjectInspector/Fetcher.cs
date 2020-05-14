@@ -67,11 +67,7 @@ namespace Wanhjor.ObjectInspector
         {
             if (fieldInfo == null)
                 return new Fetcher(null);
-
-            var typedFieldFetcher = typeof(TypedFetchField<,>);
-            var instantiatedTypedFieldFetcher = typedFieldFetcher.GetTypeInfo().MakeGenericType(
-                fieldInfo.DeclaringType, fieldInfo.FieldType);
-            return (Fetcher)Activator.CreateInstance(instantiatedTypedFieldFetcher, fieldInfo);
+            return (Fetcher)Activator.CreateInstance(typeof(TypedFetchField), fieldInfo);
         }
     }
 }
