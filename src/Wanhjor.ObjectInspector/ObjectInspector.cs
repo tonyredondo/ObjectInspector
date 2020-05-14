@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -156,7 +155,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     if (TryGetOrCreateFetcher(name, out var fetcher))
                         return fetcher.Fetch(_instance);
-                    throw new NullReferenceException("Fetcher is null");
+                    throw new KeyNotFoundException("Fetcher is null");
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set
@@ -164,7 +163,7 @@ namespace Wanhjor.ObjectInspector
                     if (TryGetOrCreateFetcher(name, out var fetcher))
                         fetcher.Shove(_instance, value);
                     else
-                        throw new NullReferenceException("Fetcher is null");
+                        throw new KeyNotFoundException("Fetcher is null");
                 }
             }
 

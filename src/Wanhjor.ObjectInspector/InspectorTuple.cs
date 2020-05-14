@@ -274,7 +274,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Tuple to inspect an object instance
     /// </summary>
-    public class InspectorTuple<T1, T2, T3, T4, T5, T6> : InspectorTuple<T1, T2, T3, T4, T6>
+    public class InspectorTuple<T1, T2, T3, T4, T5, T6> : InspectorTuple<T1, T2, T3, T4, T5>
     {
         private readonly string _name6;
 
