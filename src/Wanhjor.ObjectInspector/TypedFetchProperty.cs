@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Wanhjor.ObjectInspector
@@ -10,8 +11,10 @@ namespace Wanhjor.ObjectInspector
     /// <typeparam name="TProperty">Property type</typeparam>
     class TypedFetchProperty<TObject, TProperty> : Fetcher
     {
+        private readonly Func<TProperty> _staticPropertyFetch;
         private readonly Func<TObject, TProperty> _propertyFetch;
         private readonly Action<TObject, TProperty> _propertyShove;
+        private readonly Action<TProperty> _staticPropertyShove;
         private readonly PropertyInfo _property;
 
         /// <summary>
@@ -22,22 +25,45 @@ namespace Wanhjor.ObjectInspector
         {
             Type = FetcherType.Property;
             _property = property;
-            try
+
+            if (property.CanRead)
             {
-                _propertyFetch = (Func<TObject, TProperty>)property.GetMethod.CreateDelegate(typeof(Func<TObject, TProperty>));
-            }
-            catch
-            {
-                // Can't create the delegate
+                try
+                {
+                    var getMethod = property.GetMethod;
+                    if (getMethod.IsStatic)
+                    {
+                        _staticPropertyFetch = (Func<TProperty>)getMethod.CreateDelegate(typeof(Func<TProperty>));
+                    }
+                    else
+                    {
+                        _propertyFetch = (Func<TObject, TProperty>)getMethod.CreateDelegate(typeof(Func<TObject, TProperty>));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debugger.Log(1, "Warning", "Error creating property getter delegate: " + ex + "\n");
+                }
             }
 
-            try
+            if (property.CanWrite)
             {
-                _propertyShove = (Action<TObject, TProperty>)property.SetMethod.CreateDelegate(typeof(Action<TObject, TProperty>));
-            }
-            catch
-            {
-                // Can't create the delegate
+                try
+                {
+                    var setMethod = property.SetMethod;
+                    if (setMethod.IsStatic)
+                    {
+                        _staticPropertyShove = (Action<TProperty>)setMethod.CreateDelegate(typeof(Action<TProperty>));
+                    }
+                    else
+                    {
+                        _propertyShove = (Action<TObject, TProperty>)setMethod.CreateDelegate(typeof(Action<TObject, TProperty>));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debugger.Log(1, "Warning", "Error creating property setter delegate: " + ex + "\n");
+                }
             }
         }
 
@@ -50,6 +76,8 @@ namespace Wanhjor.ObjectInspector
         {
             if (_propertyFetch != null)
                 return _propertyFetch((TObject)obj);
+            else if (_staticPropertyFetch != null)
+                return _staticPropertyFetch();
             else if (_property.CanRead)
                 return _property.GetValue(obj);
             return null;
@@ -64,6 +92,8 @@ namespace Wanhjor.ObjectInspector
         {
             if (_propertyShove != null)
                 _propertyShove((TObject)obj, (TProperty)value);
+            else if (_staticPropertyShove != null)
+                _staticPropertyShove((TProperty)value);
             else if (_property.CanWrite)
                 _property.SetValue(obj, value);
         }
