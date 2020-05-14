@@ -18,6 +18,7 @@ namespace Wanhjor.ObjectInspector
         public TypedFetchField(FieldInfo field) : base(field.Name)
         {
             _field = field;
+            Type = FetcherType.Field;
         }
 
         /// <summary>

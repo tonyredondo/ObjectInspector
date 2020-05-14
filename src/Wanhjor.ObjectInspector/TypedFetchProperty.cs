@@ -20,6 +20,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="property">Property info</param>
         public TypedFetchProperty(PropertyInfo property) : base(property.Name)
         {
+            Type = FetcherType.Property;
             _property = property;
             try
             {

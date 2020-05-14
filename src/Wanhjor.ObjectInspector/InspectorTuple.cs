@@ -1,4 +1,6 @@
-﻿namespace Wanhjor.ObjectInspector
+﻿using System.Runtime.CompilerServices;
+
+namespace Wanhjor.ObjectInspector
 {
     /// <summary>
     /// Inspector base class for an object inspector
@@ -21,6 +23,7 @@
         /// Sets an object instance to inspect
         /// </summary>
         /// <param name="instance">Object instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetInstance(object instance)
         {
             _instanceData = _inspector.With(instance);
@@ -271,7 +274,7 @@
     /// <summary>
     /// Tuple to inspect an object instance
     /// </summary>
-    public class InspectorTuple<T1, T2, T3, T4, T5, T6> : InspectorTuple<T1, T2, T3, T4, T6>
+    public class InspectorTuple<T1, T2, T3, T4, T5, T6> : InspectorTuple<T1, T2, T3, T4, T5>
     {
         private readonly string _name6;
 
