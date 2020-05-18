@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+// ReSharper disable HeapView.BoxingAllocation
 
 namespace Wanhjor.ObjectInspector
 {
@@ -9,12 +10,12 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     /// <typeparam name="TObject">Object type</typeparam>
     /// <typeparam name="TProperty">Property type</typeparam>
-    class TypedFetchProperty<TObject, TProperty> : Fetcher
+    internal class TypedFetchProperty<TObject, TProperty> : Fetcher
     {
-        private readonly Func<TProperty> _staticPropertyFetch;
-        private readonly Func<TObject, TProperty> _propertyFetch;
-        private readonly Action<TObject, TProperty> _propertyShove;
-        private readonly Action<TProperty> _staticPropertyShove;
+        private readonly Func<TProperty>? _staticPropertyFetch;
+        private readonly Func<TObject, TProperty>? _propertyFetch;
+        private readonly Action<TObject, TProperty>? _propertyShove;
+        private readonly Action<TProperty>? _staticPropertyShove;
         private readonly PropertyInfo _property;
 
         /// <summary>
@@ -72,13 +73,13 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Value</returns>
-        public override object Fetch(object obj)
+        public override object? Fetch(object? obj)
         {
             if (_propertyFetch != null)
-                return _propertyFetch((TObject)obj);
-            else if (_staticPropertyFetch != null)
+                return _propertyFetch((TObject)obj!);
+            if (_staticPropertyFetch != null)
                 return _staticPropertyFetch();
-            else if (_property.CanRead)
+            if (_property.CanRead)
                 return _property.GetValue(obj);
             return null;
         }
@@ -88,12 +89,12 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
-        public override void Shove(object obj, object value)
+        public override void Shove(object? obj, object? value)
         {
             if (_propertyShove != null)
-                _propertyShove((TObject)obj, (TProperty)value);
+                _propertyShove((TObject)obj!, (TProperty)value!);
             else if (_staticPropertyShove != null)
-                _staticPropertyShove((TProperty)value);
+                _staticPropertyShove((TProperty)value!);
             else if (_property.CanWrite)
                 _property.SetValue(obj, value);
         }

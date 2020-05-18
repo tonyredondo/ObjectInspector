@@ -9,7 +9,7 @@ namespace Wanhjor.ObjectInspector
     public class DynamicFetcher : Fetcher
     {
         private readonly BindingFlags? _bindingFlags;
-        private Fetcher _fetcher;
+        private Fetcher _fetcher = null!;
 
         /// <summary>
         /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
@@ -35,8 +35,11 @@ namespace Wanhjor.ObjectInspector
         /// <param name="obj">Object instance</param>
         /// <returns>Fetcher</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Fetcher CreateFetcher(object obj)
+        private Fetcher CreateFetcher(object? obj)
         {
+            if (obj is null)
+                return new Fetcher(string.Empty);
+            
             var typeInfo = obj.GetType().GetTypeInfo();
             var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(Name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(Name) ?? typeInfo.GetRuntimeProperty(Name);
             if (!(pInfo is null))
@@ -53,13 +56,11 @@ namespace Wanhjor.ObjectInspector
         /// Load fetcher
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Load(object obj)
+        public void Load(object? obj)
         {
-            if (_fetcher is null)
-            {
-                _fetcher = CreateFetcher(obj);
-                Type = _fetcher.Type;
-            }
+            if (!(_fetcher is null)) return;
+            _fetcher = CreateFetcher(obj);
+            Type = _fetcher.Type;
         }
 
         /// <summary>
@@ -68,7 +69,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="obj">Object instance</param>
         /// <returns>Value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Fetch(object obj)
+        public override object? Fetch(object? obj)
         {
             Load(obj);
             return _fetcher.Fetch(obj);
@@ -80,7 +81,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Shove(object obj, object value)
+        public override void Shove(object? obj, object? value)
         {
             Load(obj);
             _fetcher.Shove(obj, value);

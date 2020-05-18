@@ -20,6 +20,7 @@ namespace Wanhjor.ObjectInspector
         public ObjectInspector()
         {
             _autoGrow = true;
+            _names = Array.Empty<InspectName>();
         }
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         internal class TypeStructure
         {
-            public readonly Dictionary<string, Fetcher> Fetchers;
+            public readonly Dictionary<string, Fetcher?> Fetchers;
             public readonly bool AutoGrow;
 
             /// <summary>
@@ -84,8 +85,7 @@ namespace Wanhjor.ObjectInspector
             internal TypeStructure(InspectName[] names, bool autoGrow)
             {
                 AutoGrow = autoGrow;
-                Fetchers = new Dictionary<string, Fetcher>();
-                if (names is null) return;
+                Fetchers = new Dictionary<string, Fetcher?>();
                 foreach (var name in names)
                     Fetchers[name.Name] = new DynamicFetcher(name.Name, name.BindingFlags);
             }
@@ -122,13 +122,13 @@ namespace Wanhjor.ObjectInspector
             }
 
             /// <summary>
-            /// Try Get or Create Fetcher (if autogrow)
+            /// Try Get or Create Fetcher (if auto grow)
             /// </summary>
             /// <param name="name">Name</param>
             /// <param name="fetcher">Fetcher</param>
             /// <returns>True if the fetcher was found or created; otherwise, false</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool TryGetOrCreateFetcher(string name, out Fetcher fetcher)
+            private bool TryGetOrCreateFetcher(string name, out Fetcher? fetcher)
             {
                 if (_structure.Fetchers.TryGetValue(name, out fetcher))
                     return fetcher != null;
@@ -148,19 +148,19 @@ namespace Wanhjor.ObjectInspector
             /// </summary>
             /// <param name="name">Name to access in the object instance</param>
             /// <returns>Value of that name inside the object</returns>
-            public object this[string name]
+            public object? this[string name]
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    if (TryGetOrCreateFetcher(name, out var fetcher))
+                    if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
                         return fetcher.Fetch(_instance);
                     throw new KeyNotFoundException("Fetcher is null");
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set
                 {
-                    if (TryGetOrCreateFetcher(name, out var fetcher))
+                    if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
                         fetcher.Shove(_instance, value);
                     else
                         throw new KeyNotFoundException("Fetcher is null");
@@ -174,9 +174,9 @@ namespace Wanhjor.ObjectInspector
             /// <param name="value">Value of that name inside the object</param>
             /// <returns>True if the name exist; otherwise, false</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryGetValue(string name, out object value)
+            public bool TryGetValue(string name, out object? value)
             {
-                if (TryGetOrCreateFetcher(name, out var fetcher))
+                if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
                 {
                     value = fetcher.Fetch(_instance);
                     return true;
@@ -205,7 +205,7 @@ namespace Wanhjor.ObjectInspector
             {
                 var lst = new List<string>();
                 foreach (var fetcher in _structure.Fetchers)
-                    lst.Add($"{fetcher.Key}: {fetcher.Value.Fetch(_instance)}");
+                    lst.Add(fetcher.Value is null ? $"{fetcher.Key}: (null)" : $"{fetcher.Key}: {fetcher.Value.Fetch(_instance)}");
                 return "[" + string.Join(", ", lst) + "]";
             }
         }

@@ -33,14 +33,14 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Value</returns>
-        public virtual object Fetch(object obj) => null;
+        public virtual object? Fetch(object? obj) => null;
 
         /// <summary>
         /// Shove value
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
-        public virtual void Shove(object obj, object value) { }
+        public virtual void Shove(object? obj, object? value) { }
 
         /// <summary>
         /// Create a property fetcher from a .NET Reflection PropertyInfo class that
@@ -50,7 +50,7 @@ namespace Wanhjor.ObjectInspector
         internal static Fetcher FetcherForProperty(PropertyInfo propertyInfo)
         {
             if (propertyInfo == null)
-                return new Fetcher(null);
+                return new Fetcher(string.Empty);
 
             var typedPropertyFetcher = typeof(TypedFetchProperty<,>);
             var instantiatedTypedPropertyFetcher = typedPropertyFetcher.GetTypeInfo().MakeGenericType(
@@ -66,7 +66,7 @@ namespace Wanhjor.ObjectInspector
         internal static Fetcher FetcherForField(FieldInfo fieldInfo)
         {
             if (fieldInfo == null)
-                return new Fetcher(null);
+                return new Fetcher(string.Empty);
             return (Fetcher)Activator.CreateInstance(typeof(TypedFetchField), fieldInfo);
         }
     }

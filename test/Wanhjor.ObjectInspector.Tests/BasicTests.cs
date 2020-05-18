@@ -1,6 +1,9 @@
 using System;
 using System.Reflection;
 using Xunit;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable InconsistentNaming
+#pragma warning disable 414
 
 namespace Wanhjor.ObjectInspector.Tests
 {
