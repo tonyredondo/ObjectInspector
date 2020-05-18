@@ -97,11 +97,4 @@ namespace Wanhjor.ObjectInspector
                 _property.SetValue(obj, value);
         }
     }
-    
-    /*
-    internal class ExpressionTreeProperty<TObject, TValue> : Fetcher
-    {
-        
-    }
-    */
 }

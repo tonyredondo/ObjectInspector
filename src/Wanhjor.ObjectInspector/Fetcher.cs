@@ -53,6 +53,8 @@ namespace Wanhjor.ObjectInspector
             if (propertyInfo == null)
                 return new Fetcher(string.Empty);
 
+            return new ExpressionTreeFetcher(propertyInfo);
+
             var typedPropertyFetcher = typeof(TypedFetchProperty<,>);
             var instantiatedTypedPropertyFetcher = typedPropertyFetcher.GetTypeInfo().MakeGenericType(
                 propertyInfo.DeclaringType, propertyInfo.PropertyType);
@@ -68,6 +70,8 @@ namespace Wanhjor.ObjectInspector
         {
             if (fieldInfo == null)
                 return new Fetcher(string.Empty);
+            
+            return new ExpressionTreeFetcher(fieldInfo);
             return (Fetcher)Activator.CreateInstance(typeof(TypedFetchField), fieldInfo);
         }
     }
