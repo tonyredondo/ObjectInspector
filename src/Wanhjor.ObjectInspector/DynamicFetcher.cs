@@ -6,7 +6,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Dynamic fetcher
     /// </summary>
-    public class DynamicFetcher : Fetcher
+    public sealed class DynamicFetcher : Fetcher
     {
         private readonly BindingFlags? _bindingFlags;
         private Fetcher _fetcher = null!;
@@ -55,7 +55,6 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Load(object? obj)
         {
-            if (!(_fetcher is null)) return;
             _fetcher = CreateFetcher(obj);
             Type = _fetcher.Type;
         }
@@ -68,8 +67,9 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object? Fetch(object? obj)
         {
-            Load(obj);
-            return _fetcher.Fetch(obj);
+            if (_fetcher is null)
+                Load(obj);
+            return _fetcher!.Fetch(obj);
         }
 
         /// <summary>
@@ -80,8 +80,9 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Shove(object? obj, object? value)
         {
-            Load(obj);
-            _fetcher.Shove(obj, value);
+            if (_fetcher is null)
+                Load(obj);
+            _fetcher!.Shove(obj, value);
         }
     }
 }

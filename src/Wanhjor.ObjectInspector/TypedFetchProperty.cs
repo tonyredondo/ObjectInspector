@@ -10,7 +10,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     /// <typeparam name="TObject">Object type</typeparam>
     /// <typeparam name="TProperty">Property type</typeparam>
-    internal class TypedFetchProperty<TObject, TProperty> : Fetcher
+    internal sealed class TypedFetchProperty<TObject, TProperty> : Fetcher
     {
         private readonly Func<TProperty>? _staticPropertyFetch;
         private readonly Func<TObject, TProperty>? _propertyFetch;
@@ -79,9 +79,7 @@ namespace Wanhjor.ObjectInspector
                 return _propertyFetch((TObject)obj!);
             if (_staticPropertyFetch != null)
                 return _staticPropertyFetch();
-            if (_property.CanRead)
-                return _property.GetValue(obj);
-            return null;
+            return _property.CanRead ? _property.GetValue(obj) : null;
         }
 
         /// <summary>
@@ -99,4 +97,11 @@ namespace Wanhjor.ObjectInspector
                 _property.SetValue(obj, value);
         }
     }
+    
+    /*
+    internal class ExpressionTreeProperty<TObject, TValue> : Fetcher
+    {
+        
+    }
+    */
 }

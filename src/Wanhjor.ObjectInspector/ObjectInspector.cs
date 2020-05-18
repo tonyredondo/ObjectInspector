@@ -8,7 +8,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Object inspector
     /// </summary>
-    public class ObjectInspector
+    public sealed class ObjectInspector
     {
         private readonly InspectName[] _names;
         private readonly Dictionary<Type, TypeStructure> _structures = new Dictionary<Type, TypeStructure>();
@@ -72,7 +72,7 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Internal type structure
         /// </summary>
-        internal class TypeStructure
+        internal sealed class TypeStructure
         {
             public readonly Dictionary<string, Fetcher?> Fetchers;
             public readonly bool AutoGrow;
@@ -128,7 +128,7 @@ namespace Wanhjor.ObjectInspector
             /// <param name="fetcher">Fetcher</param>
             /// <returns>True if the fetcher was found or created; otherwise, false</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool TryGetOrCreateFetcher(string name, out Fetcher? fetcher)
+            public bool TryGetFetcher(string name, out Fetcher? fetcher)
             {
                 if (_structure.Fetchers.TryGetValue(name, out fetcher))
                     return fetcher != null;
@@ -153,15 +153,15 @@ namespace Wanhjor.ObjectInspector
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
-                        return fetcher.Fetch(_instance);
+                    if (TryGetFetcher(name, out var fetcher))
+                        return fetcher!.Fetch(_instance);
                     throw new KeyNotFoundException("Fetcher is null");
                 }
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set
                 {
-                    if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
-                        fetcher.Shove(_instance, value);
+                    if (TryGetFetcher(name, out var fetcher))
+                        fetcher!.Shove(_instance, value);
                     else
                         throw new KeyNotFoundException("Fetcher is null");
                 }
@@ -176,7 +176,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryGetValue(string name, out object? value)
             {
-                if (TryGetOrCreateFetcher(name, out var fetcher) && fetcher != null)
+                if (TryGetFetcher(name, out var fetcher) && fetcher != null)
                 {
                     value = fetcher.Fetch(_instance);
                     return true;
@@ -193,7 +193,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool ContainsName(string name)
             {
-                return TryGetOrCreateFetcher(name, out _);
+                return TryGetFetcher(name, out _);
             }
 
             /// <summary>

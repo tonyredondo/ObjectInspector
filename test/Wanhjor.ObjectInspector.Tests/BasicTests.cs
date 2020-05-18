@@ -1,6 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using Xunit;
+using Xunit.Abstractions;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable InconsistentNaming
 #pragma warning disable 414
@@ -9,6 +12,13 @@ namespace Wanhjor.ObjectInspector.Tests
 {
     public class BasicTests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public BasicTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
         [Fact]
         public void BasicObjectInspectorGetTest()
         {
@@ -103,7 +113,70 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Equal("My Value", objData["Value"]);
             Assert.Equal("Changed!", objData["PrivateName"]);
         }
+
+        [Fact]
+        public void PerformanceTest()
+        {
+            var w1 = new Stopwatch();            
+            object name;
+
+            for (var i = 0; i < 10000; i++)
+            {
+                w1 = Stopwatch.StartNew();
+                _ = w1.Elapsed;
+            }
+
+            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+
+            var objInsp = new ObjectInspector();
+            var objData = objInsp.With(tObject);
+
+            
+            
+            if (objData.TryGetFetcher("Name", out var nameFetcher))
+            {
+                w1 = Stopwatch.StartNew();
+                for (var i = 0; i < 100000; i++)
+                {
+                    name = nameFetcher.Fetch(tObject);
+                }
+                w1.Stop();
+            }
+            _testOutputHelper.WriteLine("Property Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < 100000; i++)
+            {
+                name = tObject.Name;
+            }
+            w1.Stop();
+            _testOutputHelper.WriteLine("Direct Property Elapsed: " + w1.Elapsed.TotalMilliseconds);
+            
+            
+            
+            
+            if (objData.TryGetFetcher("Value", out var valueFetcher))
+            {
+                w1 = Stopwatch.StartNew();
+                for (var i = 0; i < 100000; i++)
+                {
+                    name = valueFetcher.Fetch(tObject);
+                }
+                w1.Stop();
+            }
+            _testOutputHelper.WriteLine("Field Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < 100000; i++)
+            {
+                name = tObject.Value;
+            }
+            w1.Stop();
+            _testOutputHelper.WriteLine("Direct Field Elapsed: " + w1.Elapsed.TotalMilliseconds);
+        }
     }
+    
+    
 
 
     public class TestObject

@@ -5,9 +5,10 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Fetcher for Fields
     /// </summary>
-    internal class TypedFetchField : Fetcher
+    internal sealed class TypedFetchField : Fetcher
     {
         private readonly FieldInfo _field;
+        private readonly bool _readOnly;
 
         /// <summary>
         /// Creates a new fetcher for a field
@@ -16,7 +17,9 @@ namespace Wanhjor.ObjectInspector
         public TypedFetchField(FieldInfo field) : base(field.Name)
         {
             _field = field;
+            _readOnly = (_field.Attributes & FieldAttributes.InitOnly) != 0;
             Type = FetcherType.Field;
+            
         }
 
         /// <summary>
@@ -33,9 +36,8 @@ namespace Wanhjor.ObjectInspector
         /// <param name="value">Value</param>
         public override void Shove(object? obj, object? value)
         {
-            if ((_field.Attributes & FieldAttributes.InitOnly) != 0)
-                return;
-            _field.SetValue(obj, value);
+            if (!_readOnly)
+                _field.SetValue(obj, value);
         }
     }
 }
