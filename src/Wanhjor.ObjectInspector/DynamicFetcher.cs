@@ -6,7 +6,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Dynamic fetcher
     /// </summary>
-    public class DynamicFetcher : Fetcher
+    public sealed class DynamicFetcher : Fetcher
     {
         private readonly BindingFlags? _bindingFlags;
         private Fetcher _fetcher = null!;
@@ -30,6 +30,15 @@ namespace Wanhjor.ObjectInspector
         }
 
         /// <summary>
+        /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
+        /// </summary>
+        /// <param name="inspectName"> Inspect Name</param>
+        public DynamicFetcher(InspectName inspectName) : base(inspectName.Name)
+        {
+            _bindingFlags = inspectName.BindingFlags;
+        }
+        
+        /// <summary>
         /// Create a fetcher for the name in the object
         /// </summary>
         /// <param name="obj">Object instance</param>
@@ -43,10 +52,10 @@ namespace Wanhjor.ObjectInspector
             var typeInfo = obj.GetType().GetTypeInfo();
             var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(Name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(Name) ?? typeInfo.GetRuntimeProperty(Name);
             if (!(pInfo is null))
-                return FetcherForProperty(pInfo);
+                return new ExpressionTreeFetcher(pInfo);
 
             var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(Name, _bindingFlags.Value) : typeInfo.GetDeclaredField(Name) ?? typeInfo.GetRuntimeField(Name);
-            return !(fInfo is null) ? FetcherForField(fInfo) : new Fetcher(Name);
+            return !(fInfo is null) ? new ExpressionTreeFetcher(fInfo) : new Fetcher(Name);
         }
 
         /// <summary>
@@ -55,7 +64,6 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Load(object? obj)
         {
-            if (!(_fetcher is null)) return;
             _fetcher = CreateFetcher(obj);
             Type = _fetcher.Type;
         }
@@ -68,8 +76,9 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object? Fetch(object? obj)
         {
-            Load(obj);
-            return _fetcher.Fetch(obj);
+            if (_fetcher is null)
+                Load(obj);
+            return _fetcher!.Fetch(obj);
         }
 
         /// <summary>
@@ -80,8 +89,9 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Shove(object? obj, object? value)
         {
-            Load(obj);
-            _fetcher.Shove(obj, value);
+            if (_fetcher is null)
+                Load(obj);
+            _fetcher!.Shove(obj, value);
         }
     }
 }
