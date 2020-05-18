@@ -7,8 +7,8 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorBase
     {
-        protected readonly ObjectInspector _inspector;
-        protected ObjectInspector.ObjectData _instanceData;
+        protected readonly ObjectInspector Inspector;
+        protected ObjectInspector.ObjectData InstanceData;
 
         /// <summary>
         /// Creates a new inspector tuple using an object inspector
@@ -16,7 +16,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="inspector">Object inspector</param>
         protected InspectorBase(ObjectInspector inspector)
         {
-            _inspector = inspector;
+            Inspector = inspector;
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetInstance(object instance)
         {
-            _instanceData = _inspector.With(instance);
+            InstanceData = Inspector.With(instance);
         }
     }
 
@@ -42,8 +42,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T1 Item1
         {
-            get => (T1)_instanceData[_name1];
-            set => _instanceData[_name1] = value;
+            get => (T1)InstanceData[_name1]!;
+            set => InstanceData[_name1] = value;
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T2 Item2
         {
-            get => (T2)_instanceData[_name2];
-            set => _instanceData[_name2] = value;
+            get => (T2)InstanceData[_name2]!;
+            set => InstanceData[_name2] = value;
         }
 
         /// <summary>
@@ -130,8 +130,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T3 Item3
         {
-            get => (T3)_instanceData[_name3];
-            set => _instanceData[_name3] = value;
+            get => (T3)InstanceData[_name3]!;
+            set => InstanceData[_name3] = value;
         }
 
         /// <summary>
@@ -178,8 +178,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T4 Item4
         {
-            get => (T4)_instanceData[_name4];
-            set => _instanceData[_name4] = value;
+            get => (T4)InstanceData[_name4]!;
+            set => InstanceData[_name4] = value;
         }
 
         /// <summary>
@@ -229,8 +229,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T5 Item5
         {
-            get => (T5)_instanceData[_name5];
-            set => _instanceData[_name5] = value;
+            get => (T5)InstanceData[_name5]!;
+            set => InstanceData[_name5] = value;
         }
 
         /// <summary>
@@ -283,8 +283,8 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public T6 Item6
         {
-            get => (T6)_instanceData[_name6];
-            set => _instanceData[_name6] = value;
+            get => (T6)InstanceData[_name6]!;
+            set => InstanceData[_name6] = value;
         }
 
         /// <summary>
