@@ -46,10 +46,7 @@ namespace Wanhjor.ObjectInspector
                 return FetcherForProperty(pInfo);
 
             var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(Name, _bindingFlags.Value) : typeInfo.GetDeclaredField(Name) ?? typeInfo.GetRuntimeField(Name);
-            if (!(fInfo is null))
-                return FetcherForField(fInfo);
-
-            return new Fetcher(Name);
+            return !(fInfo is null) ? FetcherForField(fInfo) : new Fetcher(Name);
         }
 
         /// <summary>

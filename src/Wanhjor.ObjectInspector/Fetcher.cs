@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace Wanhjor.ObjectInspector
 {

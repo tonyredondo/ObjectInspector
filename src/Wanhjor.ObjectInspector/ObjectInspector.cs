@@ -193,7 +193,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool ContainsName(string name)
             {
-                return TryGetOrCreateFetcher(name, out var _);
+                return TryGetOrCreateFetcher(name, out _);
             }
 
             /// <summary>

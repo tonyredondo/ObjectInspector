@@ -5,7 +5,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Fetcher for Fields
     /// </summary>
-    class TypedFetchField : Fetcher
+    internal class TypedFetchField : Fetcher
     {
         private readonly FieldInfo _field;
 

@@ -1,11 +1,12 @@
 ﻿using System.Reflection;
+// ReSharper disable UnusedMember.Global
 
 namespace Wanhjor.ObjectInspector
 {
     /// <summary>
     /// Inspector name
     /// </summary>
-    public struct InspectName
+    public readonly struct InspectName
     {
         /// <summary>
         /// Name to inspect
