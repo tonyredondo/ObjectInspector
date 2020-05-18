@@ -12,13 +12,6 @@ namespace Wanhjor.ObjectInspector.Tests
 {
     public class BasicTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public BasicTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         [Fact]
         public void BasicObjectInspectorGetTest()
         {
@@ -142,7 +135,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 }
                 w1.Stop();
             }
-            _testOutputHelper.WriteLine("Property Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Property Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
 
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < 100000; i++)
@@ -150,7 +143,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 name = tObject.Name;
             }
             w1.Stop();
-            _testOutputHelper.WriteLine("Direct Property Elapsed: " + w1.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Direct Property Elapsed: " + w1.Elapsed.TotalMilliseconds);
             
             
             
@@ -164,7 +157,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 }
                 w1.Stop();
             }
-            _testOutputHelper.WriteLine("Field Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Field Fetcher Elapsed: " + w1.Elapsed.TotalMilliseconds);
 
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < 100000; i++)
@@ -172,7 +165,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 name = tObject.Value;
             }
             w1.Stop();
-            _testOutputHelper.WriteLine("Direct Field Elapsed: " + w1.Elapsed.TotalMilliseconds);
+            Console.WriteLine("Direct Field Elapsed: " + w1.Elapsed.TotalMilliseconds);
         }
     }
     

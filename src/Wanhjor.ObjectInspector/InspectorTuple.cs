@@ -7,17 +7,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorBase
     {
-        protected readonly ObjectInspector Inspector;
-        protected ObjectInspector.ObjectData InstanceData;
-
-        /// <summary>
-        /// Creates a new inspector tuple using an object inspector
-        /// </summary>
-        /// <param name="inspector">Object inspector</param>
-        protected InspectorBase(ObjectInspector inspector)
-        {
-            Inspector = inspector;
-        }
+        protected object? Instance;
 
         /// <summary>
         /// Sets an object instance to inspect
@@ -26,7 +16,7 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetInstance(object instance)
         {
-            InstanceData = Inspector.With(instance);
+            Instance = instance;
         }
     }
 
@@ -35,15 +25,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1> : InspectorBase
     {
-        private readonly string _name1;
+        private readonly DynamicFetcher _fetcher1;
 
         /// <summary>
         /// Item Value for Name1
         /// </summary>
         public T1 Item1
         {
-            get => (T1)InstanceData[_name1]!;
-            set => InstanceData[_name1] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T1)_fetcher1!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher1.Shove(Instance, value);
         }
 
         /// <summary>
@@ -51,24 +43,17 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
         public InspectorTuple(string name1)
-            : this(name1, new ObjectInspector(name1)) { }
-
+        {
+            _fetcher1 = new DynamicFetcher(name1);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
         public InspectorTuple(InspectName name1)
-            : this(name1.Name, new ObjectInspector(name1)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, ObjectInspector inspector)
-            : base(inspector)
         {
-            _name1 = name1;
+            _fetcher1 = new DynamicFetcher(name1);
         }
     }
 
@@ -77,15 +62,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1, T2> : InspectorTuple<T1>
     {
-        private readonly string _name2;
+        private readonly DynamicFetcher _fetcher2;
 
         /// <summary>
         /// Item Value for Name2
         /// </summary>
         public T2 Item2
         {
-            get => (T2)InstanceData[_name2]!;
-            set => InstanceData[_name2] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T2)_fetcher2!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher2.Shove(Instance, value);
         }
 
         /// <summary>
@@ -93,28 +80,19 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
         /// <param name="name2">Property or field name 2</param>
-        public InspectorTuple(string name1, string name2)
-            : this(name1, name2, new ObjectInspector(name1, name2)) { }
-
-
+        public InspectorTuple(string name1, string name2) : base(name1)
+        {
+            _fetcher2 = new DynamicFetcher(name2);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
         /// <param name="name2">Property or field name 2</param>
-        public InspectorTuple(InspectName name1, InspectName name2)
-            : this(name1.Name, name2.Name, new ObjectInspector(name1, name2)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="name2">Property or field name 2</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, string name2, ObjectInspector inspector)
-            : base(name1, inspector)
+        public InspectorTuple(InspectName name1, InspectName name2) : base(name1)
         {
-            _name2 = name2;
+            _fetcher2 = new DynamicFetcher(name2);
         }
     }
 
@@ -123,15 +101,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1, T2, T3> : InspectorTuple<T1, T2>
     {
-        private readonly string _name3;
+        private readonly DynamicFetcher _fetcher3;
 
         /// <summary>
-        /// Item Value for Name3
+        /// Item Value for Name2
         /// </summary>
         public T3 Item3
         {
-            get => (T3)InstanceData[_name3]!;
-            set => InstanceData[_name3] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T3)_fetcher3!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher3.Shove(Instance, value);
         }
 
         /// <summary>
@@ -140,29 +120,20 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name1">Property or field name 1</param>
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
-        public InspectorTuple(string name1, string name2, string name3)
-            : this(name1, name2, name3, new ObjectInspector(name1, name2, name3)) { }
-
+        public InspectorTuple(string name1, string name2, string name3) : base(name1, name2)
+        {
+            _fetcher3 = new DynamicFetcher(name3);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3)
-            : this(name1.Name, name2.Name, name3.Name, new ObjectInspector(name1, name2, name3)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="name2">Property or field name 2</param>
-        /// <param name="name3">Property or field name 3</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, string name2, string name3, ObjectInspector inspector)
-            : base(name1, name2, inspector)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3) : base(name1, name2)
         {
-            _name3 = name3;
+            _fetcher3 = new DynamicFetcher(name3);
         }
     }
 
@@ -171,15 +142,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1, T2, T3, T4> : InspectorTuple<T1, T2, T3>
     {
-        private readonly string _name4;
+        private readonly DynamicFetcher _fetcher4;
 
         /// <summary>
-        /// Item Value for Name4
+        /// Item Value for Name2
         /// </summary>
         public T4 Item4
         {
-            get => (T4)InstanceData[_name4]!;
-            set => InstanceData[_name4] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T4)_fetcher4!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher4.Shove(Instance, value);
         }
 
         /// <summary>
@@ -189,9 +162,11 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4)
-            : this(name1, name2, name3, name4, new ObjectInspector(name1, name2, name3, name4)) { }
-
+        public InspectorTuple(string name1, string name2, string name3, string name4) : base(name1, name2, name3)
+        {
+            _fetcher4 = new DynamicFetcher(name4);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
@@ -199,21 +174,9 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4)
-            : this(name1.Name, name2.Name, name3.Name, name4.Name, new ObjectInspector(name1, name2, name3, name4)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="name2">Property or field name 2</param>
-        /// <param name="name3">Property or field name 3</param>
-        /// <param name="name4">Property or field name 4</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, ObjectInspector inspector)
-            : base(name1, name2, name3, inspector)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4) : base(name1, name2, name3)
         {
-            _name4 = name4;
+            _fetcher4 = new DynamicFetcher(name4);
         }
     }
 
@@ -222,15 +185,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1, T2, T3, T4, T5> : InspectorTuple<T1, T2, T3, T4>
     {
-        private readonly string _name5;
+        private readonly DynamicFetcher _fetcher5;
 
         /// <summary>
-        /// Item Value for Name5
+        /// Item Value for Name2
         /// </summary>
         public T5 Item5
         {
-            get => (T5)InstanceData[_name5]!;
-            set => InstanceData[_name5] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T5)_fetcher5!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher5.Shove(Instance, value);
         }
 
         /// <summary>
@@ -241,9 +206,11 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, string name5)
-            : this(name1, name2, name3, name4, name5, new ObjectInspector(name1, name2, name3, name4, name5)) { }
-
+        public InspectorTuple(string name1, string name2, string name3, string name4, string name5) : base(name1, name2, name3, name4)
+        {
+            _fetcher5 = new DynamicFetcher(name5);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
@@ -252,22 +219,9 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5)
-            : this(name1.Name, name2.Name, name3.Name, name4.Name, name5.Name, new ObjectInspector(name1, name2, name3, name4, name5)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="name2">Property or field name 2</param>
-        /// <param name="name3">Property or field name 3</param>
-        /// <param name="name4">Property or field name 4</param>
-        /// <param name="name5">Property or field name 5</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, ObjectInspector inspector)
-            : base(name1, name2, name3, name4, inspector)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5) : base(name1, name2, name3, name4)
         {
-            _name5 = name5;
+            _fetcher5 = new DynamicFetcher(name5);
         }
     }
 
@@ -276,15 +230,17 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorTuple<T1, T2, T3, T4, T5, T6> : InspectorTuple<T1, T2, T3, T4, T5>
     {
-        private readonly string _name6;
+        private readonly DynamicFetcher _fetcher6;
 
         /// <summary>
-        /// Item Value for Name6
+        /// Item Value for Name2
         /// </summary>
         public T6 Item6
         {
-            get => (T6)InstanceData[_name6]!;
-            set => InstanceData[_name6] = value;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (T6)_fetcher6!.Fetch(Instance)!;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _fetcher6.Shove(Instance, value);
         }
 
         /// <summary>
@@ -296,9 +252,11 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
         /// <param name="name6">Property or field name 6</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, string name6)
-            : this(name1, name2, name3, name4, name5, name6, new ObjectInspector(name1, name2, name3, name4, name5, name6)) { }
-
+        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, string name6) : base(name1, name2, name3, name4, name5)
+        {
+            _fetcher6 = new DynamicFetcher(name6);
+        }
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
@@ -308,23 +266,9 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
         /// <param name="name6">Property or field name 6</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5, InspectName name6)
-            : this(name1.Name, name2.Name, name3.Name, name4.Name, name5.Name, name6.Name, new ObjectInspector(name1, name2, name3, name4, name5, name6)) { }
-
-        /// <summary>
-        /// Creates a new inspector tuple for an object inspector
-        /// </summary>
-        /// <param name="name1">Property or field name 1</param>
-        /// <param name="name2">Property or field name 2</param>
-        /// <param name="name3">Property or field name 3</param>
-        /// <param name="name4">Property or field name 4</param>
-        /// <param name="name5">Property or field name 5</param>
-        /// <param name="name6">Property or field name 6</param>
-        /// <param name="inspector">Object inspector instance</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, string name6, ObjectInspector inspector)
-            : base(name1, name2, name3, name4, name5, inspector)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5, InspectName name6) : base(name1, name2, name3, name4, name5)
         {
-            _name6 = name6;
+            _fetcher6 = new DynamicFetcher(name6);
         }
     }
 }

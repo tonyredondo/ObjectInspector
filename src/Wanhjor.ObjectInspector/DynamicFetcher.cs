@@ -30,6 +30,15 @@ namespace Wanhjor.ObjectInspector
         }
 
         /// <summary>
+        /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
+        /// </summary>
+        /// <param name="inspectName"> Inspect Name</param>
+        public DynamicFetcher(InspectName inspectName) : base(inspectName.Name)
+        {
+            _bindingFlags = inspectName.BindingFlags;
+        }
+        
+        /// <summary>
         /// Create a fetcher for the name in the object
         /// </summary>
         /// <param name="obj">Object instance</param>
