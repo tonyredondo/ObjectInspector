@@ -43,10 +43,10 @@ namespace Wanhjor.ObjectInspector
             var typeInfo = obj.GetType().GetTypeInfo();
             var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(Name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(Name) ?? typeInfo.GetRuntimeProperty(Name);
             if (!(pInfo is null))
-                return FetcherForProperty(pInfo);
+                return new ExpressionTreeFetcher(pInfo);
 
             var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(Name, _bindingFlags.Value) : typeInfo.GetDeclaredField(Name) ?? typeInfo.GetRuntimeField(Name);
-            return !(fInfo is null) ? FetcherForField(fInfo) : new Fetcher(Name);
+            return !(fInfo is null) ? new ExpressionTreeFetcher(fInfo) : new Fetcher(Name);
         }
 
         /// <summary>

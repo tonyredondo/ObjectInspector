@@ -8,9 +8,10 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Expression Tree Fetcher
     /// </summary>
-    internal sealed class ExpressionTreeFetcher: Fetcher
+    public sealed class ExpressionTreeFetcher: Fetcher
     {
         private readonly Func<object, object> _getFunc;
+        private readonly Action<object, object> _setFunc;
         
         /// <summary>
         /// Creates a new fetcher for a property
@@ -20,6 +21,7 @@ namespace Wanhjor.ObjectInspector
         {
             Type = FetcherType.Property;
             _getFunc = property.CanRead ? BuildGetAccessor(property) : (obj) => null!;
+            _setFunc = property.CanWrite ? BuildSetAccessor(property) : (obj, val) => {};
         }
         
         /// <summary>
@@ -30,6 +32,7 @@ namespace Wanhjor.ObjectInspector
         {
             Type = FetcherType.Field;
             _getFunc = BuildGetAccessor(field);
+            _setFunc = (field.Attributes & FieldAttributes.InitOnly) == 0 ? BuildSetAccessor(field) : (obj, val) => {};
         }
 
         /// <summary>
@@ -46,10 +49,9 @@ namespace Wanhjor.ObjectInspector
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Shove(object? obj, object? value)
-        {
-        }
-    
+        public override void Shove(object? obj, object? value) => _setFunc(obj!, value!);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Func<object, object> BuildGetAccessor(PropertyInfo property)
         {
             var method = property.GetMethod;
@@ -69,6 +71,7 @@ namespace Wanhjor.ObjectInspector
             return expr.Compile();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Func<object, object> BuildGetAccessor(FieldInfo field)
         {
             var obj = Expression.Parameter(typeof(object), "obj");
@@ -84,6 +87,59 @@ namespace Wanhjor.ObjectInspector
             }
             var result = Expression.Convert(call, typeof(object));
             var expr = Expression.Lambda<Func<object, object>>(result, "GetField+" + field.Name, new[] { obj });
+            return expr.Compile();
+        }
+        
+        /// <summary>
+        /// Build a set accessor from a property info
+        /// </summary>
+        /// <param name="property">Property info</param>
+        /// <returns>Delegate to the set accessor</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Action<object, object> BuildSetAccessor(PropertyInfo property)
+        {
+            var method = property.SetMethod;
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var value = Expression.Parameter(typeof(object), "value");
+            MethodCallExpression call;
+            if (method.IsStatic)
+            {
+                var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
+                call = Expression.Call(method, castedValue);
+            }
+            else
+            {
+                var instance = Expression.Convert(obj, method.DeclaringType);
+                var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
+                call = Expression.Call(instance, method, castedValue);
+            }
+            var expr = Expression.Lambda<Action<object, object>>(call, "SetProp+" + property.Name, new[] { obj, value });
+            return expr.Compile();
+        }
+        
+        /// <summary>
+        /// Build a set accessor from a field info
+        /// </summary>
+        /// <param name="field">Field info</param>
+        /// <returns>Delegate to the set accessor</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Action<object, object> BuildSetAccessor(FieldInfo field)
+        {
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var value = Expression.Parameter(typeof(object), "value");
+            Expression call;
+            if (field.IsStatic)
+            {
+                var castedValue = Expression.Convert(value, field.FieldType);
+                call = Expression.Assign(Expression.Field(null, field), castedValue);
+            }
+            else
+            {
+                var instance = Expression.Convert(obj, field.DeclaringType);
+                var castedValue = Expression.Convert(value, field.FieldType);
+                call = Expression.Assign(Expression.Field(instance, field), castedValue);
+            }
+            var expr = Expression.Lambda<Action<object, object>>(call, "SetField+" + field.Name, new[] { obj, value });
             return expr.Compile();
         }
     }
