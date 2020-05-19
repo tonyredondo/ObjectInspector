@@ -53,7 +53,7 @@ namespace Wanhjor.ObjectInspector
             Type = FetcherType.Method;
             _getFunc = EmptyGetter;
             _setFunc = EmptySetter;
-            _invoker = Invokers.GetOrAdd(method, minfo => EmptyInvoker);
+            _invoker = Invokers.GetOrAdd(method, minfo => ExpressionAccessors.BuildMethodAccessor(minfo));
         }
 
         /// <summary>

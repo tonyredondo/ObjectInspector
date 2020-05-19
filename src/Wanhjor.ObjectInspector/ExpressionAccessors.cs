@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -109,6 +110,81 @@ namespace Wanhjor.ObjectInspector
             }
             var expr = Expression.Lambda<Action<object, object>>(call, "SetField+" + field.Name, new[] { obj, value });
             return expr.Compile();
+        }
+        
+        /// <summary>
+        /// Create an accessor delegte for a MethodInfo
+        /// </summary>
+        /// <param name="method">Method info instance</param>
+        /// <returns>Accessor delegate</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<object, object[], object> BuildMethodAccessor(MethodInfo method)
+        {
+            var obj = Expression.Parameter(typeof(object), "o");
+            Expression? castedObject = null;
+            if (!method.IsStatic)
+                castedObject = Expression.Convert(obj, method.DeclaringType);
+
+            var parameters = method.GetParameters();
+            var paramExp = Expression.Parameter(typeof(object[]), "args");
+            var expArr = new Expression[parameters.Length];
+
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                var p = parameters[i];
+                var pType = p.ParameterType;
+                Expression argExp = Expression.ArrayIndex(paramExp, Expression.Constant(i));
+                if (p.HasDefaultValue)
+                {
+                    argExp = Expression.Condition(Expression.Equal(argExp, Expression.Constant(null, typeof(object))),
+                        Expression.Constant(p.RawDefaultValue, pType), Expression.Convert(argExp, pType));
+                }
+                else if (pType != typeof(object))
+                {
+                    argExp = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
+                }
+                else
+                {
+                    argExp = Expression.Convert(argExp, pType);
+                }
+                expArr[i] = argExp;
+            }
+            Expression callExpression = Expression.Call(castedObject, method, expArr);
+            if (method.ReturnType != typeof(void))
+                callExpression = Expression.Convert(callExpression, typeof(object));
+            else
+                callExpression = Expression.Block(callExpression, Expression.Constant(null, typeof(object)));
+            
+            return Expression.Lambda<Func<object, object[], object>>(callExpression, "Invoker+" + method.Name, new[] { obj, paramExp }).Compile();
+        }
+        
+        private static MethodInfo _cTypeMInfo = null!;
+        private static MethodInfo ChangeTypeMethodInfo
+            => _cTypeMInfo ??= typeof(ExpressionAccessors).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType");
+
+        private static object ChangeType(object value, Type conversionType)
+        {
+            if (value is IConvertible)
+            {
+                if (conversionType.BaseType == typeof(Enum))
+                    return Enum.ToObject(conversionType, value);
+                if (conversionType.IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType)); ;
+                return Convert.ChangeType(value, conversionType);
+            }
+            if (value is null)
+                return null!;
+            
+            var valueType = value.GetType();
+            if (conversionType.IsAssignableFrom(valueType))
+                return value;
+            if (conversionType.IsGenericType)
+            {
+                if (conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                    throw new InvalidCastException($"The value of type: '{valueType}' can't be converted to: '{conversionType}'");
+                return ChangeType(value, Nullable.GetUnderlyingType(conversionType));
+            }
+            return value;
         }
     }
 }
