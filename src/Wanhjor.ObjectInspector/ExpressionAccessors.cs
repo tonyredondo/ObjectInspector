@@ -10,6 +10,11 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     internal static class ExpressionAccessors
     {
+        /// <summary>
+        /// Build a get accessor from a property info
+        /// </summary>
+        /// <param name="property">Property info</param>
+        /// <returns>Delegate to the get accessor</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<object, object> BuildGetAccessor(PropertyInfo property)
         {
@@ -28,25 +33,6 @@ namespace Wanhjor.ObjectInspector
             var expr = Expression.Lambda<Func<object, object>>(result, "GetProp+" + property.Name, new[] { obj });
             return expr.Compile();
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static  Func<object, object> BuildGetAccessor(FieldInfo field)
-        {
-            var obj = Expression.Parameter(typeof(object), "obj");
-            MemberExpression call;
-            if (field.IsStatic)
-            {
-                call = Expression.Field(null, field);
-            }
-            else
-            {
-                var instance = Expression.Convert(obj, field.DeclaringType);
-                call = Expression.Field(instance, field);
-            }
-            var result = Expression.Convert(call, typeof(object));
-            var expr = Expression.Lambda<Func<object, object>>(result, "GetField+" + field.Name, new[] { obj });
-            return expr.Compile();
-        }
         
         /// <summary>
         /// Build a set accessor from a property info
@@ -54,7 +40,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="property">Property info</param>
         /// <returns>Delegate to the set accessor</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static  Action<object, object> BuildSetAccessor(PropertyInfo property)
+        public static Action<object, object> BuildSetAccessor(PropertyInfo property)
         {
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "value");
@@ -73,6 +59,31 @@ namespace Wanhjor.ObjectInspector
             var expr = Expression.Lambda<Action<object, object>>(call, "SetProp+" + property.Name, new[] { obj, value });
             return expr.Compile();
         }
+
+        /// <summary>
+        /// Build a get accessor from a field info
+        /// </summary>
+        /// <param name="field">Field info</param>
+        /// <returns>Delegate to the get accessor</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<object, object> BuildGetAccessor(FieldInfo field)
+        {
+            var obj = Expression.Parameter(typeof(object), "obj");
+            MemberExpression call;
+            if (field.IsStatic)
+            {
+                call = Expression.Field(null, field);
+            }
+            else
+            {
+                var instance = Expression.Convert(obj, field.DeclaringType);
+                call = Expression.Field(instance, field);
+            }
+            var result = Expression.Convert(call, typeof(object));
+            var expr = Expression.Lambda<Func<object, object>>(result, "GetField+" + field.Name, new[] { obj });
+            return expr.Compile();
+        }
+        
         
         /// <summary>
         /// Build a set accessor from a field info
@@ -80,7 +91,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="field">Field info</param>
         /// <returns>Delegate to the set accessor</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static  Action<object, object> BuildSetAccessor(FieldInfo field)
+        public static Action<object, object> BuildSetAccessor(FieldInfo field)
         {
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "value");
