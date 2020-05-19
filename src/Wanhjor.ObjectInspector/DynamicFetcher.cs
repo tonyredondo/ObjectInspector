@@ -1,4 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Wanhjor.ObjectInspector
@@ -8,6 +13,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public sealed class DynamicFetcher : Fetcher
     {
+        private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
         private readonly BindingFlags? _bindingFlags;
         private Fetcher _fetcher = null!;
 
@@ -48,14 +54,41 @@ namespace Wanhjor.ObjectInspector
         {
             if (obj is null)
                 return new Fetcher(string.Empty);
-            
-            var typeInfo = obj.GetType().GetTypeInfo();
-            var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(Name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(Name) ?? typeInfo.GetRuntimeProperty(Name);
-            if (!(pInfo is null))
-                return new ExpressionTreeFetcher(pInfo);
 
-            var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(Name, _bindingFlags.Value) : typeInfo.GetDeclaredField(Name) ?? typeInfo.GetRuntimeField(Name);
-            return !(fInfo is null) ? new ExpressionTreeFetcher(fInfo) : new Fetcher(Name);
+            return Fetchers.GetOrAdd((Name, obj.GetType()), t =>
+            {
+                var name = t.Name;
+                var typeInfo = t.Type.GetTypeInfo();
+
+                var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(name) ?? typeInfo.GetRuntimeProperty(name);
+                if (!(pInfo is null))
+                    return new ExpressionTreeFetcher(pInfo);
+
+                var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(name, _bindingFlags.Value) : typeInfo.GetDeclaredField(name) ?? typeInfo.GetRuntimeField(name);
+                if (!(fInfo is null))
+                    return new ExpressionTreeFetcher(fInfo);
+
+
+                MethodInfo[] methods;
+                if (_bindingFlags.HasValue)
+                {
+                    methods = typeInfo.GetMethods(_bindingFlags.Value);
+                }
+                else
+                {
+                    methods = typeInfo.GetDeclaredMethods(name).ToArray();
+                    if (methods.Length == 0)
+                        methods = typeInfo.GetRuntimeMethods().ToArray();
+                }
+
+                var mInfo = methods.FirstOrDefault(m => m.Name == name);
+                if (!(mInfo is null))
+                    return new ExpressionTreeFetcher(mInfo);
+            
+                return new Fetcher(t.Name);
+                
+            });
+            
         }
 
         /// <summary>

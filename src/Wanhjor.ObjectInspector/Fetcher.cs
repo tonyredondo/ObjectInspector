@@ -11,6 +11,19 @@ namespace Wanhjor.ObjectInspector
     public class Fetcher
     {
         /// <summary>
+        /// All binding flags
+        /// </summary>
+        public const BindingFlags BindEverything = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
+        /// <summary>
+        /// Binding flags for instance members
+        /// </summary>
+        public const BindingFlags BindInstance = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+        /// <summary>
+        /// Binding flags for static members
+        /// </summary>
+        public const BindingFlags BindStatic = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+
+        /// <summary>
         /// Name
         /// </summary>
         public string Name { get; }

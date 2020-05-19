@@ -39,6 +39,14 @@ namespace Wanhjor.ObjectInspector
         }
 
         /// <summary>
+        /// Invokes item1 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T1 InvokeItem1(params object[] parameters)
+            => (T1)_fetcher1.Invoke(Instance, parameters)!;
+
+        /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
@@ -75,6 +83,14 @@ namespace Wanhjor.ObjectInspector
             set => _fetcher2.Shove(Instance, value);
         }
 
+        /// <summary>
+        /// Invokes item2 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T2 InvokeItem2(params object[] parameters)
+            => (T2)_fetcher2.Invoke(Instance, parameters)!;
+        
         /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
@@ -113,6 +129,14 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _fetcher3.Shove(Instance, value);
         }
+
+        /// <summary>
+        /// Invokes item3 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T3 InvokeItem3(params object[] parameters)
+            => (T3)_fetcher3.Invoke(Instance, parameters)!;
 
         /// <summary>
         /// Creates a new inspector tuple for an object
@@ -154,6 +178,14 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _fetcher4.Shove(Instance, value);
         }
+
+        /// <summary>
+        /// Invokes item4 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T4 InvokeItem4(params object[] parameters)
+            => (T4)_fetcher4.Invoke(Instance, parameters)!;
 
         /// <summary>
         /// Creates a new inspector tuple for an object
@@ -199,6 +231,14 @@ namespace Wanhjor.ObjectInspector
         }
 
         /// <summary>
+        /// Invokes item5 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T5 InvokeItem5(params object[] parameters)
+            => (T5)_fetcher5.Invoke(Instance, parameters)!;
+
+        /// <summary>
         /// Creates a new inspector tuple for an object
         /// </summary>
         /// <param name="name1">Property or field name 1</param>
@@ -242,6 +282,14 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _fetcher6.Shove(Instance, value);
         }
+
+        /// <summary>
+        /// Invokes item6 as a method
+        /// </summary>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public T6 InvokeItem6(params object[] parameters)
+            => (T6)_fetcher6.Invoke(Instance, parameters)!;
 
         /// <summary>
         /// Creates a new inspector tuple for an object
