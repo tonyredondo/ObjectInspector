@@ -11,6 +11,19 @@ namespace Wanhjor.ObjectInspector
     public class Fetcher
     {
         /// <summary>
+        /// All binding flags
+        /// </summary>
+        public const BindingFlags BindEverything = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
+        /// <summary>
+        /// Binding flags for instance members
+        /// </summary>
+        public const BindingFlags BindInstance = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+        /// <summary>
+        /// Binding flags for static members
+        /// </summary>
+        public const BindingFlags BindStatic = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static;
+
+        /// <summary>
         /// Name
         /// </summary>
         public string Name { get; }
@@ -34,13 +47,21 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <returns>Value</returns>
-        public virtual object? Fetch(object? obj) => null;
+        public virtual object? Fetch(object? obj) => throw new NotImplementedException();
 
         /// <summary>
         /// Shove value
         /// </summary>
         /// <param name="obj">Object instance</param>
         /// <param name="value">Value</param>
-        public virtual void Shove(object? obj, object? value) { }
+        public virtual void Shove(object? obj, object? value) => throw new NotImplementedException();
+        
+        /// <summary>
+        /// Invokes the method
+        /// </summary>
+        /// <param name="obj">Object instance</param>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        public virtual object? Invoke(object? obj, params object[] parameters) => throw new NotImplementedException();
     }
 }

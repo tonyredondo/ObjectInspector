@@ -168,6 +168,20 @@ namespace Wanhjor.ObjectInspector
             }
 
             /// <summary>
+            /// Invokes a method
+            /// </summary>
+            /// <param name="name">Method name</param>
+            /// <param name="parameters">Method parameters</param>
+            /// <returns>Method return value</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public object? Invoke(string name, params object[] parameters)
+            {
+                if (TryGetFetcher(name, out var fetcher))
+                    return fetcher!.Invoke(_instance, parameters);
+                throw new KeyNotFoundException("Fetcher is null");
+            }
+
+            /// <summary>
             /// Tries to get a value from the object instance
             /// </summary>
             /// <param name="name">Name to access in the object instance</param>
@@ -176,7 +190,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryGetValue(string name, out object? value)
             {
-                if (TryGetFetcher(name, out var fetcher) && fetcher != null)
+                if (TryGetFetcher(name, out var fetcher) && fetcher != null && fetcher.Type != FetcherType.Method)
                 {
                     value = fetcher.Fetch(_instance);
                     return true;
