@@ -16,6 +16,10 @@
         /// <summary>
         /// Field fetcher
         /// </summary>
-        Field
+        Field,
+        /// <summary>
+        /// Method fetcher
+        /// </summary>
+        Method
     }
 }

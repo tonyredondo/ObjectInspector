@@ -93,5 +93,19 @@ namespace Wanhjor.ObjectInspector
                 Load(obj);
             _fetcher!.Shove(obj, value);
         }
+
+        /// <summary>
+        /// Invokes the method
+        /// </summary>
+        /// <param name="obj">Object instance</param>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns>Method return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override object? Invoke(object? obj, params object[] parameters)
+        {
+            if (_fetcher is null)
+                Load(obj);
+            return _fetcher!.Invoke(obj, parameters);
+        }
     }
 }
