@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -15,6 +13,7 @@ namespace Wanhjor.ObjectInspector
     {
         private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
         private readonly BindingFlags? _bindingFlags;
+        private readonly Func<MethodInfo, bool>? _methodSelector = null;
         private Fetcher _fetcher = null!;
         
         /// <summary>
@@ -22,6 +21,7 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public bool UseDelegatePropertyFetcher { get; set; }
 
+        #region .ctor
         /// <summary>
         /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
         /// </summary>
@@ -48,6 +48,40 @@ namespace Wanhjor.ObjectInspector
         {
             _bindingFlags = inspectName.BindingFlags;
         }
+        
+        /// <summary>
+        /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
+        /// </summary>
+        /// <param name="name">Name</param>
+        /// <param name="methodSelector">Method selector predicate</param>
+        public DynamicFetcher(string name, Func<MethodInfo, bool> methodSelector) : base(name)
+        {
+            _methodSelector = methodSelector;
+        }
+
+        /// <summary>
+        /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
+        /// </summary>
+        /// <param name="name">Name</param>
+        /// <param name="bindingFlags">Binding flags</param>
+        /// <param name="methodSelector">Method selector predicate</param>
+        public DynamicFetcher(string name, BindingFlags? bindingFlags, Func<MethodInfo, bool> methodSelector) : base(name)
+        {
+            _bindingFlags = bindingFlags;
+            _methodSelector = methodSelector;
+        }
+
+        /// <summary>
+        /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
+        /// </summary>
+        /// <param name="inspectName"> Inspect Name</param>
+        /// <param name="methodSelector">Method selector predicate</param>
+        public DynamicFetcher(InspectName inspectName, Func<MethodInfo, bool> methodSelector) : base(inspectName.Name)
+        {
+            _bindingFlags = inspectName.BindingFlags;
+            _methodSelector = methodSelector;
+        }
+        #endregion 
         
         /// <summary>
         /// Create a fetcher for the name in the object
@@ -93,7 +127,12 @@ namespace Wanhjor.ObjectInspector
                         methods = typeInfo.GetRuntimeMethods().ToArray();
                 }
 
-                var mInfo = methods.FirstOrDefault(m => m.Name == name);
+                MethodInfo? mInfo;
+                if (_methodSelector != null && methods.Length > 0)
+                    mInfo = methods.FirstOrDefault(_methodSelector);
+                else
+                    mInfo = methods.FirstOrDefault(m => m.Name == name);
+                
                 if (!(mInfo is null))
                     return new ExpressionTreeFetcher(mInfo);
             

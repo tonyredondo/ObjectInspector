@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Wanhjor.ObjectInspector
 {
@@ -63,6 +65,26 @@ namespace Wanhjor.ObjectInspector
         {
             _fetcher1 = new DynamicFetcher(name1);
         }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, Func<MethodInfo, bool> methodSelector)
+        {
+            _fetcher1 = new DynamicFetcher(name1, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, Func<MethodInfo, bool> methodSelector)
+        {
+            _fetcher1 = new DynamicFetcher(name1, methodSelector);
+        }
     }
 
     /// <summary>
@@ -109,6 +131,28 @@ namespace Wanhjor.ObjectInspector
         public InspectorTuple(InspectName name1, InspectName name2) : base(name1)
         {
             _fetcher2 = new DynamicFetcher(name2);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, string name2, Func<MethodInfo, bool> methodSelector) : base(name1, methodSelector)
+        {
+            _fetcher2 = new DynamicFetcher(name2, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, InspectName name2, Func<MethodInfo, bool> methodSelector) : base(name1, methodSelector)
+        {
+            _fetcher2 = new DynamicFetcher(name2, methodSelector);
         }
     }
 
@@ -159,6 +203,30 @@ namespace Wanhjor.ObjectInspector
         {
             _fetcher3 = new DynamicFetcher(name3);
         }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, string name2, string name3, Func<MethodInfo, bool> methodSelector) : base(name1, name2, methodSelector)
+        {
+            _fetcher3 = new DynamicFetcher(name3, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, Func<MethodInfo, bool> methodSelector) : base(name1, name2, methodSelector)
+        {
+            _fetcher3 = new DynamicFetcher(name3, methodSelector);
+        }
     }
 
     /// <summary>
@@ -194,7 +262,8 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4) : base(name1, name2, name3)
+        public InspectorTuple(string name1, string name2, string name3, string name4) 
+            : base(name1, name2, name3)
         {
             _fetcher4 = new DynamicFetcher(name4);
         }
@@ -206,9 +275,38 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name2">Property or field name 2</param>
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4) : base(name1, name2, name3)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4) 
+            : base(name1, name2, name3)
         {
             _fetcher4 = new DynamicFetcher(name4);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, string name2, string name3, string name4, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, methodSelector)
+        {
+            _fetcher4 = new DynamicFetcher(name4, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, methodSelector)
+        {
+            _fetcher4 = new DynamicFetcher(name4, methodSelector);
         }
     }
 
@@ -246,7 +344,8 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
-        public InspectorTuple(string name1, string name2, string name3, string name4, string name5) : base(name1, name2, name3, name4)
+        public InspectorTuple(string name1, string name2, string name3, string name4, string name5) 
+            : base(name1, name2, name3, name4)
         {
             _fetcher5 = new DynamicFetcher(name5);
         }
@@ -259,9 +358,40 @@ namespace Wanhjor.ObjectInspector
         /// <param name="name3">Property or field name 3</param>
         /// <param name="name4">Property or field name 4</param>
         /// <param name="name5">Property or field name 5</param>
-        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5) : base(name1, name2, name3, name4)
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5) 
+            : base(name1, name2, name3, name4)
         {
             _fetcher5 = new DynamicFetcher(name5);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="name5">Property or field name 5</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, name4, methodSelector)
+        {
+            _fetcher5 = new DynamicFetcher(name5, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="name5">Property or field name 5</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, name4, methodSelector)
+        {
+            _fetcher5 = new DynamicFetcher(name5, methodSelector);
         }
     }
 
@@ -317,6 +447,38 @@ namespace Wanhjor.ObjectInspector
         public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5, InspectName name6) : base(name1, name2, name3, name4, name5)
         {
             _fetcher6 = new DynamicFetcher(name6);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="name5">Property or field name 5</param>
+        /// <param name="name6">Property or field name 6</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(string name1, string name2, string name3, string name4, string name5, string name6, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, name4, name5, methodSelector)
+        {
+            _fetcher6 = new DynamicFetcher(name6, methodSelector);
+        }
+        
+        /// <summary>
+        /// Creates a new inspector tuple for an object
+        /// </summary>
+        /// <param name="name1">Property or field name 1</param>
+        /// <param name="name2">Property or field name 2</param>
+        /// <param name="name3">Property or field name 3</param>
+        /// <param name="name4">Property or field name 4</param>
+        /// <param name="name5">Property or field name 5</param>
+        /// <param name="name6">Property or field name 6</param>
+        /// <param name="methodSelector">Method selector</param>
+        public InspectorTuple(InspectName name1, InspectName name2, InspectName name3, InspectName name4, InspectName name5, InspectName name6, Func<MethodInfo, bool> methodSelector) 
+            : base(name1, name2, name3, name4, name5, methodSelector)
+        {
+            _fetcher6 = new DynamicFetcher(name6, methodSelector);
         }
     }
 }
