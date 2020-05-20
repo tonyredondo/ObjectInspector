@@ -9,12 +9,20 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>ObjectInspector</Title>
     <Authors>Daniel Redondo</Authors>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/tonyredondo/ObjectInspector/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Object, Inspector, Reflection</PackageTags>
     <PackageProjectUrl>https://github.com/tonyredondo/ObjectInspector</PackageProjectUrl>
     <RepositoryUrl>https://github.com/tonyredondo/ObjectInspector</RepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" Link="LICENSE" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" Condition="'$(TargetFramework)' == 'net461' Or '$(TargetFramework)' == 'net472'" />
