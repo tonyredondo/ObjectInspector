@@ -62,7 +62,11 @@ namespace Wanhjor.ObjectInspector
 
                 var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(name) ?? typeInfo.GetRuntimeProperty(name);
                 if (!(pInfo is null))
+                {
+                    //var dType = typeof(DelegatePropertyFetcher<,>).MakeGenericType(pInfo.DeclaringType, pInfo.PropertyType);
+                    //return (Fetcher) Activator.CreateInstance(dType, pInfo);
                     return new ExpressionTreeFetcher(pInfo);
+                }
 
                 var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(name, _bindingFlags.Value) : typeInfo.GetDeclaredField(name) ?? typeInfo.GetRuntimeField(name);
                 if (!(fInfo is null))

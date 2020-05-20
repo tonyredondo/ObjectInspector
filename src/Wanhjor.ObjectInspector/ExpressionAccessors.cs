@@ -20,16 +20,7 @@ namespace Wanhjor.ObjectInspector
         public static Func<object, object> BuildGetAccessor(PropertyInfo property)
         {
             var obj = Expression.Parameter(typeof(object), "obj");
-            MemberExpression call;
-            if (property.GetMethod.IsStatic)
-            {
-                call = Expression.Property(null, property);
-            }
-            else
-            {
-                var instance = Expression.Convert(obj, property.DeclaringType);
-                call = Expression.Property(instance, property);
-            }
+            var call = Expression.Property(property.GetMethod.IsStatic ? null : Expression.Convert(obj, property.DeclaringType), property);
             var result = Expression.Convert(call, typeof(object));
             var expr = Expression.Lambda<Func<object, object>>(result, "GetProp+" + property.Name, new[] { obj });
             return expr.Compile();
@@ -70,16 +61,7 @@ namespace Wanhjor.ObjectInspector
         public static Func<object, object> BuildGetAccessor(FieldInfo field)
         {
             var obj = Expression.Parameter(typeof(object), "obj");
-            MemberExpression call;
-            if (field.IsStatic)
-            {
-                call = Expression.Field(null, field);
-            }
-            else
-            {
-                var instance = Expression.Convert(obj, field.DeclaringType);
-                call = Expression.Field(instance, field);
-            }
+            var call = Expression.Field(field.IsStatic ? null : Expression.Convert(obj, field.DeclaringType), field);
             var result = Expression.Convert(call, typeof(object));
             var expr = Expression.Lambda<Func<object, object>>(result, "GetField+" + field.Name, new[] { obj });
             return expr.Compile();
