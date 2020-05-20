@@ -16,6 +16,11 @@ namespace Wanhjor.ObjectInspector
         private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
         private readonly BindingFlags? _bindingFlags;
         private Fetcher _fetcher = null!;
+        
+        /// <summary>
+        /// Gets or sets if the fetcher is using the DelegatePropertyFetcher or the ExpressionTreeFetcher for Properties
+        /// </summary>
+        public bool UseDelegatePropertyFetcher { get; set; }
 
         /// <summary>
         /// Efficient implementation of fetching properties and fields of anonymous types with reflection.
@@ -63,8 +68,11 @@ namespace Wanhjor.ObjectInspector
                 var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(name) ?? typeInfo.GetRuntimeProperty(name);
                 if (!(pInfo is null))
                 {
-                    //var dType = typeof(DelegatePropertyFetcher<,>).MakeGenericType(pInfo.DeclaringType, pInfo.PropertyType);
-                    //return (Fetcher) Activator.CreateInstance(dType, pInfo);
+                    if (UseDelegatePropertyFetcher)
+                    {
+                        var dType = typeof(DelegatePropertyFetcher<,>).MakeGenericType(pInfo.DeclaringType, pInfo.PropertyType);
+                        return (Fetcher) Activator.CreateInstance(dType, pInfo);
+                    }
                     return new ExpressionTreeFetcher(pInfo);
                 }
 
