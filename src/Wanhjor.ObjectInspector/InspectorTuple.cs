@@ -9,6 +9,9 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class InspectorBase
     {
+        /// <summary>
+        /// Current object instance
+        /// </summary>
         protected object? Instance;
 
         /// <summary>
