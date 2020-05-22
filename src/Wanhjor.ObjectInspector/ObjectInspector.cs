@@ -138,7 +138,7 @@ namespace Wanhjor.ObjectInspector
 
                 var df = new DynamicFetcher(name);
                 df.Load(_instance);
-                fetcher = df.Type != FetcherType.None ? df : null;
+                fetcher = df.Kind != FetcherKind.None ? df : null;
                 _structure.Fetchers[name] = fetcher;
                 return fetcher != null;
             }
@@ -190,7 +190,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryGetValue(string name, out object? value)
             {
-                if (TryGetFetcher(name, out var fetcher) && fetcher != null && fetcher.Type != FetcherType.Method)
+                if (TryGetFetcher(name, out var fetcher) && fetcher != null && fetcher.Kind != FetcherKind.Method)
                 {
                     value = fetcher.Fetch(_instance);
                     return true;

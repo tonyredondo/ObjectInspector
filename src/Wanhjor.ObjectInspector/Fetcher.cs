@@ -31,7 +31,7 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Fetcher type
         /// </summary>
-        public FetcherType Type { get; protected set; }
+        public FetcherKind Kind { get; protected set; }
 
         /// <summary>
         /// .ctor
@@ -39,7 +39,7 @@ namespace Wanhjor.ObjectInspector
         internal Fetcher(string name)
         {
             Name = name;
-            Type = FetcherType.None;
+            Kind = FetcherKind.None;
         }
 
         /// <summary>
