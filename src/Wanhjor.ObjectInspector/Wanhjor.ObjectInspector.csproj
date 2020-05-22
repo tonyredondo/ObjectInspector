@@ -6,7 +6,7 @@
     <Description>An efficient .NET object inspector/accesor to avoid reflection</Description>
     <LangVersion>8</LangVersion>
     <Nullable>enable</Nullable>
-    <Version>0.1.1</Version>
+    <Version>0.2.0-pre.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>ObjectInspector</Title>
     <Authors>Daniel Redondo</Authors>
