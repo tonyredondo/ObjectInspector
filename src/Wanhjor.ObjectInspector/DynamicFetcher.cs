@@ -13,7 +13,7 @@ namespace Wanhjor.ObjectInspector
     {
         private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
         private readonly BindingFlags? _bindingFlags;
-        private readonly Func<MethodInfo, bool>? _methodSelector = null;
+        private readonly Func<MethodInfo, bool>? _methodSelector;
         private Fetcher _fetcher = null!;
         private FetcherType _fetcherType = FetcherType.ExpressionTree;
         
