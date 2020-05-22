@@ -18,7 +18,7 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
 
-            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum");
+            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum", "ShowEnum");
             var objData = objInsp.With(tObject);
 
             Assert.Equal("Tony", objData["Name"]);
@@ -26,6 +26,8 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Equal("My private name", objData["PrivateName"]);
             Assert.Equal("my private value", objData["_privateValue"]);
             Assert.Equal(4, objData.Invoke("Sum", 2, 2));
+            Assert.Equal(TestEnum.Second, objData.Invoke("ShowEnum", 1));
+            Assert.Equal(4, objData.Invoke("Sum", 2d, 2f));
         }
 
         [Fact]
@@ -219,5 +221,16 @@ namespace Wanhjor.ObjectInspector.Tests
 
         public int Sum(int a, int b) => a + b;
         private int InternalSum(int a, int b) => a + b;
+
+        public TestEnum ShowEnum(TestEnum val)
+        {
+            return val;
+        }
+    }
+
+    public enum TestEnum
+    {
+        First,
+        Second
     }
 }

@@ -11,6 +11,10 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public static class EmitAccessors
     {
+        private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle");
+        private static readonly MethodInfo EnumToObjectMethodInfo = typeof(Enum).GetMethod("ToObject", new[] { typeof(Type), typeof(object) });
+        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType");
+        
         /// <summary>
         /// Build a get accessor from a property info
         /// </summary>
@@ -273,15 +277,16 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="method">Method info instance</param>
         /// <returns>Accessor delegate</returns>
+        /// <param name="strict">Creates an strict accessor without basic conversion for IConvertibles</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<object, object[], object> BuildMethodAccessor(MethodInfo method)
+        public static Func<object, object[], object> BuildMethodAccessor(MethodInfo method, bool strict)
         {
             var lstParams = new List<string>();
             var gParams = method.GetParameters();
             foreach (var p in gParams)
                 lstParams.Add(p.ParameterType.Name);
             var callMethod = new DynamicMethod($"Call+{method.DeclaringType.Name}.{method.Name}+{string.Join("_", lstParams)}", typeof(object), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
-            CreateMethodAccessor(callMethod.GetILGenerator(), method);
+            CreateMethodAccessor(callMethod.GetILGenerator(), method, strict);
             return (Func<object, object[], object>) callMethod.CreateDelegate(typeof(Func<object, object[], object>));
         }
         /// <summary>
@@ -293,8 +298,9 @@ namespace Wanhjor.ObjectInspector
         /// </remarks>
         /// <param name="il">Il Generator</param>
         /// <param name="method">Method info</param>
+        /// <param name="strict">Creates an strict accessor without basic conversion for IConvertibles</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CreateMethodAccessor(ILGenerator il, MethodInfo method)
+        public static void CreateMethodAccessor(ILGenerator il, MethodInfo method, bool strict)
         {
             // Prepare instance
             if (!method.IsStatic)
@@ -318,6 +324,16 @@ namespace Wanhjor.ObjectInspector
             {
                 for (var i = 0; i < parameters.Length; i++)
                 {
+                    var pType = parameters[i].ParameterType;
+                    var rType = Util.GetRootType(pType);
+                    var callEnum = false;
+                    if (rType.IsEnum)
+                    {
+                        il.Emit(OpCodes.Ldtoken, rType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        callEnum = true;
+                    }
+                    
                     il.Emit(OpCodes.Ldarg_1);
                     switch (i)
                     {
@@ -353,11 +369,22 @@ namespace Wanhjor.ObjectInspector
                             break;
                     }
                     il.Emit(OpCodes.Ldelem_Ref);
+
+                    if (callEnum)
+                    {
+                        il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
+                    } 
+                    else if (!strict && pType != typeof(object))
+                    {
+                        il.Emit(OpCodes.Ldtoken, rType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                    }
                     
-                    if (parameters[i].ParameterType.IsValueType)
-                        il.Emit( OpCodes.Unbox_Any, parameters[i].ParameterType);
-                    else if (parameters[i].ParameterType != typeof(object))
-                        il.Emit(OpCodes.Castclass, parameters[i].ParameterType);
+                    if (pType.IsValueType)
+                        il.Emit( OpCodes.Unbox_Any, pType);
+                    else if (pType != typeof(object))
+                        il.Emit(OpCodes.Castclass, pType);
                 }
             }
             
