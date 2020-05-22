@@ -9,7 +9,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Expression trees for accessors
     /// </summary>
-    internal static class ExpressionAccessors
+    public static class ExpressionAccessors
     {
         /// <summary>
         /// Build a get accessor from a property info

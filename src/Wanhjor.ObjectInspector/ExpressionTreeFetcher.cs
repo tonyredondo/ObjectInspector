@@ -27,8 +27,8 @@ namespace Wanhjor.ObjectInspector
         public ExpressionTreeFetcher(PropertyInfo property) : base(property.Name)
         {
             Type = FetcherType.Property;
-            _getFunc = Getters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanRead ? EmitAccessors.BuildGetAccessor((PropertyInfo)prop) : EmptyGetter);
-            _setFunc = Setters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanWrite ? EmitAccessors.BuildSetAccessor((PropertyInfo)prop) : EmptySetter);
+            _getFunc = Getters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanRead ? ExpressionAccessors.BuildGetAccessor((PropertyInfo)prop) : EmptyGetter);
+            _setFunc = Setters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanWrite ? ExpressionAccessors.BuildSetAccessor((PropertyInfo)prop) : EmptySetter);
             _invoker = EmptyInvoker;
         }
         
