@@ -201,9 +201,43 @@ namespace Wanhjor.ObjectInspector.Tests
             Console.WriteLine($"Direct Method Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
         }
+
+        [Fact]
+        public void DuckTypeTest()
+        {
+            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+
+            var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
+            var name = iObj.Name;
+        }
     }
-    
-    
+
+
+    public interface IDuckTestObject
+    {
+        string Name { get; }
+        /*
+        [Duck(Kind = DuckKind.Field)]
+        string Value { get; set; }
+
+        [Duck(Flags = BindingFlags.NonPublic | BindingFlags.Instance)]
+        string PrivateName { get; set; }
+        
+        [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
+        string PrivateValue { get; set; }
+        
+        [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
+        string PrivateStaticProp { get; }
+        
+        [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
+        string PrivateStaticField { get; }
+
+        int Sum(int a, int b);
+
+        [Duck(Flags = BindingFlags.Instance | BindingFlags.NonPublic)]
+        object InternalSum(int a, int b);
+        */
+    }
 
 
     public class TestObject
