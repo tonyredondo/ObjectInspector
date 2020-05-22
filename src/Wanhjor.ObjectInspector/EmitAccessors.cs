@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
@@ -263,6 +264,39 @@ namespace Wanhjor.ObjectInspector
                 }
                 il.Emit(OpCodes.Ret);
             }
+        }
+
+        
+        
+        /// <summary>
+        /// Create an accessor delegate for a MethodInfo
+        /// </summary>
+        /// <param name="method">Method info instance</param>
+        /// <returns>Accessor delegate</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<object, object[], object> BuildMethodAccessor(MethodInfo method)
+        {
+            var lstParams = new List<string>();
+            var gParams = method.GetParameters();
+            foreach (var p in gParams)
+                lstParams.Add(p.ParameterType.Name);
+            var callMethod = new DynamicMethod($"Call+{method.DeclaringType.Name}.{method.Name}+{string.Join("_", lstParams)}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
+            CreateMethodAccessor(callMethod.GetILGenerator(), method);
+            return (Func<object, object[], object>) callMethod.CreateDelegate(typeof(Func<object, object[], object>));
+        }
+        /// <summary>
+        /// Creates the IL code for calling a method
+        /// </summary>
+        /// <remarks>
+        /// Methods should accomplish the following signature:
+        /// object (object instance, object[] args)
+        /// </remarks>
+        /// <param name="il">Il Generator</param>
+        /// <param name="method">Method info</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void CreateMethodAccessor(ILGenerator il, MethodInfo method)
+        {
+            
         }
     }
 }

@@ -95,7 +95,7 @@ namespace Wanhjor.ObjectInspector
         }
         
         /// <summary>
-        /// Create an accessor delegte for a MethodInfo
+        /// Create an accessor delegate for a MethodInfo
         /// </summary>
         /// <param name="method">Method info instance</param>
         /// <returns>Accessor delegate</returns>
