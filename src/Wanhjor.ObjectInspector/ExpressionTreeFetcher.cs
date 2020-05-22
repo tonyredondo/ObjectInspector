@@ -27,8 +27,8 @@ namespace Wanhjor.ObjectInspector
         public ExpressionTreeFetcher(PropertyInfo property) : base(property.Name)
         {
             Type = FetcherType.Property;
-            _getFunc = Getters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanRead ? ExpressionAccessors.BuildGetAccessor((PropertyInfo)prop) : EmptyGetter);
-            _setFunc = Setters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanWrite ? ExpressionAccessors.BuildSetAccessor((PropertyInfo)prop) : EmptySetter);
+            _getFunc = Getters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanRead ? EmitAccessors.BuildGetAccessor((PropertyInfo)prop) : EmptyGetter);
+            _setFunc = Setters.GetOrAdd(property, prop => ((PropertyInfo)prop).CanWrite ? EmitAccessors.BuildSetAccessor((PropertyInfo)prop) : EmptySetter);
             _invoker = EmptyInvoker;
         }
         
@@ -39,8 +39,8 @@ namespace Wanhjor.ObjectInspector
         public ExpressionTreeFetcher(FieldInfo field) : base(field.Name)
         {
             Type = FetcherType.Field;
-            _getFunc = Getters.GetOrAdd(field, f => ExpressionAccessors.BuildGetAccessor((FieldInfo)f));
-            _setFunc = Setters.GetOrAdd(field, f => (((FieldInfo)f).Attributes & FieldAttributes.InitOnly) == 0 ? ExpressionAccessors.BuildSetAccessor((FieldInfo)f) : EmptySetter);
+            _getFunc = Getters.GetOrAdd(field, f => EmitAccessors.BuildGetAccessor((FieldInfo)f));
+            _setFunc = Setters.GetOrAdd(field, f => (((FieldInfo)f).Attributes & FieldAttributes.InitOnly) == 0 ? EmitAccessors.BuildSetAccessor((FieldInfo)f) : EmptySetter);
             _invoker = EmptyInvoker;
         }
         
@@ -53,7 +53,7 @@ namespace Wanhjor.ObjectInspector
             Type = FetcherType.Method;
             _getFunc = EmptyGetter;
             _setFunc = EmptySetter;
-            _invoker = Invokers.GetOrAdd(method, minfo => ExpressionAccessors.BuildMethodAccessor(minfo));
+            _invoker = Invokers.GetOrAdd(method, minfo => EmitAccessors.BuildMethodAccessor(minfo));
         }
 
         /// <summary>

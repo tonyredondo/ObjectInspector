@@ -280,7 +280,7 @@ namespace Wanhjor.ObjectInspector
             var gParams = method.GetParameters();
             foreach (var p in gParams)
                 lstParams.Add(p.ParameterType.Name);
-            var callMethod = new DynamicMethod($"Call+{method.DeclaringType.Name}.{method.Name}+{string.Join("_", lstParams)}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
+            var callMethod = new DynamicMethod($"Call+{method.DeclaringType.Name}.{method.Name}+{string.Join("_", lstParams)}", typeof(object), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
             CreateMethodAccessor(callMethod.GetILGenerator(), method);
             return (Func<object, object[], object>) callMethod.CreateDelegate(typeof(Func<object, object[], object>));
         }
@@ -296,7 +296,81 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateMethodAccessor(ILGenerator il, MethodInfo method)
         {
+            // Prepare instance
+            if (!method.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (method.DeclaringType.IsValueType)
+                {
+                    il.Emit( OpCodes.Unbox_Any, method.DeclaringType);
+                    il.Emit( OpCodes.Stloc_0);
+                    il.Emit( OpCodes.Ldloca_S, 0);
+                } 
+                else if (method.DeclaringType != typeof(object))
+                {
+                    il.Emit(OpCodes.Castclass, method.DeclaringType);
+                }
+            }
             
+            // Prepare arguments
+            var parameters = method.GetParameters();
+            if (parameters != null)
+            {
+                for (var i = 0; i < parameters.Length; i++)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                    switch (i)
+                    {
+                        case 0:
+                            il.Emit(OpCodes.Ldc_I4_0);
+                            break;
+                        case 1:
+                            il.Emit(OpCodes.Ldc_I4_1);
+                            break;
+                        case 2:
+                            il.Emit(OpCodes.Ldc_I4_2);
+                            break;
+                        case 3:
+                            il.Emit(OpCodes.Ldc_I4_3);
+                            break;
+                        case 4:
+                            il.Emit(OpCodes.Ldc_I4_4);
+                            break;
+                        case 5:
+                            il.Emit(OpCodes.Ldc_I4_5);
+                            break;
+                        case 6:
+                            il.Emit(OpCodes.Ldc_I4_6);
+                            break;
+                        case 7:
+                            il.Emit(OpCodes.Ldc_I4_7);
+                            break;
+                        case 8:
+                            il.Emit(OpCodes.Ldc_I4_8);
+                            break;
+                        default:
+                            il.Emit(OpCodes.Ldc_I4_S, i);
+                            break;
+                    }
+                    il.Emit(OpCodes.Ldelem_Ref);
+                    
+                    if (parameters[i].ParameterType.IsValueType)
+                        il.Emit( OpCodes.Unbox_Any, parameters[i].ParameterType);
+                    else if (parameters[i].ParameterType != typeof(object))
+                        il.Emit(OpCodes.Castclass, parameters[i].ParameterType);
+                }
+            }
+            
+            // Call method
+            il.EmitCall(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method, null);
+
+            // Prepare return
+            if (method.ReturnType == typeof(void))
+                il.Emit(OpCodes.Ldnull);
+            else if (method.ReturnType.IsValueType)
+                il.Emit(OpCodes.Box, method.ReturnType);
+            
+            il.Emit(OpCodes.Ret);
         }
     }
 }
