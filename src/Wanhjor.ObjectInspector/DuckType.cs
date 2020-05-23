@@ -101,90 +101,10 @@ namespace Wanhjor.ObjectInspector
                     var prop = instanceType.GetProperty(duckAttr.Name, duckAttr.Flags);
                     
                     if (iProperty.CanRead)
-                    {
-                        var method = typeBuilder.DefineMethod("get_" + iProperty.Name, 
-                            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, iProperty.PropertyType, Type.EmptyTypes);
-
-                        var il = method.GetILGenerator();
-
-                        if (prop.CanRead)
-                        {
-                            var propMethod = prop.GetMethod;
-                            
-                            var innerDuck = false;
-                            if (iProperty.PropertyType.IsInterface && instanceType.GetInterface(iProperty.PropertyType.Name) == null)
-                            {
-                                il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
-                                il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                                innerDuck = true;
-                            }
-                            
-                            if (!prop.GetMethod.IsStatic)
-                                LoadInstance(il, instanceField, instanceType);
-                            
-                            if (propMethod.IsPublic)
-                            {
-                                il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
-                            }
-                            else
-                            {
-                                il.Emit(OpCodes.Ldc_I8, (long)propMethod.MethodHandle.GetFunctionPointer());
-                                il.Emit(OpCodes.Conv_I);
-                                il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
-                                    propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
-                            }
-
-                            if (innerDuck)
-                            {
-                                il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
-                            }
-                            else if (prop.PropertyType != iProperty.PropertyType)
-                            {
-                                if (prop.PropertyType.IsValueType)
-                                    il.Emit(OpCodes.Box, prop.PropertyType);
-                                il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                            }
-                            il.Emit(OpCodes.Ret);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
-                            il.Emit(OpCodes.Throw);
-                        }
-
-                        propertyBuilder.SetGetMethod(method);
-                    }
+                        propertyBuilder.SetGetMethod(GetPropertyGetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
 
                     if (iProperty.CanWrite)
-                    {
-                        var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
-                            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(void), new[]{ iProperty.PropertyType });
-
-                        var il = method.GetILGenerator();
-                        
-                        if (prop.CanWrite)
-                        {
-                            /*
-                            if (!prop.GetMethod.IsStatic)
-                                LoadInstance(il, instanceField, instanceType);
-                            il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
-                            if (prop.PropertyType != iProperty.PropertyType)
-                            {
-                                if (prop.PropertyType.IsValueType)
-                                    il.Emit(OpCodes.Box, prop.PropertyType);
-                                il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                            }
-                            il.Emit(OpCodes.Ret);
-                            */
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
-                            il.Emit(OpCodes.Throw);
-                        }
-                        
-                        propertyBuilder.SetSetMethod(method);
-                    }
+                        propertyBuilder.SetSetMethod(GetPropertySetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
                 }
                 else if (duckAttr.Kind == DuckKind.Field)
                 {
@@ -193,7 +113,7 @@ namespace Wanhjor.ObjectInspector
                 }
             }
         }
-        
+
         private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
         {
             var interfaceMethods = interfaceType.GetMethods();
@@ -207,11 +127,97 @@ namespace Wanhjor.ObjectInspector
                     iMethod.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
                 for (var j = 0; j < parameters.Length; j++)
                     paramBuilders[j] = methodBuilder.DefineParameter(j, ParameterAttributes.None, parameters[j].Name);
-                
-                
             }
         }
 
+        
+        private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
+        {
+            var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, iProperty.PropertyType, Type.EmptyTypes);
+
+            var il = method.GetILGenerator();
+
+            if (prop.CanRead)
+            {
+                var propMethod = prop.GetMethod;
+
+                var innerDuck = false;
+                if (iProperty.PropertyType.IsInterface && instanceType.GetInterface(iProperty.PropertyType.Name) == null)
+                {
+                    il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
+                    il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                    innerDuck = true;
+                }
+
+                if (!prop.GetMethod.IsStatic)
+                    LoadInstance(il, instanceField, instanceType);
+
+                if (propMethod.IsPublic)
+                {
+                    il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
+                    il.Emit(OpCodes.Conv_I);
+                    il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
+                        propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
+                }
+
+                if (innerDuck)
+                {
+                    il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                }
+                else if (prop.PropertyType != iProperty.PropertyType)
+                {
+                    if (prop.PropertyType.IsValueType)
+                        il.Emit(OpCodes.Box, prop.PropertyType);
+                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                }
+
+                il.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
+                il.Emit(OpCodes.Throw);
+            }
+
+            return method;
+        }
+
+        private static MethodBuilder GetPropertySetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
+        {
+            var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(void), new[]{ iProperty.PropertyType });
+
+            var il = method.GetILGenerator();
+                        
+            if (prop.CanWrite)
+            {
+                /*
+                if (!prop.GetMethod.IsStatic)
+                    LoadInstance(il, instanceField, instanceType);
+                il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
+                if (prop.PropertyType != iProperty.PropertyType)
+                {
+                    if (prop.PropertyType.IsValueType)
+                        il.Emit(OpCodes.Box, prop.PropertyType);
+                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                }
+                il.Emit(OpCodes.Ret);
+                */
+            }
+            else
+            {
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
+                il.Emit(OpCodes.Throw);
+            }
+            
+            return method;
+        }
+        
         private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
