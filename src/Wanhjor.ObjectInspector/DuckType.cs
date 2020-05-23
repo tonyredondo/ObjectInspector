@@ -83,10 +83,10 @@ namespace Wanhjor.ObjectInspector
                     
                     if (iProperty.CanRead)
                     {
-                        var propMethod = typeBuilder.DefineMethod("get_" + iProperty.Name, 
+                        var method = typeBuilder.DefineMethod("get_" + iProperty.Name, 
                             MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, iProperty.PropertyType, Type.EmptyTypes);
 
-                        var il = propMethod.GetILGenerator();
+                        var il = method.GetILGenerator();
 
                         if (prop.CanRead)
                         {
@@ -107,23 +107,44 @@ namespace Wanhjor.ObjectInspector
                             il.Emit(OpCodes.Throw);
                         }
 
-                        propertyBuilder.SetGetMethod(propMethod);
+                        propertyBuilder.SetGetMethod(method);
+                    }
+
+                    if (iProperty.CanWrite)
+                    {
+                        var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
+                            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(void), new[]{ iProperty.PropertyType });
+
+                        var il = method.GetILGenerator();
+                        
+                        if (prop.CanWrite)
+                        {
+                            /*
+                            if (!prop.GetMethod.IsStatic)
+                                LoadInstance(il, instanceField, instanceType);
+                            il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
+                            if (prop.PropertyType != iProperty.PropertyType)
+                            {
+                                if (prop.PropertyType.IsValueType)
+                                    il.Emit(OpCodes.Box, prop.PropertyType);
+                                il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                            }
+                            il.Emit(OpCodes.Ret);
+                            */
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
+                            il.Emit(OpCodes.Throw);
+                        }
+                        
+                        propertyBuilder.SetSetMethod(method);
                     }
                 }
                 else if (duckAttr.Kind == DuckKind.Field)
                 {
                     var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
 
-                }
-                
-                
-                if (iProperty.CanWrite)
-                {
-                    var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
-                        MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, 
-                        null, new[] { iProperty.PropertyType });
-                    
-                    propertyBuilder.SetSetMethod(method);
                 }
             }
         }
