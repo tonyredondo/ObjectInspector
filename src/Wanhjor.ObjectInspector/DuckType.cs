@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace Wanhjor.ObjectInspector
@@ -12,6 +14,10 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class DuckType
     {
+        private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle");
+        private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
+        private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
+
         /// <summary>
         /// Current instance
         /// </summary>
@@ -48,25 +54,32 @@ namespace Wanhjor.ObjectInspector
                 throw new ArgumentNullException(nameof(interfaceType), "The Interface type can't be null");
             if (instance is null)
                 throw new ArgumentNullException(nameof(instance), "The Instance can't be null");
-            
-            var typeSignature = "ProxyTo" + instance.GetType().Name;
-            //Create Type
-            var an = new AssemblyName(typeSignature + "Assembly");
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            var typeBuilder = moduleBuilder.DefineType(typeSignature, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
-                typeof(DuckType), new[] { interfaceType });
-            
-            // Define .ctor
-            typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
-            
-            // Create Members
+
             var instanceType = instance.GetType();
-            CreateInterfaceProperties(interfaceType, instanceType, typeBuilder);
-            //CreateInterfaceMethods(interfaceType, instanceType, typeBuilder);
+
+            var type = DuckTypeCache.GetOrAdd((interfaceType, instanceType), types =>
+            {
+                var typeSignature = "ProxyTo" + types.InstanceType.Name;
+                
+                //Create Type
+                var an = new AssemblyName(typeSignature + "Assembly");
+                var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+                var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
+                var typeBuilder = moduleBuilder.DefineType(typeSignature, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
+                    typeof(DuckType), new[] { types.InterfaceType });
             
-            // Create Type instance
-            var type = typeBuilder.CreateTypeInfo()!.AsType();
+                // Define .ctor
+                typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
+            
+                // Create Members
+                CreateInterfaceProperties(types.InterfaceType, types.InstanceType, typeBuilder);
+                //CreateInterfaceMethods(types.InterfaceType, types.InstanceType, typeBuilder);
+            
+                // Create Type
+                return typeBuilder.CreateTypeInfo()!.AsType();
+            });
+            
+            // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
             objInstance.SetInstance(instance);
             return objInstance;
@@ -98,10 +111,34 @@ namespace Wanhjor.ObjectInspector
                         {
                             var propMethod = prop.GetMethod;
                             
+                            var innerDuck = false;
+                            if (iProperty.PropertyType.IsInterface && instanceType.GetInterface(iProperty.PropertyType.Name) == null)
+                            {
+                                il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
+                                il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                                innerDuck = true;
+                            }
+                            
                             if (!prop.GetMethod.IsStatic)
                                 LoadInstance(il, instanceField, instanceType);
-                            il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
-                            if (prop.PropertyType != iProperty.PropertyType)
+                            
+                            if (propMethod.IsPublic)
+                            {
+                                il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
+                            }
+                            else
+                            {
+                                il.Emit(OpCodes.Ldc_I8, (long)propMethod.MethodHandle.GetFunctionPointer());
+                                il.Emit(OpCodes.Conv_I);
+                                il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
+                                    propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
+                            }
+
+                            if (innerDuck)
+                            {
+                                il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                            }
+                            else if (prop.PropertyType != iProperty.PropertyType)
                             {
                                 if (prop.PropertyType.IsValueType)
                                     il.Emit(OpCodes.Box, prop.PropertyType);

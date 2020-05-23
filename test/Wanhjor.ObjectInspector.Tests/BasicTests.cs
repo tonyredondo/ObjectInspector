@@ -209,11 +209,10 @@ namespace Wanhjor.ObjectInspector.Tests
 
             var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
 
-            //var stProp = iObj.PrivateStaticProp;
-            //_ = stProp;
-            
             const int times = 1_000_000;
 
+            var self = iObj.Self;
+            
             string name = null;
             var w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
@@ -222,10 +221,22 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                name = iObj.PrivateStaticProp;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Private Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
             _ = name;
         }
     }
 
+    public interface IDuckTestName
+    {
+        string Name { get; }
+    }
 
     public interface IDuckTestObject
     {
@@ -234,6 +245,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
         string PrivateStaticProp { get; }
         
+        IDuckTestName Self { get; }
         /*
         [Duck(Kind = DuckKind.Field)]
         string Value { get; set; }
@@ -269,6 +281,8 @@ namespace Wanhjor.ObjectInspector.Tests
 
         private string _privateValue = "my private value";
 
+        public TestObject Self => this;
+        
         public int Sum(int a, int b) => a + b;
         private int InternalSum(int a, int b) => a + b;
 
@@ -276,6 +290,8 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             return val;
         }
+        
+        
     }
 
     public enum TestEnum
