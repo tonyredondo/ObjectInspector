@@ -134,7 +134,7 @@ namespace Wanhjor.ObjectInspector.Tests
             var objInsp = new ObjectInspector();
             var objData = objInsp.With(tObject);
 
-            const int times = 100_000;
+            const int times = 1_000_000;
             
             if (objData.TryGetFetcher("Name", out var nameFetcher))
             {
@@ -208,7 +208,18 @@ namespace Wanhjor.ObjectInspector.Tests
             var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
 
             var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
-            var name = iObj.Name;
+            
+            const int times = 1_000_000;
+
+            string name = null;
+            var w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                name = iObj.Name;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            _ = name;
         }
     }
 

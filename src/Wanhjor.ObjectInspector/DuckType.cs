@@ -11,13 +11,15 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public abstract class DuckType
     {
-        private static readonly FieldInfo InstanceFieldInfo = typeof(DuckType).GetField(nameof(_instance), BindingFlags.Instance | BindingFlags.NonPublic);
-        private object? _instance;
+        /// <summary>
+        /// Current instance
+        /// </summary>
+        protected object? CurrentInstance;
 
         /// <summary>
         /// Object Instance
         /// </summary>
-        public object? Instance => _instance;
+        public object? Instance => CurrentInstance;
 
         /// <summary>
         /// Set object instance
@@ -25,7 +27,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="instance">Object instance</param>
         public void SetInstance(object instance)
         {
-            _instance = instance;
+            CurrentInstance = instance;
         }
 
         /// <summary>
@@ -66,6 +68,7 @@ namespace Wanhjor.ObjectInspector
 
         private static void CreateInterfaceProperties(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
         {
+            var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
             var interfaceProperties = interfaceType.GetProperties();
             foreach (var iProperty in interfaceProperties)
             {
@@ -81,14 +84,14 @@ namespace Wanhjor.ObjectInspector
                     if (iProperty.CanRead)
                     {
                         var propMethod = typeBuilder.DefineMethod("get_" + iProperty.Name, 
-                            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, iProperty.PropertyType, Type.EmptyTypes);
+                            MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, iProperty.PropertyType, Type.EmptyTypes);
 
                         var il = propMethod.GetILGenerator();
 
                         if (prop.CanRead)
                         {
                             if (!prop.GetMethod.IsStatic)
-                                LoadInstance(il, instanceType);
+                                LoadInstance(il, instanceField, instanceType);
                             il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
                             if (prop.PropertyType != iProperty.PropertyType)
                             {
@@ -143,10 +146,10 @@ namespace Wanhjor.ObjectInspector
             }
         }
 
-        private static void LoadInstance(ILGenerator il, Type instanceType)
+        private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, InstanceFieldInfo);
+            il.Emit(OpCodes.Ldfld, instanceField);
             if (instanceType.IsValueType)
             {
                 il.Emit(OpCodes.Unbox_Any, instanceType);
