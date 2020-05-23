@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Serialization;
 
 namespace Wanhjor.ObjectInspector
 {
     /// <summary>
     /// Duck Type
     /// </summary>
-    public abstract class DuckType
+    public class DuckType
     {
         /// <summary>
         /// Current instance
@@ -21,6 +22,11 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         public object? Instance => CurrentInstance;
 
+        /// <summary>
+        /// Duck type
+        /// </summary>
+        protected DuckType(){}
+        
         /// <summary>
         /// Set object instance
         /// </summary>
@@ -52,7 +58,7 @@ namespace Wanhjor.ObjectInspector
                 typeof(DuckType), new[] { interfaceType });
             
             // Define .ctor
-            typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+            typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
             
             // Create Members
             var instanceType = instance.GetType();
@@ -61,7 +67,7 @@ namespace Wanhjor.ObjectInspector
             
             // Create Type instance
             var type = typeBuilder.CreateTypeInfo()!.AsType();
-            var objInstance = (DuckType)Activator.CreateInstance(type);
+            var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
             objInstance.SetInstance(instance);
             return objInstance;
         }
@@ -90,9 +96,11 @@ namespace Wanhjor.ObjectInspector
 
                         if (prop.CanRead)
                         {
+                            var propMethod = prop.GetMethod;
+                            
                             if (!prop.GetMethod.IsStatic)
                                 LoadInstance(il, instanceField, instanceType);
-                            il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
+                            il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
                             if (prop.PropertyType != iProperty.PropertyType)
                             {
                                 if (prop.PropertyType.IsValueType)

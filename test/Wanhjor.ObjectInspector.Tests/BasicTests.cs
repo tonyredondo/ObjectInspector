@@ -208,6 +208,9 @@ namespace Wanhjor.ObjectInspector.Tests
             var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
 
             var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
+
+            //var stProp = iObj.PrivateStaticProp;
+            //_ = stProp;
             
             const int times = 1_000_000;
 
@@ -227,6 +230,10 @@ namespace Wanhjor.ObjectInspector.Tests
     public interface IDuckTestObject
     {
         string Name { get; }
+        
+        [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
+        string PrivateStaticProp { get; }
+        
         /*
         [Duck(Kind = DuckKind.Field)]
         string Value { get; set; }
@@ -237,8 +244,6 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
         string PrivateValue { get; set; }
         
-        [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
-        string PrivateStaticProp { get; }
         
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
         string PrivateStaticField { get; }

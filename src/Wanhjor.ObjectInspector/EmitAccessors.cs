@@ -23,9 +23,9 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<object, object> BuildGetAccessor(PropertyInfo property)
         {
-            var getMethod = new DynamicMethod($"GetProp+{property.DeclaringType.Name}.{property.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
-            CreateGetAccessor(getMethod.GetILGenerator(), property);
-            return (Func<object, object>) getMethod.CreateDelegate(typeof(Func<object, object>));
+            var method = new DynamicMethod($"GetProp+{property.DeclaringType.Name}.{property.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
+            CreateGetAccessor(method.GetILGenerator(), property);
+            return (Func<object, object>) method.CreateDelegate(typeof(Func<object, object>));
         }
 
         /// <summary>
