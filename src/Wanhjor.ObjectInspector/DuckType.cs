@@ -185,7 +185,7 @@ namespace Wanhjor.ObjectInspector
                     innerDuck = true;
                 } 
                 
-                if (!prop.GetMethod.IsStatic)
+                if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
 
                 if (propMethod.IsPublic)
@@ -245,18 +245,45 @@ namespace Wanhjor.ObjectInspector
                         
             if (prop.CanWrite)
             {
-                /*
-                if (!prop.GetMethod.IsStatic)
+                var propMethod = prop.SetMethod;
+
+                if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
-                il.EmitCall(prop.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, prop.GetMethod, null);
+                
+                // Load value
+                il.Emit(OpCodes.Ldarg_1);
                 if (prop.PropertyType != iProperty.PropertyType)
                 {
-                    if (prop.PropertyType.IsValueType)
-                        il.Emit(OpCodes.Box, prop.PropertyType);
-                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                    if (iProperty.PropertyType.IsValueType && prop.PropertyType.IsValueType)
+                    {
+                        il.Emit(OpCodes.Box, iProperty.PropertyType);
+                        il.Emit(OpCodes.Ldtoken, prop.PropertyType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                        il.Emit( OpCodes.Unbox_Any, prop.PropertyType);
+                    }
+                    else if (prop.PropertyType.IsValueType)
+                    {
+                        il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Castclass, prop.PropertyType);
+                    }
+                }
+                
+                if (propMethod.IsPublic)
+                {
+                    il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
+                    il.Emit(OpCodes.Conv_I);
+                    il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
+                        propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
                 }
                 il.Emit(OpCodes.Ret);
-                */
             }
             else
             {

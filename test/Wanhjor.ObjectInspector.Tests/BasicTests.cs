@@ -218,6 +218,9 @@ namespace Wanhjor.ObjectInspector.Tests
             var mEnum = iObj.MyEnumValue;
             var numberObject = iObj.NumberObject;
             var mList = iObj.MyList;
+
+            iObj.Name = "Daniel";
+            //iObj.PrivateStaticProp = "New Private";
             
             string name = null;
             var w1 = Stopwatch.StartNew();
@@ -227,6 +230,16 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.Name = "Daniel";
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
             
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
@@ -246,11 +259,11 @@ namespace Wanhjor.ObjectInspector.Tests
 
     public interface IDuckTestObject
     {
-        string Name { get; }
+        string Name { get; set; }
         
         [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static, UpToVersion = "0.5")]
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
-        string PrivateStaticProp { get; }
+        string PrivateStaticProp { get; set; }
         
         IDuckTestName Self { get; }
         
