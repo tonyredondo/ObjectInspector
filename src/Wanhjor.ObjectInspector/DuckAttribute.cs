@@ -6,7 +6,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Duck attribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true)]
     public class DuckAttribute : Attribute
     {
         /// <summary>

@@ -104,24 +104,42 @@ namespace Wanhjor.ObjectInspector
             {
                 var propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
 
-                var duckAttr = iProperty.GetCustomAttribute<DuckAttribute>(true) ?? new DuckAttribute();
-                duckAttr.Name ??= iProperty.Name;
+                var duckAttrs = iProperty.GetCustomAttributes<DuckAttribute>(true).ToList();
+                if (duckAttrs.Count == 0)
+                    duckAttrs.Add(new DuckAttribute());
 
-                if (duckAttr.Kind == DuckKind.Property)
+                foreach (var duckAttr in duckAttrs)
                 {
-                    var prop = instanceType.GetProperty(duckAttr.Name, duckAttr.Flags);
+                    duckAttr.Name ??= iProperty.Name;
+
+                    switch (duckAttr.Kind)
+                    {
+                        case DuckKind.Property:
+                        {
+                            var prop = instanceType.GetProperty(duckAttr.Name, duckAttr.Flags);
+                            if (prop is null)
+                                continue;
                     
-                    if (iProperty.CanRead)
-                        propertyBuilder.SetGetMethod(GetPropertyGetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
+                            if (iProperty.CanRead)
+                                propertyBuilder.SetGetMethod(GetPropertyGetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
 
-                    if (iProperty.CanWrite)
-                        propertyBuilder.SetSetMethod(GetPropertySetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
-                }
-                else if (duckAttr.Kind == DuckKind.Field)
-                {
-                    var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
+                            if (iProperty.CanWrite)
+                                propertyBuilder.SetSetMethod(GetPropertySetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
+                            break;
+                        }
+                        case DuckKind.Field:
+                        {
+                            var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
+                            if (field is null)
+                                continue;
+                            
+                            break;
+                        }
+                    }
 
+                    break;
                 }
+
             }
         }
 
