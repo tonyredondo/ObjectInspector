@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -212,6 +214,10 @@ namespace Wanhjor.ObjectInspector.Tests
             const int times = 1_000_000;
 
             var self = iObj.Self;
+            var number = iObj.Number;
+            var mEnum = iObj.MyEnumValue;
+            var numberObject = iObj.NumberObject;
+            var mList = iObj.MyList;
             
             string name = null;
             var w1 = Stopwatch.StartNew();
@@ -246,6 +252,16 @@ namespace Wanhjor.ObjectInspector.Tests
         string PrivateStaticProp { get; }
         
         IDuckTestName Self { get; }
+        
+        int Number { get; }
+        
+        int MyEnumValue { get; }
+        
+        [Duck(Name="Number")]
+        object NumberObject { get; }
+        
+        IList MyList { get; }
+        
         /*
         [Duck(Kind = DuckKind.Field)]
         string Value { get; set; }
@@ -281,7 +297,13 @@ namespace Wanhjor.ObjectInspector.Tests
 
         private string _privateValue = "my private value";
 
+        public float Number { get; set; } = 3.225f;
+
+        public TestEnum MyEnumValue { get; set; } = TestEnum.Second;
+
         public TestObject Self => this;
+
+        public List<string> MyList { get; set; } = new List<string>();
         
         public int Sum(int a, int b) => a + b;
         private int InternalSum(int a, int b) => a + b;
