@@ -9,6 +9,8 @@ namespace Wanhjor.ObjectInspector
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true)]
     public class DuckAttribute : Attribute
     {
+        private string? _upToVersion;
+        
         /// <summary>
         /// Property Name
         /// </summary>
@@ -21,6 +23,23 @@ namespace Wanhjor.ObjectInspector
         /// Duck kind
         /// </summary>
         public DuckKind Kind { get; set; } = DuckKind.Property;
+
+        /// <summary>
+        /// Up to assembly version
+        /// </summary>
+        public string? UpToVersion
+        {
+            get => _upToVersion;
+            set
+            {
+                Version = string.IsNullOrWhiteSpace(value) ? null : new Version(value);
+                _upToVersion = value;
+            }
+        }
+        /// <summary>
+        /// Internal up to assembly version
+        /// </summary>
+        internal Version? Version { get; private set; }
     }
 
     /// <summary>

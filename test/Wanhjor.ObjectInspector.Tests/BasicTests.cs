@@ -248,7 +248,7 @@ namespace Wanhjor.ObjectInspector.Tests
     {
         string Name { get; }
         
-        [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
+        [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static, UpToVersion = "0.5")]
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
         string PrivateStaticProp { get; }
         

@@ -98,6 +98,7 @@ namespace Wanhjor.ObjectInspector
 
         private static void CreateInterfaceProperties(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
         {
+            var asmVersion = instanceType.Assembly.GetName().Version;
             var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
             var interfaceProperties = interfaceType.GetProperties();
             foreach (var iProperty in interfaceProperties)
@@ -107,15 +108,23 @@ namespace Wanhjor.ObjectInspector
                 var duckAttrs = iProperty.GetCustomAttributes<DuckAttribute>(true).ToList();
                 if (duckAttrs.Count == 0)
                     duckAttrs.Add(new DuckAttribute());
+                duckAttrs.Sort((x, y) =>
+                {
+                    if (x.Version is null) return 1;
+                    if (y.Version is null) return -1;
+                    return x.Version.CompareTo(y.Version);
+                });
 
                 foreach (var duckAttr in duckAttrs)
                 {
+                    if (!(duckAttr.Version is null) && asmVersion > duckAttr.Version)
+                        continue;
+                    
                     duckAttr.Name ??= iProperty.Name;
 
                     switch (duckAttr.Kind)
                     {
                         case DuckKind.Property:
-                        {
                             var prop = instanceType.GetProperty(duckAttr.Name, duckAttr.Flags);
                             if (prop is null)
                                 continue;
@@ -126,20 +135,17 @@ namespace Wanhjor.ObjectInspector
                             if (iProperty.CanWrite)
                                 propertyBuilder.SetSetMethod(GetPropertySetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
                             break;
-                        }
                         case DuckKind.Field:
-                        {
                             var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
                             if (field is null)
                                 continue;
                             
                             break;
-                        }
                     }
 
                     break;
                 }
-
+                
             }
         }
 
