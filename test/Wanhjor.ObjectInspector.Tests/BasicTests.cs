@@ -366,6 +366,14 @@ namespace Wanhjor.ObjectInspector.Tests
             w1.Stop();
             Console.WriteLine($"DuckType Get DuckType Self Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                name = iObj.PrivateStaticField;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Private Static Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
         }
     }
 
@@ -405,17 +413,10 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
         string PrivateValue { get; }
         
-        /*
-        
-
-       
-        
-        
-        
-        
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
         string PrivateStaticField { get; }
-
+        
+        /*
         int Sum(int a, int b);
 
         [Duck(Flags = BindingFlags.Instance | BindingFlags.NonPublic)]
