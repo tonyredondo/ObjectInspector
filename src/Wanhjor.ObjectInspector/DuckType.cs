@@ -327,6 +327,77 @@ namespace Wanhjor.ObjectInspector
 
             var il = method.GetILGenerator();
             
+            var innerDuck = false;
+            if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
+            {
+                il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
+                il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                innerDuck = true;
+            }
+
+            if (field.IsPublic)
+            {
+                if (field.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldsfld, field);
+                }
+                else
+                {
+                    LoadInstance(il, instanceField, instanceType);
+                    il.Emit(OpCodes.Ldfld, field);
+                }
+            }
+            else
+            {
+                if (field.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldnull);
+                }
+                else
+                {
+                    LoadInstance(il, instanceField, instanceType);
+                }
+                var getMethod = new DynamicMethod($"GetField+{field.DeclaringType!.Name}.{field.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
+                EmitAccessors.CreateGetAccessor(getMethod.GetILGenerator(), field);
+
+                var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
+                var handle = (RuntimeMethodHandle)getMethodDescriptorInfo.Invoke(getMethod, null);
+                
+                il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
+                il.Emit(OpCodes.Conv_I);
+                il.EmitCalli(OpCodes.Calli, getMethod.CallingConvention,
+                    getMethod.ReturnType, 
+                    getMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
+                    null);
+            }
+            
+            if (innerDuck)
+            {
+                il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+            }
+            else if (field.FieldType != iProperty.PropertyType)
+            {
+                if (iProperty.PropertyType.IsValueType && field.FieldType.IsValueType)
+                {
+                    il.Emit(OpCodes.Box, field.FieldType);
+                    il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
+                    il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                    il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                    il.Emit( OpCodes.Unbox_Any, iProperty.PropertyType);
+                }
+                else if (field.FieldType.IsValueType)
+                {
+                    il.Emit(OpCodes.Box, field.FieldType);
+                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
+                }
+            }
+
+            il.Emit(OpCodes.Ret);
+            
             return method;
         }
 

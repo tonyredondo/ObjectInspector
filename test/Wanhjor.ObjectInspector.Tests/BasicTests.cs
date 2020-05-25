@@ -323,6 +323,49 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Get List<string>->IList Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            
+            
+            
+            
+            Console.WriteLine();
+            
+            string value = null;
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                value = iObj.Value;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            /*
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.Value = "Smith";
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+*/
+
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                name = iObj.PrivateValue;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Private Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.ValueSelf;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get DuckType Self Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
         }
     }
 
@@ -339,6 +382,9 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
         string PrivateStaticProp { get; }
         
+        [Duck(Flags = BindingFlags.NonPublic | BindingFlags.Instance)]
+        string PrivateName { get; set; }
+        
         IDuckTestName Self { get; }
         
         int Number { get; set; }
@@ -350,15 +396,21 @@ namespace Wanhjor.ObjectInspector.Tests
         
         IList MyList { get; }
         
-        /*
         [Duck(Kind = DuckKind.Field)]
-        string Value { get; set; }
-
-        [Duck(Flags = BindingFlags.NonPublic | BindingFlags.Instance)]
-        string PrivateName { get; set; }
+        string Value { get; }
+        
+        [Duck(Kind = DuckKind.Field)]
+        IDuckTestName ValueSelf { get; }
         
         [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
-        string PrivateValue { get; set; }
+        string PrivateValue { get; }
+        
+        /*
+        
+
+       
+        
+        
         
         
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
@@ -392,6 +444,13 @@ namespace Wanhjor.ObjectInspector.Tests
         public TestObject Self => this;
 
         public List<string> MyList { get; set; } = new List<string>();
+
+        public TestObject ValueSelf;
+
+        public TestObject()
+        {
+            ValueSelf = this;
+        }
         
         public int Sum(int a, int b) => a + b;
         private int InternalSum(int a, int b) => a + b;
