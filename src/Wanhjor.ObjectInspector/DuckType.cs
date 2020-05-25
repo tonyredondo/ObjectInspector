@@ -229,7 +229,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes));
                 il.Emit(OpCodes.Throw);
             }
 
@@ -251,23 +251,42 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
                 
                 // Load value
-                il.Emit(OpCodes.Ldarg_1);
-                if (prop.PropertyType != iProperty.PropertyType)
+                if (prop.PropertyType == iProperty.PropertyType)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+                else
                 {
                     if (iProperty.PropertyType.IsValueType && prop.PropertyType.IsValueType)
                     {
-                        il.Emit(OpCodes.Box, iProperty.PropertyType);
-                        il.Emit(OpCodes.Ldtoken, prop.PropertyType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                        il.Emit( OpCodes.Unbox_Any, prop.PropertyType);
+                        var rootType = Util.GetRootType(prop.PropertyType);
+                        if (rootType.IsEnum)
+                        {
+                            il.Emit(OpCodes.Ldtoken, rootType);
+                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                            il.Emit(OpCodes.Ldarg_1);
+                            il.Emit(OpCodes.Box, iProperty.PropertyType);
+                            il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
+                            il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Ldarg_1);
+                            il.Emit(OpCodes.Box, iProperty.PropertyType);
+                            il.Emit(OpCodes.Ldtoken, prop.PropertyType);
+                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                            il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
+                        }
                     }
                     else if (prop.PropertyType.IsValueType)
                     {
+                        il.Emit(OpCodes.Ldarg_1);
                         il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
                     }
                     else
                     {
+                        il.Emit(OpCodes.Ldarg_1);
                         il.Emit(OpCodes.Castclass, prop.PropertyType);
                     }
                 }
@@ -287,7 +306,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException));
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes));
                 il.Emit(OpCodes.Throw);
             }
             

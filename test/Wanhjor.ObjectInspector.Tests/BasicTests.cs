@@ -220,7 +220,8 @@ namespace Wanhjor.ObjectInspector.Tests
             var mList = iObj.MyList;
 
             iObj.Name = "Daniel";
-            //iObj.PrivateStaticProp = "New Private";
+            iObj.Number = 42;
+            iObj.MyEnumValue = 0;
             
             string name = null;
             var w1 = Stopwatch.StartNew();
@@ -263,13 +264,13 @@ namespace Wanhjor.ObjectInspector.Tests
         
         [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static, UpToVersion = "0.5")]
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
-        string PrivateStaticProp { get; set; }
+        string PrivateStaticProp { get; }
         
         IDuckTestName Self { get; }
         
-        int Number { get; }
+        int Number { get; set; }
         
-        int MyEnumValue { get; }
+        int MyEnumValue { get; set; }
         
         [Duck(Name="Number")]
         object NumberObject { get; }
