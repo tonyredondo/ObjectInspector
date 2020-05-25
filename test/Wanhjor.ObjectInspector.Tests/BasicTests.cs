@@ -301,7 +301,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 iObj.MyEnumValue = 0;
             }
             w1.Stop();
-            Console.WriteLine($"DuckType Get Int->Enum Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            Console.WriteLine($"DuckType Set Int->Enum Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             
             
@@ -319,7 +319,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 iObj.NumberObject = 51f;
             }
             w1.Stop();
-            Console.WriteLine($"DuckType Get Object(Float)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            Console.WriteLine($"DuckType Set Object(Float)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
@@ -327,7 +327,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 iObj.NumberObject = 51;
             }
             w1.Stop();
-            Console.WriteLine($"DuckType Get Object(Int)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            Console.WriteLine($"DuckType Set Object(Int)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             
             
