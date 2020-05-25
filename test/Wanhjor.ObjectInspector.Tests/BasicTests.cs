@@ -205,23 +205,16 @@ namespace Wanhjor.ObjectInspector.Tests
         }
 
         [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DuckTypeTest()
         {
+            Console.WriteLine();
             var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
 
             var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
 
             const int times = 1_000_000;
 
-            var self = iObj.Self;
-            var number = iObj.Number;
-            var mEnum = iObj.MyEnumValue;
-            var numberObject = iObj.NumberObject;
-            var mList = iObj.MyList;
-
-            iObj.Name = "Daniel";
-            iObj.Number = 42;
-            iObj.MyEnumValue = 0;
             iObj.NumberObject = 51;
             
             string name = null;
@@ -233,7 +226,6 @@ namespace Wanhjor.ObjectInspector.Tests
             w1.Stop();
             Console.WriteLine($"DuckType Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
             
-            
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
@@ -243,6 +235,7 @@ namespace Wanhjor.ObjectInspector.Tests
             Console.WriteLine($"DuckType Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             
+            
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
@@ -250,7 +243,86 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Get Private Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            _ = name;
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.Self;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get DuckType Self Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.Number;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Float->Int Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.Number = 42;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Int->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.MyEnumValue;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Enum->Int Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.MyEnumValue = 0;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Int->Enum Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.NumberObject;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Float->Object Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.NumberObject = 51f;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Object(Float)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.NumberObject = 51;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Object(Int)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.MyList;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get List<string>->IList Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
         }
     }
 

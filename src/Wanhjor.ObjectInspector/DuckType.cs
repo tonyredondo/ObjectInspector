@@ -144,11 +144,19 @@ namespace Wanhjor.ObjectInspector
 
                             if (iProperty.CanWrite)
                                 propertyBuilder.SetSetMethod(GetPropertySetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
+                            
                             break;
+                        
                         case DuckKind.Field:
                             var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
                             if (field is null)
                                 continue;
+
+                            if (iProperty.CanRead)
+                                propertyBuilder.SetGetMethod(GetFieldGetMethod(instanceType, typeBuilder, iProperty, field, instanceField));
+                            
+                            if (iProperty.CanWrite)
+                                propertyBuilder.SetSetMethod(GetFieldSetMethod(instanceType, typeBuilder, iProperty, field, instanceField));
                             
                             break;
                     }
@@ -159,24 +167,6 @@ namespace Wanhjor.ObjectInspector
             }
         }
 
-        private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
-        {
-            var interfaceMethods = interfaceType.GetMethods();
-            foreach (var iMethod in interfaceMethods)
-            {
-                var parameters = iMethod.GetParameters();
-
-                var paramBuilders = new ParameterBuilder[parameters.Length];
-                var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, 
-                    MethodAttributes.Public | MethodAttributes.Virtual | 
-                    MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
-                    iMethod.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
-                for (var j = 0; j < parameters.Length; j++)
-                    paramBuilders[j] = methodBuilder.DefineParameter(j, ParameterAttributes.None, parameters[j].Name);
-            }
-        }
-
-        
         private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
@@ -326,7 +316,61 @@ namespace Wanhjor.ObjectInspector
             
             return method;
         }
+
+        private static MethodBuilder GetFieldGetMethod(Type instanceType, TypeBuilder typeBuilder,
+            PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
+        {
+            var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                iProperty.PropertyType, Type.EmptyTypes);
+
+            var il = method.GetILGenerator();
+            
+            return method;
+        }
+
+        private static MethodBuilder GetFieldSetMethod(Type instanceType, TypeBuilder typeBuilder,
+            PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
+        {
+            var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                typeof(void), 
+                new[]{ iProperty.PropertyType });
+
+            var il = method.GetILGenerator();
+
+            if ((field.Attributes & FieldAttributes.InitOnly) == 0)
+            {
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Throw);
+            }
+            else
+            {
+                
+            }
+            
+            return method;
+        }
         
+        private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
+        {
+            var interfaceMethods = interfaceType.GetMethods();
+            foreach (var iMethod in interfaceMethods)
+            {
+                var parameters = iMethod.GetParameters();
+
+                var paramBuilders = new ParameterBuilder[parameters.Length];
+                var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, 
+                    MethodAttributes.Public | MethodAttributes.Virtual | 
+                    MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
+                    iMethod.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
+                for (var j = 0; j < parameters.Length; j++)
+                    paramBuilders[j] = methodBuilder.DefineParameter(j, ParameterAttributes.None, parameters[j].Name);
+            }
+        }
+
         private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
