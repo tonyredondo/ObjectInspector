@@ -339,7 +339,6 @@ namespace Wanhjor.ObjectInspector.Tests
             w1.Stop();
             Console.WriteLine($"DuckType Get Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
             
-            /*
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
@@ -347,7 +346,6 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-*/
 
             
             w1 = Stopwatch.StartNew();
@@ -405,7 +403,7 @@ namespace Wanhjor.ObjectInspector.Tests
         IList MyList { get; }
         
         [Duck(Kind = DuckKind.Field)]
-        string Value { get; }
+        string Value { get; set; }
         
         [Duck(Kind = DuckKind.Field)]
         IDuckTestName ValueSelf { get; }

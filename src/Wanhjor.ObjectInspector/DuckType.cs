@@ -257,6 +257,7 @@ namespace Wanhjor.ObjectInspector
             {
                 var propMethod = prop.SetMethod;
 
+                // Load instance
                 if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
                 
@@ -361,7 +362,7 @@ namespace Wanhjor.ObjectInspector
                 EmitAccessors.CreateGetAccessor(getMethod.GetILGenerator(), field);
 
                 var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
-                var handle = (RuntimeMethodHandle)getMethodDescriptorInfo.Invoke(getMethod, null);
+                var handle = (RuntimeMethodHandle)getMethodDescriptorInfo!.Invoke(getMethod, null);
                 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
                 il.Emit(OpCodes.Conv_I);
@@ -412,16 +413,61 @@ namespace Wanhjor.ObjectInspector
 
             var il = method.GetILGenerator();
 
-            if ((field.Attributes & FieldAttributes.InitOnly) == 0)
+            if ((field.Attributes & FieldAttributes.InitOnly) != 0)
             {
                 il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             else
             {
-                
+                // Load instance
+                if (!field.IsStatic)
+                    LoadInstance(il, instanceField, instanceType);
+
+                // Load value
+                if (field.FieldType == iProperty.PropertyType)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+                else if (field.FieldType.IsValueType)
+                {
+                    var rootType = Util.GetRootType(field.FieldType);
+                    if (rootType.IsEnum)
+                    {
+                        il.Emit(OpCodes.Ldtoken, rootType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        il.Emit(OpCodes.Ldarg_1);
+                        il.Emit(OpCodes.Box, iProperty.PropertyType);
+                        il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
+                        il.Emit(OpCodes.Unbox_Any, field.FieldType);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldarg_1);
+                        il.Emit(OpCodes.Box, iProperty.PropertyType);
+                        il.Emit(OpCodes.Ldtoken, field.FieldType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                        il.Emit(OpCodes.Unbox_Any, field.FieldType);
+                    }
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, field.FieldType);
+                }
+
+                if (field.IsPublic)
+                {
+                    il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                }
+                else
+                {
+                    il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                }
             }
-            
+            il.Emit(OpCodes.Ret);
+
             return method;
         }
         
