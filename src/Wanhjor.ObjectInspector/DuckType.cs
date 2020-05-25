@@ -255,40 +255,32 @@ namespace Wanhjor.ObjectInspector
                 {
                     il.Emit(OpCodes.Ldarg_1);
                 }
-                else
+                else if (prop.PropertyType.IsValueType)
                 {
-                    if (iProperty.PropertyType.IsValueType && prop.PropertyType.IsValueType)
+                    var rootType = Util.GetRootType(prop.PropertyType);
+                    if (rootType.IsEnum)
                     {
-                        var rootType = Util.GetRootType(prop.PropertyType);
-                        if (rootType.IsEnum)
-                        {
-                            il.Emit(OpCodes.Ldtoken, rootType);
-                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                            il.Emit(OpCodes.Ldarg_1);
-                            il.Emit(OpCodes.Box, iProperty.PropertyType);
-                            il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
-                            il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Ldarg_1);
-                            il.Emit(OpCodes.Box, iProperty.PropertyType);
-                            il.Emit(OpCodes.Ldtoken, prop.PropertyType);
-                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                            il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
-                        }
-                    }
-                    else if (prop.PropertyType.IsValueType)
-                    {
+                        il.Emit(OpCodes.Ldtoken, rootType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                         il.Emit(OpCodes.Ldarg_1);
+                        il.Emit(OpCodes.Box, iProperty.PropertyType);
+                        il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
                         il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
                     }
                     else
                     {
                         il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Castclass, prop.PropertyType);
+                        il.Emit(OpCodes.Box, iProperty.PropertyType);
+                        il.Emit(OpCodes.Ldtoken, prop.PropertyType);
+                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                        il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
                     }
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, prop.PropertyType);
                 }
                 
                 if (propMethod.IsPublic)

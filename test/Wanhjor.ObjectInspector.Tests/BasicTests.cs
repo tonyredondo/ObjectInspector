@@ -222,6 +222,7 @@ namespace Wanhjor.ObjectInspector.Tests
             iObj.Name = "Daniel";
             iObj.Number = 42;
             iObj.MyEnumValue = 0;
+            iObj.NumberObject = 51;
             
             string name = null;
             var w1 = Stopwatch.StartNew();
@@ -273,7 +274,7 @@ namespace Wanhjor.ObjectInspector.Tests
         int MyEnumValue { get; set; }
         
         [Duck(Name="Number")]
-        object NumberObject { get; }
+        object NumberObject { get; set; }
         
         IList MyList { get; }
         
