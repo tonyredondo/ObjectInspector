@@ -234,7 +234,22 @@ namespace Wanhjor.ObjectInspector.Tests
             w1.Stop();
             Console.WriteLine($"DuckType Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
+            name = null;
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                name = iObj.PublicStaticProp;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Static Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
             
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.PublicStaticProp = "Daniel";
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Static Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
             
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
@@ -348,6 +363,24 @@ namespace Wanhjor.ObjectInspector.Tests
             Console.WriteLine($"DuckType Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             
+            value = null;
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                value = iObj.PublicStaticField;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Static Get Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.PublicStaticField = "Smith static field";
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Static Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
@@ -414,6 +447,11 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
         string PrivateStaticField { get; }
         
+        [Duck(Name="_publicStaticField", Flags = BindingFlags.Public | BindingFlags.Static, Kind = DuckKind.Field)]
+        string PublicStaticField { get; set; }
+        
+        [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
+        string PublicStaticProp { get; set; } 
         /*
         int Sum(int a, int b);
 
@@ -428,6 +466,9 @@ namespace Wanhjor.ObjectInspector.Tests
         private static string _privateStaticProp { get; } = "private static prop";
         private static readonly string _privateStaticField = "private static field";
 
+        public static string PublicStaticProp { get; set; } = "public static prop";
+        public static string _publicStaticField = "My public static field";
+        
         public string Name { get; set; }
 
         public string Value;
