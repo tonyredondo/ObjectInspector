@@ -5,8 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace Wanhjor.ObjectInspector
 {
@@ -15,11 +15,16 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public class DuckType
     {
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle");
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] private static readonly MethodInfo EnumToObjectMethodInfo = typeof(Enum).GetMethod("ToObject", new[] { typeof(Type), typeof(object) });
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType");
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle")!;
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo EnumToObjectMethodInfo = typeof(Enum).GetMethod("ToObject", new[] { typeof(Type), typeof(object) })!;
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType")!;
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static)!;
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
 
         /// <summary>
         /// Current instance
@@ -58,7 +63,8 @@ namespace Wanhjor.ObjectInspector
             EnsureArguments(interfaceType, instance);
 
             // Create Type
-            var type = DuckTypeCache.GetOrAdd((interfaceType, instance.GetType()), types => CreateType(types));
+            var type = DuckTypeCache.GetOrAdd((interfaceType, instance.GetType()), 
+                types => CreateType(types));
             
             // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
@@ -82,7 +88,9 @@ namespace Wanhjor.ObjectInspector
             var an = new AssemblyName(typeSignature + "Assembly");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
-            var typeBuilder = moduleBuilder.DefineType(typeSignature, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
+            var typeBuilder = moduleBuilder.DefineType(typeSignature, 
+                TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | 
+                TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
                 typeof(DuckType), new[] { types.InterfaceType });
             
             // Define .ctor
@@ -100,6 +108,8 @@ namespace Wanhjor.ObjectInspector
         {
             var asmVersion = instanceType.Assembly.GetName().Version;
             var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
+            if (instanceField is null)
+                throw new NullReferenceException();
             var interfaceProperties = interfaceType.GetProperties();
             foreach (var iProperty in interfaceProperties)
             {
@@ -158,7 +168,8 @@ namespace Wanhjor.ObjectInspector
 
                 var paramBuilders = new ParameterBuilder[parameters.Length];
                 var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, 
-                    MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
+                    MethodAttributes.Public | MethodAttributes.Virtual | 
+                    MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
                     iMethod.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
                 for (var j = 0; j < parameters.Length; j++)
                     paramBuilders[j] = methodBuilder.DefineParameter(j, ParameterAttributes.None, parameters[j].Name);
@@ -166,10 +177,13 @@ namespace Wanhjor.ObjectInspector
         }
 
         
-        private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
+        private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, 
+            PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, iProperty.PropertyType, Type.EmptyTypes);
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                iProperty.PropertyType, Type.EmptyTypes);
 
             var il = method.GetILGenerator();
 
@@ -197,7 +211,9 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
                     il.Emit(OpCodes.Conv_I);
                     il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
-                        propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
+                        propMethod.ReturnType, 
+                        propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
+                        null);
                 }
 
                 if (innerDuck)
@@ -229,17 +245,21 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
 
             return method;
         }
 
-        private static MethodBuilder GetPropertySetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
+        private static MethodBuilder GetPropertySetMethod(Type instanceType, TypeBuilder typeBuilder, 
+            PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
-                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(void), new[]{ iProperty.PropertyType });
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                typeof(void), 
+                new[]{ iProperty.PropertyType });
 
             var il = method.GetILGenerator();
                         
@@ -292,13 +312,15 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
                     il.Emit(OpCodes.Conv_I);
                     il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
-                        propMethod.ReturnType, propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), null);
+                        propMethod.ReturnType, 
+                        propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
+                        null);
                 }
                 il.Emit(OpCodes.Ret);
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             
