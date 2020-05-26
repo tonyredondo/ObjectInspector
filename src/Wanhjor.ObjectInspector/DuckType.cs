@@ -25,6 +25,8 @@ namespace Wanhjor.ObjectInspector
         private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static)!;
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly ConcurrentBag<DynamicMethod> DynamicMethods = new ConcurrentBag<DynamicMethod>();
 
         /// <summary>
         /// Current instance
@@ -96,20 +98,22 @@ namespace Wanhjor.ObjectInspector
             // Define .ctor
             typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
             
+            var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
+            if (instanceField is null)
+                throw new NullReferenceException();
+            
             // Create Members
-            CreateInterfaceProperties(types.InterfaceType, types.InstanceType, typeBuilder);
-            //CreateInterfaceMethods(types.InterfaceType, types.InstanceType, typeBuilder);
+            CreateInterfaceProperties(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
+            CreateInterfaceMethods(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();
         }
 
-        private static void CreateInterfaceProperties(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
+        
+        private static void CreateInterfaceProperties(Type interfaceType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
         {
             var asmVersion = instanceType.Assembly.GetName().Version;
-            var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
-            if (instanceField is null)
-                throw new NullReferenceException();
             var interfaceProperties = interfaceType.GetProperties();
             foreach (var iProperty in interfaceProperties)
             {
@@ -370,6 +374,7 @@ namespace Wanhjor.ObjectInspector
                     getMethod.ReturnType, 
                     getMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
                     null);
+                DynamicMethods.Add(getMethod);
             }
             
             if (innerDuck)
@@ -475,6 +480,7 @@ namespace Wanhjor.ObjectInspector
                         setMethod.ReturnType, 
                         setMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
                         null);
+                    DynamicMethods.Add(setMethod);
                 }
             }
             il.Emit(OpCodes.Ret);
@@ -482,23 +488,235 @@ namespace Wanhjor.ObjectInspector
             return method;
         }
         
-        private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, TypeBuilder typeBuilder)
+        
+        
+        private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
         {
-            var interfaceMethods = interfaceType.GetMethods();
+            var interfaceMethods = interfaceType.GetMethods().Where(m => !m.IsSpecialName);
             foreach (var iMethod in interfaceMethods)
             {
-                var parameters = iMethod.GetParameters();
+                var iMethodParameters = iMethod.GetParameters();
+                var iMethodParametersTypes = iMethodParameters.Select(p => p.ParameterType).ToArray();
 
-                var paramBuilders = new ParameterBuilder[parameters.Length];
+                var paramBuilders = new ParameterBuilder[iMethodParameters.Length];
                 var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, 
                     MethodAttributes.Public | MethodAttributes.Virtual | 
                     MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
-                    iMethod.ReturnType, parameters.Select(p => p.ParameterType).ToArray());
-                for (var j = 0; j < parameters.Length; j++)
-                    paramBuilders[j] = methodBuilder.DefineParameter(j, ParameterAttributes.None, parameters[j].Name);
+                    iMethod.ReturnType, iMethodParametersTypes);
+                for (var j = 0; j < iMethodParameters.Length; j++)
+                {
+                    var cParam = iMethodParameters[j];
+                    var nParam = methodBuilder.DefineParameter(j, cParam.Attributes, cParam.Name);
+                    if (cParam.HasDefaultValue)
+                        nParam.SetConstant(cParam.RawDefaultValue);
+                    paramBuilders[j] = nParam;
+                }
+                var il = methodBuilder.GetILGenerator();
+
+                // We select the method to call
+                var method = SelectMethod(instanceType, iMethod, iMethodParameters, iMethodParametersTypes);
+
+                if (method is null) 
+                {
+                    il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
+                    il.Emit(OpCodes.Throw);
+                    return;
+                }
+                
+                var innerDuck = false;
+                if (method.ReturnType != typeof(void) && iMethod.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
+                {
+                    il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
+                    il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                    innerDuck = true;
+                } 
+                
+                // Load instance
+                if (!method.IsStatic)
+                    LoadInstance(il, instanceField, instanceType);
+                
+                // Load arguments
+                var parameters = method.GetParameters();
+                for (var i = 0; i < Math.Min(parameters.Length, iMethodParameters.Length); i++)
+                {
+                    static void WriteLoadArg(int index, ILGenerator il, MethodInfo iMethod)
+                    {
+                        switch (index)
+                        {
+                            case 0:
+                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+                                break;
+                            case 1:
+                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
+                                break;
+                            case 2:
+                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
+                                break;
+                            case 3:
+                                if (iMethod.IsStatic)
+                                    il.Emit(OpCodes.Ldarg_3);
+                                else
+                                    il.Emit(OpCodes.Ldarg_S, 4);
+                                break;
+                            default:
+                                il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
+                                break;
+                        }
+                    }
+
+                    var iPType = iMethodParameters[i].ParameterType;
+                    var pType = parameters[i].ParameterType;
+                    
+                    if (pType == iPType)
+                    {
+                        WriteLoadArg(i, il, iMethod);
+                    }
+                    else if (pType.IsValueType)
+                    {
+                        var rootType = Util.GetRootType(pType);
+                        if (rootType.IsEnum)
+                        {
+                            il.Emit(OpCodes.Ldtoken, rootType);
+                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                            WriteLoadArg(i, il, iMethod);
+                            il.Emit(OpCodes.Box, iPType);
+                            il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
+                            il.Emit(OpCodes.Unbox_Any, pType);
+                        }
+                        else
+                        {
+                            WriteLoadArg(i, il, iMethod);
+                            il.Emit(OpCodes.Box, iPType);
+                            il.Emit(OpCodes.Ldtoken, pType);
+                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                            il.Emit(OpCodes.Unbox_Any, pType);
+                        }
+                    }
+                    else
+                    {
+                        WriteLoadArg(i, il, iMethod);
+                        il.Emit(OpCodes.Castclass, pType);
+                    }
+                }
+                
+                // Call method
+                if (method.IsPublic)
+                {
+                    il.EmitCall(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method, null);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldc_I8, (long) method.MethodHandle.GetFunctionPointer());
+                    il.Emit(OpCodes.Conv_I);
+                    il.EmitCalli(OpCodes.Calli, method.CallingConvention,
+                        method.ReturnType, 
+                        method.GetParameters().Select(p => p.ParameterType).ToArray(), 
+                        null);
+                }
+
+                // Covert return value
+                if (method.ReturnType != typeof(void)) 
+                {
+                    if (innerDuck)
+                    {
+                        il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                    }
+                    else if (method.ReturnType != iMethod.ReturnType)
+                    {
+                        if (iMethod.ReturnType.IsValueType && method.ReturnType.IsValueType)
+                        {
+                            il.Emit(OpCodes.Box, method.ReturnType);
+                            il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
+                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
+                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
+                            il.Emit( OpCodes.Unbox_Any, iMethod.ReturnType);
+                        }
+                        else if (method.ReturnType.IsValueType)
+                        {
+                            il.Emit(OpCodes.Box, method.ReturnType);
+                            il.Emit(OpCodes.Castclass, iMethod.ReturnType);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Castclass, iMethod.ReturnType);
+                        }
+                    }
+                }
+
+                il.Emit(OpCodes.Ret);
             }
         }
 
+        private static MethodInfo? SelectMethod(Type instanceType, MethodInfo iMethod, ParameterInfo[] parameters, Type[] parametersTypes) 
+        {
+            var asmVersion = instanceType.Assembly.GetName().Version;
+            var duckAttrs = iMethod.GetCustomAttributes<DuckAttribute>(true).ToList();
+            if (duckAttrs.Count == 0)
+                duckAttrs.Add(new DuckAttribute());
+            duckAttrs.Sort((x, y) =>
+            {
+                if (x.Version is null) return 1;
+                if (y.Version is null) return -1;
+                return x.Version.CompareTo(y.Version);
+            });
+
+            MethodInfo[] allMethods = null!;
+            foreach (var duckAttr in duckAttrs)
+            {
+                if (!(duckAttr.Version is null) && asmVersion > duckAttr.Version)
+                    continue;
+
+                duckAttr.Name ??= iMethod.Name;
+                
+                // We select the method to call
+                var method = instanceType.GetMethod(duckAttr.Name, duckAttr.Flags, null, parametersTypes, null);
+                
+                if (!(method is null))
+                    return method;
+                
+                allMethods ??= instanceType.GetMethods(duckAttr.Flags);
+                        
+                // Trying to select the ones with the same parameters count
+                var remaining = allMethods.Where(m =>
+                {
+                    if (m.Name != duckAttr.Name) return false;
+                    
+                    var mParams = m.GetParameters();
+                    if (mParams.Length == parameters.Length)
+                        return true;
+                    return  mParams.Count(p => p.HasDefaultValue) == parameters.Count(p => p.HasDefaultValue);
+                }).ToList();
+
+                if (remaining.Count == 0)
+                    continue;
+                if (remaining.Count == 1)
+                    return remaining[0];
+                
+                // Trying to select the ones with the same return type
+                var sameReturnType = remaining.Where(m => m.ReturnType == iMethod.ReturnType).ToList();
+                if (sameReturnType.Count == 1)
+                    return sameReturnType[0];
+                    
+                if (sameReturnType.Count > 1)
+                    remaining = sameReturnType;
+
+                if (iMethod.ReturnType.IsInterface && iMethod.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
+                {
+                    var duckReturnType = remaining.Where(m => !m.ReturnType.IsValueType).ToList();
+                    if (duckReturnType.Count == 1)
+                        return duckReturnType[0];
+                    
+                    if (duckReturnType.Count > 1)
+                        remaining = duckReturnType;
+                }
+
+                return remaining[0];
+            }
+
+            return null;
+        }
+        
         private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);

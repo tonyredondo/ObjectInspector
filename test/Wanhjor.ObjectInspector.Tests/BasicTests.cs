@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -18,7 +17,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void BasicObjectInspectorGetTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum", "ShowEnum");
             var objData = objInsp.With(tObject);
@@ -35,7 +34,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void BasicObjectInspectorSetTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum");
             var objData = objInsp.With(tObject);
@@ -53,13 +52,13 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void ObjectInspectorWithInspectNameTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp2 = new ObjectInspector(
                 new InspectName("_privateStaticProp", Fetcher.BindStatic),
                 new InspectName("_privateStaticField", Fetcher.BindStatic),
                 new InspectName("InternalSum", Fetcher.BindInstance)
-                );
+            );
             var objData = objInsp2.With(tObject);
 
             Assert.Equal("private static prop", objData["_privateStaticProp"]);
@@ -69,14 +68,14 @@ namespace Wanhjor.ObjectInspector.Tests
 
             Assert.Equal("private static prop", objData["_privateStaticProp"]);
             Assert.Equal("private static field", objData["_privateStaticField"]);
-            
+
             Assert.Equal(4, objData.Invoke("InternalSum", 2, 2));
         }
 
         [Fact]
         public void ObjectInspectorWithInspectorTuplesTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var iTuple = new InspectorTuple<string, string>("Name", "Value");
             iTuple.SetInstance(tObject);
@@ -99,7 +98,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void ObjectInspectorAutogrowTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector();
             var objData = objInsp.With(tObject);
@@ -122,7 +121,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void PerformanceTest()
         {
-            var w1 = new Stopwatch();            
+            var w1 = new Stopwatch();
             object name;
 
             for (var i = 0; i < 10000; i++)
@@ -131,13 +130,13 @@ namespace Wanhjor.ObjectInspector.Tests
                 _ = w1.Elapsed;
             }
 
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector();
             var objData = objInsp.With(tObject);
 
             const int times = 1_000_000;
-            
+
             if (objData.TryGetFetcher("Name", out var nameFetcher))
             {
                 w1 = Stopwatch.StartNew();
@@ -145,8 +144,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 {
                     name = nameFetcher.Fetch(tObject);
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Property Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             w1 = Stopwatch.StartNew();
@@ -154,12 +155,13 @@ namespace Wanhjor.ObjectInspector.Tests
             {
                 name = tObject.Name;
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            
-            
-            
+
+
+
+
             if (objData.TryGetFetcher("Value", out var valueFetcher))
             {
                 w1 = Stopwatch.StartNew();
@@ -167,8 +169,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 {
                     name = valueFetcher.Fetch(tObject);
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Field Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             w1 = Stopwatch.StartNew();
@@ -176,6 +180,7 @@ namespace Wanhjor.ObjectInspector.Tests
             {
                 name = tObject.Value;
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
@@ -184,401 +189,27 @@ namespace Wanhjor.ObjectInspector.Tests
             var res = 0;
             if (objData.TryGetFetcher("Sum", out var sumFetcher))
             {
-                var p = new object[] { 2, 2 };
+                var p = new object[] {2, 2};
                 w1 = Stopwatch.StartNew();
                 for (var i = 0; i < times; i++)
                 {
                     _ = sumFetcher.Invoke(tObject, p)!;
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Method Invoke Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
+
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
                 res = tObject.Sum(2, 2);
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Method Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
         }
-
-        [Fact]
-        [MethodImpl(MethodImplOptions.NoOptimization)]
-        public void DuckTypeTest()
-        {
-            Console.WriteLine();
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
-
-            var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
-
-            const int times = 1_000_000;
-
-            iObj.NumberObject = 51;
-            
-            string name = null;
-            var w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = iObj.Name;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.Name = "Daniel";
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            name = null;
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = iObj.PublicStaticProp;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Static Get Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.PublicStaticProp = "Daniel";
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Static Set Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = iObj.PrivateStaticProp;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Private Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.Self;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get DuckType Self Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.Number;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Float->Int Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.Number = 42;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Int->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.MyEnumValue;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Enum->Int Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.MyEnumValue = 0;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Int->Enum Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.NumberObject;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Float->Object Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.NumberObject = 51f;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Object(Float)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.NumberObject = 51;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Object(Int)->Float Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.MyList;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get List<string>->IList Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            
-            
-            
-            
-            Console.WriteLine();
-            
-            string value = null;
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                value = iObj.Value;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.Value = "Smith";
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            value = null;
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                value = iObj.PublicStaticField;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Static Get Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.PublicStaticField = "Smith static field";
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Static Set Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = iObj.PrivateValue;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Private Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.PrivateValue = "private value change";
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Private Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.ValueSelf;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get DuckType Self Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = iObj.PrivateStaticField;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Private Static Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.FieldNumberInteger;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Float->Int Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.FieldNumberInteger = 42;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Int->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.MyEnumFieldValue;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Enum->Int Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.MyEnumFieldValue = 0;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Int->Enum Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                _ = iObj.FieldNumberObject;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Get Float->Object Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.FieldNumberObject = 51f;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Object(Float)->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                iObj.FieldNumberObject = 51;
-            }
-            w1.Stop();
-            Console.WriteLine($"DuckType Set Object(Int)->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-        }
-    }
-
-    public interface IDuckTestName
-    {
-        string Name { get; }
-    }
-
-    public interface IDuckTestObject
-    {
-        string Name { get; set; }
-        
-        [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static, UpToVersion = "0.5")]
-        [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
-        string PrivateStaticProp { get; }
-        
-        [Duck(Flags = BindingFlags.NonPublic | BindingFlags.Instance)]
-        string PrivateName { get; set; }
-        
-        IDuckTestName Self { get; }
-        
-        int Number { get; set; }
-        
-        int MyEnumValue { get; set; }
-        
-        [Duck(Name="Number")]
-        object NumberObject { get; set; }
-        
-        IList MyList { get; }
-        
-        [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
-        string PublicStaticProp { get; set; } 
-        
-        
-        [Duck(Kind = DuckKind.Field)]
-        string Value { get; set; }
-        
-        [Duck(Kind = DuckKind.Field)]
-        IDuckTestName ValueSelf { get; }
-        
-        [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
-        string PrivateValue { get; set; }
-        
-        [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
-        string PrivateStaticField { get; }
-        
-        [Duck(Name="_publicStaticField", Flags = BindingFlags.Public | BindingFlags.Static, Kind = DuckKind.Field)]
-        string PublicStaticField { get; set; }
-        
-        [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
-        int FieldNumberInteger { get; set; }
-        
-        [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
-        object FieldNumberObject { get; set; }
-        
-        [Duck(Kind = DuckKind.Field)]
-        object MyEnumFieldValue { get; set; }
-        
-        /*
-        int Sum(int a, int b);
-
-        [Duck(Flags = BindingFlags.Instance | BindingFlags.NonPublic)]
-        object InternalSum(int a, int b);
-        */
-    }
-
-
-    public class TestObject
-    {
-        private static string _privateStaticProp { get; } = "private static prop";
-        public static string PublicStaticProp { get; set; } = "public static prop";
-        public string Name { get; set; }
-        private string PrivateName { get; set; } = "My private name";
-        public float Number { get; set; } = 3.225f;
-        public TestEnum MyEnumValue { get; set; } = TestEnum.Second;
-        public TestObject Self => this;
-        public List<string> MyList { get; set; } = new List<string>();
-
-        
-        private static readonly string _privateStaticField = "private static field";
-        public static string _publicStaticField = "My public static field";
-        public string Value;
-        private string _privateValue = "my private value";
-        public float FieldNumber = 3.225f;
-        public TestEnum MyEnumFieldValue = TestEnum.Second;
-        public TestObject ValueSelf;
-
-        
-        public TestObject()
-        {
-            ValueSelf = this;
-        }
-        
-        public int Sum(int a, int b) => a + b;
-        private int InternalSum(int a, int b) => a + b;
-
-        public TestEnum ShowEnum(TestEnum val)
-        {
-            return val;
-        }
-        
-        
-    }
-
-    public enum TestEnum
-    {
-        First,
-        Second
     }
 }
