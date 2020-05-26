@@ -463,7 +463,18 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                    var setMethod = new DynamicMethod($"SetField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
+                    EmitAccessors.CreateSetAccessor(setMethod.GetILGenerator(), field);
+
+                    var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var handle = (RuntimeMethodHandle)getMethodDescriptorInfo!.Invoke(setMethod, null);
+                
+                    il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
+                    il.Emit(OpCodes.Conv_I);
+                    il.EmitCalli(OpCodes.Calli, setMethod.CallingConvention,
+                        setMethod.ReturnType, 
+                        setMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
+                        null);
                 }
             }
             il.Emit(OpCodes.Ret);

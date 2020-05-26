@@ -392,6 +392,14 @@ namespace Wanhjor.ObjectInspector.Tests
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
+                iObj.PrivateValue = "private value change";
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Private Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
                 _ = iObj.ValueSelf;
             }
             w1.Stop();
@@ -404,6 +412,65 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             w1.Stop();
             Console.WriteLine($"DuckType Get Private Static Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.FieldNumberInteger;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Float->Int Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.FieldNumberInteger = 42;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Int->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.MyEnumFieldValue;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Enum->Int Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.MyEnumFieldValue = 0;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Int->Enum Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                _ = iObj.FieldNumberObject;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Get Float->Object Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+            
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.FieldNumberObject = 51f;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Object(Float)->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
+
+            w1 = Stopwatch.StartNew();
+            for (var i = 0; i < times; i++)
+            {
+                iObj.FieldNumberObject = 51;
+            }
+            w1.Stop();
+            Console.WriteLine($"DuckType Set Object(Int)->Float Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
         }
     }
@@ -435,6 +502,10 @@ namespace Wanhjor.ObjectInspector.Tests
         
         IList MyList { get; }
         
+        [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
+        string PublicStaticProp { get; set; } 
+        
+        
         [Duck(Kind = DuckKind.Field)]
         string Value { get; set; }
         
@@ -442,7 +513,7 @@ namespace Wanhjor.ObjectInspector.Tests
         IDuckTestName ValueSelf { get; }
         
         [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
-        string PrivateValue { get; }
+        string PrivateValue { get; set; }
         
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
         string PrivateStaticField { get; }
@@ -450,8 +521,15 @@ namespace Wanhjor.ObjectInspector.Tests
         [Duck(Name="_publicStaticField", Flags = BindingFlags.Public | BindingFlags.Static, Kind = DuckKind.Field)]
         string PublicStaticField { get; set; }
         
-        [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
-        string PublicStaticProp { get; set; } 
+        [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
+        int FieldNumberInteger { get; set; }
+        
+        [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
+        object FieldNumberObject { get; set; }
+        
+        [Duck(Kind = DuckKind.Field)]
+        object MyEnumFieldValue { get; set; }
+        
         /*
         int Sum(int a, int b);
 
@@ -464,29 +542,24 @@ namespace Wanhjor.ObjectInspector.Tests
     public class TestObject
     {
         private static string _privateStaticProp { get; } = "private static prop";
-        private static readonly string _privateStaticField = "private static field";
-
         public static string PublicStaticProp { get; set; } = "public static prop";
-        public static string _publicStaticField = "My public static field";
-        
         public string Name { get; set; }
-
-        public string Value;
-
         private string PrivateName { get; set; } = "My private name";
-
-        private string _privateValue = "my private value";
-
         public float Number { get; set; } = 3.225f;
-
         public TestEnum MyEnumValue { get; set; } = TestEnum.Second;
-
         public TestObject Self => this;
-
         public List<string> MyList { get; set; } = new List<string>();
 
+        
+        private static readonly string _privateStaticField = "private static field";
+        public static string _publicStaticField = "My public static field";
+        public string Value;
+        private string _privateValue = "my private value";
+        public float FieldNumber = 3.225f;
+        public TestEnum MyEnumFieldValue = TestEnum.Second;
         public TestObject ValueSelf;
 
+        
         public TestObject()
         {
             ValueSelf = this;
