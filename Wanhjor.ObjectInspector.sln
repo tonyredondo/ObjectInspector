@@ -5,6 +5,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wanhjor.ObjectInspector", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wanhjor.ObjectInspector.Tests", "test\Wanhjor.ObjectInspector.Tests\Wanhjor.ObjectInspector.Tests.csproj", "{7C587710-704A-4D0B-BFD0-13F39BE7A7F5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{AD15180F-DA05-475E-849D-5D4C2C25E7A4}"
+ProjectSection(SolutionItems) = preProject
+	LICENSE = LICENSE
+	README.md = README.md
+	icon.png = icon.png
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

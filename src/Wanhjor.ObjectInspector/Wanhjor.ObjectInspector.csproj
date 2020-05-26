@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netcoreapp2.0;net461;net472</TargetFrameworks>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-    <Description>An efficient .NET object inspector/accesor to avoid reflection</Description>
+    <Description>An efficient .NET object inspector/accesor to avoid reflection with duck typing support.</Description>
     <LangVersion>8</LangVersion>
     <Nullable>enable</Nullable>
     <Version>0.2.0-pre.1</Version>
@@ -11,9 +11,10 @@
     <Title>ObjectInspector</Title>
     <Authors>Daniel Redondo</Authors>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>Object, Inspector, Reflection</PackageTags>
+    <PackageTags>Object, Inspector, Reflection, DuckType, DuckTyping, Fetcher</PackageTags>
     <PackageProjectUrl>https://github.com/tonyredondo/ObjectInspector</PackageProjectUrl>
     <RepositoryUrl>https://github.com/tonyredondo/ObjectInspector</RepositoryUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/tonyredondo/ObjectInspector/master/icon.png</PackageIconUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
