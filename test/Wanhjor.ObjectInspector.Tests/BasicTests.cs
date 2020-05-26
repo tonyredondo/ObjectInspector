@@ -121,95 +121,25 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void PerformanceTest()
         {
-            var w1 = new Stopwatch();
-            object name;
-
-            for (var i = 0; i < 10000; i++)
+            lock (Runner.Locker)
             {
-                w1 = Stopwatch.StartNew();
-                _ = w1.Elapsed;
-            }
+                var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
-            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
+                var objInsp = new ObjectInspector();
+                var objData = objInsp.With(tObject);
 
-            var objInsp = new ObjectInspector();
-            var objData = objInsp.With(tObject);
+                if (objData.TryGetFetcher("Name", out var nameFetcher))
+                    Runner.RunF("Property Fetcher", () => tObject.Name, () => nameFetcher.Fetch(tObject));
 
-            const int times = 1_000_000;
+                if (objData.TryGetFetcher("Value", out var valueFetcher))
+                    Runner.RunF("Field Fetcher", () => tObject.Value, () => valueFetcher.Fetch(tObject));
 
-            if (objData.TryGetFetcher("Name", out var nameFetcher))
-            {
-                w1 = Stopwatch.StartNew();
-                for (var i = 0; i < times; i++)
+                if (objData.TryGetFetcher("Sum", out var sumFetcher))
                 {
-                    name = nameFetcher.Fetch(tObject);
+                    var p = new object[] {2, 2};
+                    Runner.RunF("Method Fetcher", () => tObject.Sum(2, 2), () => sumFetcher.Invoke(tObject, p)!);
                 }
-
-                w1.Stop();
             }
-
-            Console.WriteLine($"Property Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = tObject.Name;
-            }
-
-            w1.Stop();
-            Console.WriteLine($"Direct Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-
-
-
-            if (objData.TryGetFetcher("Value", out var valueFetcher))
-            {
-                w1 = Stopwatch.StartNew();
-                for (var i = 0; i < times; i++)
-                {
-                    name = valueFetcher.Fetch(tObject);
-                }
-
-                w1.Stop();
-            }
-
-            Console.WriteLine($"Field Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                name = tObject.Value;
-            }
-
-            w1.Stop();
-            Console.WriteLine($"Direct Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-
-
-            var res = 0;
-            if (objData.TryGetFetcher("Sum", out var sumFetcher))
-            {
-                var p = new object[] {2, 2};
-                w1 = Stopwatch.StartNew();
-                for (var i = 0; i < times; i++)
-                {
-                    _ = sumFetcher.Invoke(tObject, p)!;
-                }
-
-                w1.Stop();
-            }
-
-            Console.WriteLine($"Method Invoke Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
-            w1 = Stopwatch.StartNew();
-            for (var i = 0; i < times; i++)
-            {
-                res = tObject.Sum(2, 2);
-            }
-
-            w1.Stop();
-            Console.WriteLine($"Direct Method Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-
         }
     }
 }

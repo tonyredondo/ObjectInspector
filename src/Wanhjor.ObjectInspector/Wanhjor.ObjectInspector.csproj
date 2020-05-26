@@ -14,7 +14,7 @@
     <PackageTags>Object, Inspector, Reflection, DuckType, DuckTyping, Fetcher</PackageTags>
     <PackageProjectUrl>https://github.com/tonyredondo/ObjectInspector</PackageProjectUrl>
     <RepositoryUrl>https://github.com/tonyredondo/ObjectInspector</RepositoryUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/tonyredondo/ObjectInspector/master/icon.png</PackageIconUrl>
+    <PackageIcon>icon.png</PackageIcon>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -28,6 +28,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\LICENSE" Pack="true" PackagePath="" Link="LICENSE" />
+    <None Include="..\..\icon.png" Pack="true" PackagePath="" Link="icon.png" />
   </ItemGroup>
 
   <ItemGroup>
