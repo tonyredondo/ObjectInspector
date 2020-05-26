@@ -1,0 +1,39 @@
+
+name: Build - Publish
+
+on:
+  push:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Setup .NET Core 3.1.100
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build -c Release
+
+    - name: Copy Nuget Packages to artifact folder
+      run: mkdir artifacts; Get-ChildItem -Path ".\src\*" -Include *.nupkg,*.snupkg -Recurse | Copy-Item -Destination ".\artifacts\"
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: NuGet Packages
+        path: artifacts
+    
+    - if: github.event_name == 'release'
+      name: Publish NuGet packages
+      run: cd artifacts; dotnet nuget push *.nupkg --skip-duplicate -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
