@@ -13,7 +13,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Duck Type
     /// </summary>
-    public class DuckType
+    public class DuckType : IDuckType
     {
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle")!;
@@ -22,7 +22,7 @@ namespace Wanhjor.ObjectInspector
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType")!;
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
-        private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static)!;
+        private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Type), typeof(object) }, null)!;
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
@@ -34,25 +34,46 @@ namespace Wanhjor.ObjectInspector
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         protected object? CurrentInstance;
 
+        private Type? _type;
+        private Version? _version;
+
+        /// <summary>
+        /// Instance
+        /// </summary>
+        public object? Instance
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => CurrentInstance;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private set => CurrentInstance = value;
+        }
+
+        /// <summary>
+        /// Instance Type
+        /// </summary>
+        public Type? Type => _type ??= CurrentInstance?.GetType();
+
+        /// <summary>
+        /// Assembly version
+        /// </summary>
+        public Version? AssemblyVersion => _version ??= _type?.Assembly?.GetName().Version;
+        
         /// <summary>
         /// Duck type
         /// </summary>
         protected DuckType(){}
         
         /// <summary>
-        /// Set object instance
+        /// Create duck type proxy from an interface
         /// </summary>
-        /// <param name="instance">Object instance</param>
+        /// <param name="instance">Instance object</param>
+        /// <typeparam name="T">Interface type</typeparam>
+        /// <returns>Duck type proxy</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetInstance(object instance) => CurrentInstance = instance;
-
-        /// <summary>
-        /// Get object instance
-        /// </summary>
-        /// <returns>Current object instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object? GetInstance() => CurrentInstance;
-
+        public static T Create<T>(object instance)
+        {
+            return (T) Create(typeof(T), instance);
+        }
         /// <summary>
         /// Create duck type proxy from an interface type
         /// </summary>
@@ -70,16 +91,20 @@ namespace Wanhjor.ObjectInspector
             
             // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
-            objInstance.SetInstance(instance);
+            objInstance.Instance = instance;
             return objInstance;
         }
 
         private static void EnsureArguments(Type interfaceType, object instance)
         {
             if (interfaceType is null)
-                throw new ArgumentNullException(nameof(interfaceType), "The Interface type can't be null");
+                throw new ArgumentNullException(nameof(interfaceType), "The interface type can't be null");
             if (instance is null)
-                throw new ArgumentNullException(nameof(instance), "The Instance can't be null");
+                throw new ArgumentNullException(nameof(instance), "The object instance can't be null");
+            if (!interfaceType.IsInterface)
+                throw new ArgumentException("The type is not an interface type", nameof(interfaceType));
+            if (!interfaceType.IsPublic)
+                throw new ArgumentException("The interface type must be public", nameof(interfaceType));
         }
 
         private static Type CreateType((Type InterfaceType, Type InstanceType) types)
