@@ -18,14 +18,18 @@ namespace Wanhjor.ObjectInspector.Tests
                 Console.WriteLine();
 
                 var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
-                var iObj = (IDuckTestObject) DuckType.Create(typeof(IDuckTestObject), tObject);
+                var iObj = DuckType.Create<IDuckTestObject>(tObject);
 
+                Console.WriteLine($"Type = {iObj.Type}");
+                Console.WriteLine($"Version = {iObj.AssemblyVersion}");
+                Console.WriteLine();
+                
                 Runner.RunF("Get Public Property", () => tObject.Name, () => iObj.Name);
                 Runner.RunA("Set Public Property", () => tObject.Name = "SetTest", () => iObj.Name = "SetTest");
                 Runner.RunF("Get Public Static Property", () => TestObject.PublicStaticProp, () => iObj.PublicStaticProp);
                 Runner.RunA("Set Public Static Property", () => TestObject.PublicStaticProp = "PSP", () => _ = iObj.PublicStaticProp = "PSP");
                 Runner.RunF("Get Private Static Property", null, () => iObj.PrivateStaticProp);
-                Runner.RunF("Get Self Property as DuckType", () => (IDuckTestName) DuckType.Create(typeof(IDuckTestName), tObject.Self), () => iObj.Self);
+                Runner.RunF("Get Self Property as DuckType", () => DuckType.Create<IDuckTestName>(tObject.Self), () => iObj.Self);
                 Runner.RunF("Get Public Property. Float->Int conversion", () => (int) tObject.Number, () => iObj.Number);
                 Runner.RunA("Set Public Property. Int->Float conversion", () => tObject.Number = (int) 42, () => iObj.Number = 42);
                 Runner.RunF("Get Public Property. Enum->Int conversion", () => (int) tObject.MyEnumValue, () => iObj.MyEnumValue);
@@ -41,7 +45,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Static Field", () => TestObject._publicStaticField = "PSP", () => _ = iObj.PublicStaticField = "PSP");
                 Runner.RunF("Get Private Field", null, () => iObj.PrivateValue);
                 Runner.RunA("Set Private Field", null, () => iObj.PrivateValue = "PrivateValue");
-                Runner.RunF("Get Self Field as DuckType", () => (IDuckTestName) DuckType.Create(typeof(IDuckTestName), tObject.ValueSelf), () => iObj.ValueSelf);
+                Runner.RunF("Get Self Field as DuckType", () => DuckType.Create<IDuckTestName>(tObject.ValueSelf), () => iObj.ValueSelf);
                 Runner.RunF("Get Private Static Field", null, () => iObj.PrivateStaticField);
                 Runner.RunF("Get Public Field. Float->Int conversion", () => (int) tObject.FieldNumber, () => iObj.FieldNumberInteger);
                 Runner.RunA("Set Public Field. Int->Float conversion", () => tObject.FieldNumber = (int) 42, () => iObj.FieldNumberInteger = 42);
@@ -59,7 +63,7 @@ namespace Wanhjor.ObjectInspector.Tests
         string Name { get; }
     }
 
-    public interface IDuckTestObject
+    public interface IDuckTestObject : IDuckType
     {
         string Name { get; set; }
         
