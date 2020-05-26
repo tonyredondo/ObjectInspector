@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,7 +10,7 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Expression trees for accessors
     /// </summary>
-    internal static class ExpressionAccessors
+    public static class ExpressionAccessors
     {
         /// <summary>
         /// Build a get accessor from a property info
@@ -95,7 +96,7 @@ namespace Wanhjor.ObjectInspector
         }
         
         /// <summary>
-        /// Create an accessor delegte for a MethodInfo
+        /// Create an accessor delegate for a MethodInfo
         /// </summary>
         /// <param name="method">Method info instance</param>
         /// <returns>Accessor delegate</returns>
@@ -115,6 +116,8 @@ namespace Wanhjor.ObjectInspector
             {
                 var p = parameters[i];
                 var pType = p.ParameterType;
+                var rootType = Util.GetRootType(pType);
+
                 Expression argExp = Expression.ArrayIndex(paramExp, Expression.Constant(i));
                 if (p.HasDefaultValue)
                 {
@@ -123,7 +126,10 @@ namespace Wanhjor.ObjectInspector
                 }
                 else if (pType != typeof(object))
                 {
-                    argExp = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
+                    if (rootType.IsEnum)
+                        argExp = Expression.Convert(Expression.Call(EnumToObjectMethodInfo, Expression.Constant(rootType), argExp), pType);
+                    else
+                        argExp = Expression.Convert(Expression.Call(ConvertTypeMethodInfo, argExp, Expression.Constant(rootType)), pType);
                 }
                 else
                 {
@@ -140,33 +146,7 @@ namespace Wanhjor.ObjectInspector
             return Expression.Lambda<Func<object, object[], object>>(callExpression, "Invoker+" + method.Name, new[] { obj, paramExp }).Compile();
         }
         
-        private static MethodInfo _cTypeMInfo = null!;
-        private static MethodInfo ChangeTypeMethodInfo
-            => _cTypeMInfo ??= typeof(ExpressionAccessors).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType");
-
-        private static object ChangeType(object value, Type conversionType)
-        {
-            if (value is IConvertible)
-            {
-                if (conversionType.BaseType == typeof(Enum))
-                    return Enum.ToObject(conversionType, value);
-                if (conversionType.IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                    return ChangeType(value, Nullable.GetUnderlyingType(conversionType)); ;
-                return Convert.ChangeType(value, conversionType);
-            }
-            if (value is null)
-                return null!;
-            
-            var valueType = value.GetType();
-            if (conversionType.IsAssignableFrom(valueType))
-                return value;
-            if (conversionType.IsGenericType)
-            {
-                if (conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
-                    throw new InvalidCastException($"The value of type: '{valueType}' can't be converted to: '{conversionType}'");
-                return ChangeType(value, Nullable.GetUnderlyingType(conversionType));
-            }
-            return value;
-        }
+        private static readonly MethodInfo EnumToObjectMethodInfo = typeof(Enum).GetMethod("ToObject", new[] { typeof(Type), typeof(object) });
+        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType");
     }
 }

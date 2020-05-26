@@ -1,25 +1,17 @@
-﻿namespace Wanhjor.ObjectInspector
+namespace Wanhjor.ObjectInspector
 {
     /// <summary>
-    /// Fetcher type
+    /// Fetcher Type
     /// </summary>
     public enum FetcherType
     {
         /// <summary>
-        /// None
+        /// Expression tree fetcher
         /// </summary>
-        None,
+        ExpressionTree,
         /// <summary>
-        /// Property fetcher
+        /// Emit fetcher
         /// </summary>
-        Property,
-        /// <summary>
-        /// Field fetcher
-        /// </summary>
-        Field,
-        /// <summary>
-        /// Method fetcher
-        /// </summary>
-        Method
+        Emit
     }
 }

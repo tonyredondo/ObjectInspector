@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -16,9 +17,9 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void BasicObjectInspectorGetTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
-            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum");
+            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum", "ShowEnum");
             var objData = objInsp.With(tObject);
 
             Assert.Equal("Tony", objData["Name"]);
@@ -26,12 +27,14 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Equal("My private name", objData["PrivateName"]);
             Assert.Equal("my private value", objData["_privateValue"]);
             Assert.Equal(4, objData.Invoke("Sum", 2, 2));
+            Assert.Equal(TestEnum.Second, objData.Invoke("ShowEnum", 1));
+            Assert.Equal(4, objData.Invoke("Sum", 2d, 2f));
         }
 
         [Fact]
         public void BasicObjectInspectorSetTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum");
             var objData = objInsp.With(tObject);
@@ -49,13 +52,13 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void ObjectInspectorWithInspectNameTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp2 = new ObjectInspector(
                 new InspectName("_privateStaticProp", Fetcher.BindStatic),
                 new InspectName("_privateStaticField", Fetcher.BindStatic),
                 new InspectName("InternalSum", Fetcher.BindInstance)
-                );
+            );
             var objData = objInsp2.With(tObject);
 
             Assert.Equal("private static prop", objData["_privateStaticProp"]);
@@ -65,14 +68,14 @@ namespace Wanhjor.ObjectInspector.Tests
 
             Assert.Equal("private static prop", objData["_privateStaticProp"]);
             Assert.Equal("private static field", objData["_privateStaticField"]);
-            
+
             Assert.Equal(4, objData.Invoke("InternalSum", 2, 2));
         }
 
         [Fact]
         public void ObjectInspectorWithInspectorTuplesTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var iTuple = new InspectorTuple<string, string>("Name", "Value");
             iTuple.SetInstance(tObject);
@@ -95,7 +98,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [Fact]
         public void ObjectInspectorAutogrowTest()
         {
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector();
             var objData = objInsp.With(tObject);
@@ -118,7 +121,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void PerformanceTest()
         {
-            var w1 = new Stopwatch();            
+            var w1 = new Stopwatch();
             object name;
 
             for (var i = 0; i < 10000; i++)
@@ -127,13 +130,13 @@ namespace Wanhjor.ObjectInspector.Tests
                 _ = w1.Elapsed;
             }
 
-            var tObject = new TestObject { Name = "Tony", Value = "Redondo" };
+            var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
             var objInsp = new ObjectInspector();
             var objData = objInsp.With(tObject);
 
-            const int times = 100_000;
-            
+            const int times = 1_000_000;
+
             if (objData.TryGetFetcher("Name", out var nameFetcher))
             {
                 w1 = Stopwatch.StartNew();
@@ -141,8 +144,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 {
                     name = nameFetcher.Fetch(tObject);
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Property Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             w1 = Stopwatch.StartNew();
@@ -150,12 +155,13 @@ namespace Wanhjor.ObjectInspector.Tests
             {
                 name = tObject.Name;
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Property Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
-            
-            
-            
+
+
+
+
             if (objData.TryGetFetcher("Value", out var valueFetcher))
             {
                 w1 = Stopwatch.StartNew();
@@ -163,8 +169,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 {
                     name = valueFetcher.Fetch(tObject);
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Field Fetcher Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
             w1 = Stopwatch.StartNew();
@@ -172,6 +180,7 @@ namespace Wanhjor.ObjectInspector.Tests
             {
                 name = tObject.Value;
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Field Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
@@ -180,44 +189,27 @@ namespace Wanhjor.ObjectInspector.Tests
             var res = 0;
             if (objData.TryGetFetcher("Sum", out var sumFetcher))
             {
-                var p = new object[] { 2, 2 };
+                var p = new object[] {2, 2};
                 w1 = Stopwatch.StartNew();
                 for (var i = 0; i < times; i++)
                 {
                     _ = sumFetcher.Invoke(tObject, p)!;
                 }
+
                 w1.Stop();
             }
+
             Console.WriteLine($"Method Invoke Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
-            
+
             w1 = Stopwatch.StartNew();
             for (var i = 0; i < times; i++)
             {
                 res = tObject.Sum(2, 2);
             }
+
             w1.Stop();
             Console.WriteLine($"Direct Method Elapsed: {w1.Elapsed.TotalMilliseconds} - Per call: {w1.Elapsed.TotalMilliseconds / times}");
 
         }
-    }
-    
-    
-
-
-    public class TestObject
-    {
-        private static string _privateStaticProp { get; } = "private static prop";
-        private static readonly string _privateStaticField = "private static field";
-
-        public string Name { get; set; }
-
-        public string Value;
-
-        private string PrivateName { get; set; } = "My private name";
-
-        private string _privateValue = "my private value";
-
-        public int Sum(int a, int b) => a + b;
-        private int InternalSum(int a, int b) => a + b;
     }
 }

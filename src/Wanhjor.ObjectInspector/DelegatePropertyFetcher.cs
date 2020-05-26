@@ -23,7 +23,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="property">Property info</param>
         public DelegatePropertyFetcher(PropertyInfo property) : base(property.Name)
         {
-            Type = FetcherType.Property;
+            Kind = FetcherKind.Property;
             _getFunc = Getters.GetOrAdd(property, prop =>
             {
                 if (!prop.CanRead) return EmptyGetter;

@@ -13,13 +13,22 @@ namespace Wanhjor.ObjectInspector
     {
         private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
         private readonly BindingFlags? _bindingFlags;
-        private readonly Func<MethodInfo, bool>? _methodSelector = null;
+        private readonly Func<MethodInfo, bool>? _methodSelector;
         private Fetcher _fetcher = null!;
+        private FetcherType _fetcherType = FetcherType.ExpressionTree;
         
         /// <summary>
-        /// Gets or sets if the fetcher is using the DelegatePropertyFetcher or the ExpressionTreeFetcher for Properties
+        /// Gets or sets the fetcher Type
         /// </summary>
-        public bool UseDelegatePropertyFetcher { get; set; }
+        public FetcherType FetcherType
+        {
+            get => _fetcherType;
+            set
+            {
+                _fetcherType = value;
+                _fetcher = null!;
+            }
+        }
 
         #region .ctor
         /// <summary>
@@ -101,18 +110,21 @@ namespace Wanhjor.ObjectInspector
 
                 var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(name) ?? typeInfo.GetRuntimeProperty(name);
                 if (!(pInfo is null))
-                {
-                    if (UseDelegatePropertyFetcher)
+                    return _fetcherType switch
                     {
-                        var dType = typeof(DelegatePropertyFetcher<,>).MakeGenericType(pInfo.DeclaringType, pInfo.PropertyType);
-                        return (Fetcher) Activator.CreateInstance(dType, pInfo);
-                    }
-                    return new ExpressionTreeFetcher(pInfo);
-                }
+                        FetcherType.ExpressionTree => new ExpressionTreeFetcher(pInfo),
+                        FetcherType.Emit => new EmitFetcher(pInfo),
+                        _ => new Fetcher(Name)
+                    };
 
                 var fInfo = _bindingFlags.HasValue ? typeInfo.GetField(name, _bindingFlags.Value) : typeInfo.GetDeclaredField(name) ?? typeInfo.GetRuntimeField(name);
                 if (!(fInfo is null))
-                    return new ExpressionTreeFetcher(fInfo);
+                    return _fetcherType switch
+                    {
+                        FetcherType.ExpressionTree => new ExpressionTreeFetcher(fInfo),
+                        FetcherType.Emit => new EmitFetcher(fInfo),
+                        _ => new Fetcher(Name)
+                    };
 
 
                 MethodInfo[] methods;
@@ -134,7 +146,12 @@ namespace Wanhjor.ObjectInspector
                     mInfo = methods.FirstOrDefault(m => m.Name == name);
                 
                 if (!(mInfo is null))
-                    return new ExpressionTreeFetcher(mInfo);
+                    return _fetcherType switch
+                    {
+                        FetcherType.ExpressionTree => new ExpressionTreeFetcher(mInfo),
+                        FetcherType.Emit => new EmitFetcher(mInfo),
+                        _ => new Fetcher(Name)
+                    };
             
                 return new Fetcher(t.Name);
                 
@@ -149,7 +166,7 @@ namespace Wanhjor.ObjectInspector
         public void Load(object? obj)
         {
             _fetcher = CreateFetcher(obj);
-            Type = _fetcher.Type;
+            Kind = _fetcher.Kind;
         }
 
         /// <summary>
