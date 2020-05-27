@@ -103,7 +103,7 @@ namespace Wanhjor.ObjectInspector
                 throw new ArgumentNullException(nameof(instance), "The object instance can't be null");
             if (!interfaceType.IsInterface)
                 throw new ArgumentException("The type is not an interface type", nameof(interfaceType));
-            if (!interfaceType.IsPublic)
+            if (!interfaceType.IsPublic && !interfaceType.IsNestedPublic)
                 throw new ArgumentException("The interface type must be public", nameof(interfaceType));
         }
 
