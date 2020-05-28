@@ -47,4 +47,5 @@ namespace Wanhjor.ObjectInspector.Tests
         First,
         Second
     }
+
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -236,29 +237,9 @@ namespace Wanhjor.ObjectInspector
                 }
 
                 if (innerDuck)
-                {
                     il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
-                }
                 else if (prop.PropertyType != iProperty.PropertyType)
-                {
-                    if (iProperty.PropertyType.IsValueType && prop.PropertyType.IsValueType)
-                    {
-                        il.Emit(OpCodes.Box, prop.PropertyType);
-                        il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                        il.Emit( OpCodes.Unbox_Any, iProperty.PropertyType);
-                    }
-                    else if (prop.PropertyType.IsValueType)
-                    {
-                        il.Emit(OpCodes.Box, prop.PropertyType);
-                        il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                    }
-                }
+                    TypeConversion(il, prop.PropertyType, iProperty.PropertyType);
 
                 il.Emit(OpCodes.Ret);
             }
@@ -403,29 +384,9 @@ namespace Wanhjor.ObjectInspector
             }
             
             if (innerDuck)
-            {
                 il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
-            }
             else if (field.FieldType != iProperty.PropertyType)
-            {
-                if (iProperty.PropertyType.IsValueType && field.FieldType.IsValueType)
-                {
-                    il.Emit(OpCodes.Box, field.FieldType);
-                    il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
-                    il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                    il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                    il.Emit( OpCodes.Unbox_Any, iProperty.PropertyType);
-                }
-                else if (field.FieldType.IsValueType)
-                {
-                    il.Emit(OpCodes.Box, field.FieldType);
-                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                }
-                else
-                {
-                    il.Emit(OpCodes.Castclass, iProperty.PropertyType);
-                }
-            }
+                TypeConversion(il, field.FieldType, iProperty.PropertyType);
 
             il.Emit(OpCodes.Ret);
             
@@ -644,29 +605,9 @@ namespace Wanhjor.ObjectInspector
                 if (method.ReturnType != typeof(void)) 
                 {
                     if (innerDuck)
-                    {
                         il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
-                    }
                     else if (method.ReturnType != iMethod.ReturnType)
-                    {
-                        if (iMethod.ReturnType.IsValueType && method.ReturnType.IsValueType)
-                        {
-                            il.Emit(OpCodes.Box, method.ReturnType);
-                            il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
-                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                            il.Emit( OpCodes.Unbox_Any, iMethod.ReturnType);
-                        }
-                        else if (method.ReturnType.IsValueType)
-                        {
-                            il.Emit(OpCodes.Box, method.ReturnType);
-                            il.Emit(OpCodes.Castclass, iMethod.ReturnType);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Castclass, iMethod.ReturnType);
-                        }
-                    }
+                        TypeConversion(il, method.ReturnType, iMethod.ReturnType);
                 }
 
                 il.Emit(OpCodes.Ret);
@@ -756,6 +697,122 @@ namespace Wanhjor.ObjectInspector
             {
                 il.Emit(OpCodes.Castclass, instanceType);
             }
+        }
+
+        private static void TypeConversion(ILGenerator il, Type actualType, Type expectedType)
+        {
+            if (actualType.IsEnum)
+                actualType = Enum.GetUnderlyingType(actualType);
+            if (expectedType.IsEnum)
+                expectedType = Enum.GetUnderlyingType(expectedType);
+
+            if (actualType.IsValueType)
+            {
+                if (expectedType.IsValueType)
+                {
+                    if (ConvertValueTypes(il, actualType, expectedType)) return;
+                    il.Emit(OpCodes.Box, actualType);
+                    il.Emit(OpCodes.Unbox_Any, expectedType);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Box, actualType);
+                    il.Emit(OpCodes.Castclass, expectedType);
+                }
+            }
+            else
+            {
+                il.Emit(OpCodes.Castclass, expectedType);
+            }
+        }
+
+        private static readonly Dictionary<Type, OpCode> ConvOpCodes = new Dictionary<Type,OpCode>
+        {
+            {typeof(sbyte),  OpCodes.Conv_I1},
+            {typeof(short),  OpCodes.Conv_I2},
+            {typeof(int),  OpCodes.Conv_I4},
+            {typeof(long),  OpCodes.Conv_I8},
+            
+            {typeof(byte),  OpCodes.Conv_U1},
+            {typeof(ushort),  OpCodes.Conv_U2},
+            {typeof(uint),  OpCodes.Conv_U4},
+            {typeof(ulong),  OpCodes.Conv_I8},
+            
+            {typeof(char),  OpCodes.Conv_U2},
+            {typeof(float),  OpCodes.Conv_R4},
+            {typeof(double),  OpCodes.Conv_R8},
+        };
+        
+        private static bool ConvertValueTypes(ILGenerator il, Type currentType, Type expectedType)
+        {
+            if (currentType == expectedType) return false;
+
+            if (currentType == typeof(byte) &&
+                expectedType != typeof(sbyte) && expectedType != typeof(short) &&
+                expectedType != typeof(int) && expectedType != typeof(uint))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(short) && expectedType != typeof(int) && expectedType != typeof(uint))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(int) && expectedType != typeof(uint))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(long) && expectedType != typeof(ulong))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(sbyte) &&
+                expectedType != typeof(short) && expectedType != typeof(int) && expectedType != typeof(uint))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+
+            if (currentType == typeof(ushort) &&
+                expectedType != typeof(int) && expectedType != typeof(uint) && expectedType != typeof(char))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(uint) && expectedType != typeof(int))
+            {
+                if (expectedType == typeof(float) || expectedType == typeof(double))
+                    il.Emit(OpCodes.Conv_R_Un);
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(ulong) && expectedType != typeof(long))
+            {
+                if (expectedType == typeof(float) || expectedType == typeof(double))
+                    il.Emit(OpCodes.Conv_R_Un);
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(char) && expectedType != typeof(int) && expectedType != typeof(uint) &&
+                expectedType != typeof(ushort))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(float))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            if (currentType == typeof(double))
+            {
+                il.Emit(ConvOpCodes[expectedType]);
+                return true;
+            }
+            return false;
         }
     }
 }
