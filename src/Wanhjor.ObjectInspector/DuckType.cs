@@ -272,38 +272,12 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
                 
                 // Load value
-                if (prop.PropertyType == iProperty.PropertyType)
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                }
-                else if (prop.PropertyType.IsValueType)
-                {
-                    var rootType = Util.GetRootType(prop.PropertyType);
-                    if (rootType.IsEnum)
-                    {
-                        il.Emit(OpCodes.Ldtoken, rootType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Box, iProperty.PropertyType);
-                        il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
-                        il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Box, iProperty.PropertyType);
-                        il.Emit(OpCodes.Ldtoken, prop.PropertyType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                        il.Emit(OpCodes.Unbox_Any, prop.PropertyType);
-                    }
-                }
-                else
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Castclass, prop.PropertyType);
-                }
+                il.Emit(OpCodes.Ldarg_1);
+                var propRootType = Util.GetRootType(prop.PropertyType);
+                var iPropRootType = Util.GetRootType(iProperty.PropertyType);
+                TypeConversion(il, iPropRootType, propRootType);
                 
+                // Call method
                 if (propMethod.IsPublic)
                 {
                     il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
@@ -416,38 +390,12 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
 
                 // Load value
-                if (field.FieldType == iProperty.PropertyType)
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                }
-                else if (field.FieldType.IsValueType)
-                {
-                    var rootType = Util.GetRootType(field.FieldType);
-                    if (rootType.IsEnum)
-                    {
-                        il.Emit(OpCodes.Ldtoken, rootType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Box, iProperty.PropertyType);
-                        il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
-                        il.Emit(OpCodes.Unbox_Any, field.FieldType);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Box, iProperty.PropertyType);
-                        il.Emit(OpCodes.Ldtoken, field.FieldType);
-                        il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                        il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                        il.Emit(OpCodes.Unbox_Any, field.FieldType);
-                    }
-                }
-                else
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Castclass, field.FieldType);
-                }
-
+                il.Emit(OpCodes.Ldarg_1);
+                var fieldRootType = Util.GetRootType(field.FieldType);
+                var iPropRootType = Util.GetRootType(iProperty.PropertyType);
+                TypeConversion(il, iPropRootType, fieldRootType);
+                
+                // Call method
                 if (field.IsPublic)
                 {
                     il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
@@ -510,7 +458,7 @@ namespace Wanhjor.ObjectInspector
                 }
                 
                 var innerDuck = false;
-                if (method.ReturnType != typeof(void) && iMethod.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
+                if (method.ReturnType != typeof(void) && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
                 {
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
@@ -550,40 +498,11 @@ namespace Wanhjor.ObjectInspector
                         }
                     }
 
-                    var iPType = iMethodParameters[i].ParameterType;
-                    var pType = parameters[i].ParameterType;
-                    
-                    if (pType == iPType)
-                    {
-                        WriteLoadArg(i, il, iMethod);
-                    }
-                    else if (pType.IsValueType)
-                    {
-                        var rootType = Util.GetRootType(pType);
-                        if (rootType.IsEnum)
-                        {
-                            il.Emit(OpCodes.Ldtoken, rootType);
-                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                            WriteLoadArg(i, il, iMethod);
-                            il.Emit(OpCodes.Box, iPType);
-                            il.EmitCall(OpCodes.Call, EnumToObjectMethodInfo, null);
-                            il.Emit(OpCodes.Unbox_Any, pType);
-                        }
-                        else
-                        {
-                            WriteLoadArg(i, il, iMethod);
-                            il.Emit(OpCodes.Box, iPType);
-                            il.Emit(OpCodes.Ldtoken, pType);
-                            il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
-                            il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null);
-                            il.Emit(OpCodes.Unbox_Any, pType);
-                        }
-                    }
-                    else
-                    {
-                        WriteLoadArg(i, il, iMethod);
-                        il.Emit(OpCodes.Castclass, pType);
-                    }
+                    // Load value
+                    WriteLoadArg(i, il, iMethod);
+                    var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
+                    var pType = Util.GetRootType(parameters[i].ParameterType);
+                    TypeConversion(il, iPType, pType);
                 }
                 
                 // Call method
@@ -701,6 +620,8 @@ namespace Wanhjor.ObjectInspector
 
         private static void TypeConversion(ILGenerator il, Type actualType, Type expectedType)
         {
+            if (actualType == expectedType) return;
+            
             if (actualType.IsEnum)
                 actualType = Enum.GetUnderlyingType(actualType);
             if (expectedType.IsEnum)
@@ -722,7 +643,18 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Castclass, expectedType);
+                if (expectedType.IsValueType)
+                { 
+                    il.Emit(OpCodes.Box, actualType); 
+                    il.Emit(OpCodes.Ldtoken, expectedType); 
+                    il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null); 
+                    il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null); 
+                    il.Emit(OpCodes.Unbox_Any, expectedType);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Castclass, expectedType);
+                }
             }
         }
 
