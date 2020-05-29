@@ -458,7 +458,7 @@ namespace Wanhjor.ObjectInspector
                 }
                 
                 var innerDuck = false;
-                if (method.ReturnType != typeof(void) && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
+                if (method.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
                 {
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
