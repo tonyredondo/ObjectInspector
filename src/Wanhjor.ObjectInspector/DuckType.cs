@@ -34,8 +34,15 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         protected object? CurrentInstance;
-
+        /// <summary>
+        /// Instance type
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private Type? _type;
+        /// <summary>
+        /// Assembly version
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private Version? _version;
 
         /// <summary>
@@ -57,7 +64,7 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Assembly version
         /// </summary>
-        public Version? AssemblyVersion => _version ??= _type?.Assembly?.GetName().Version;
+        public Version? AssemblyVersion => _version ??= Type?.Assembly?.GetName().Version;
         
         /// <summary>
         /// Duck type
@@ -73,22 +80,21 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Create<T>(object instance)
         {
-            return (T) Create(typeof(T), instance);
+            return (T)(object) Create(typeof(T), instance);
         }
+        
         /// <summary>
         /// Create duck type proxy from an interface type
         /// </summary>
         /// <param name="interfaceType">Interface type</param>
         /// <param name="instance">Instance object</param>
         /// <returns>Duck Type proxy</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Create(Type interfaceType, object instance)
+        public static DuckType Create(Type interfaceType, object instance)
         {
             EnsureArguments(interfaceType, instance);
 
             // Create Type
-            var type = DuckTypeCache.GetOrAdd((interfaceType, instance.GetType()), 
-                types => CreateType(types));
+            var type = GetOrCreateProxyType(interfaceType, instance.GetType()); 
             
             // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
@@ -96,6 +102,25 @@ namespace Wanhjor.ObjectInspector
             return objInstance;
         }
 
+        /// <summary>
+        /// Create a duck type proxy from an interface type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Duck Type proxy</returns>
+        public static DuckType Create(Type interfaceType, Type instanceType)
+        {
+            var type = GetOrCreateProxyType(interfaceType, instanceType);
+            return (DuckType) FormatterServices.GetUninitializedObject(type);
+        }
+
+        /// <summary>
+        /// Checks and ensures the arguments for the Create methods
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instance">Instance value</param>
+        /// <exception cref="ArgumentNullException">If the interface type or the instance value is null</exception>
+        /// <exception cref="ArgumentException">If the interface type is not an interface or is neither public or nested public</exception>
         private static void EnsureArguments(Type interfaceType, object instance)
         {
             if (interfaceType is null)
@@ -107,10 +132,58 @@ namespace Wanhjor.ObjectInspector
             if (!interfaceType.IsPublic && !interfaceType.IsNestedPublic)
                 throw new ArgumentException("The interface type must be public", nameof(interfaceType));
         }
-
-        private static Type CreateType((Type InterfaceType, Type InstanceType) types)
+        
+        /// <summary>
+        /// Get inner DuckType
+        /// </summary>
+        /// <param name="field">Field reference</param>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="value">Property value</param>
+        /// <returns>DuckType instance</returns>
+        private static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
-            var typeSignature = $"{types.InterfaceType.Name}-ProxyTo->{types.InstanceType.Name}";
+            if (value is null)
+                return null!;
+            if (field is null || field.Type != value.GetType())
+                field = Create(interfaceType, value.GetType());
+            field.Instance = value;
+            return field;
+        }
+
+        /// <summary>
+        /// Set inner DuckType
+        /// </summary>
+        /// <param name="field">Field reference</param>
+        /// <param name="value">DuckType instance</param>
+        /// <returns>Property value</returns>
+        private static object? SetInnerDuckType(ref DuckType field, DuckType? value)
+        {
+            if (value is null)
+                return null;
+            field = value;
+            return field.Instance;
+        }
+
+        /// <summary>
+        /// Get or creates a proxy type implementing the interface type to access the given instance type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Proxy type</returns>
+        private static Type GetOrCreateProxyType(Type interfaceType, Type instanceType)
+            => DuckTypeCache.GetOrAdd((interfaceType, instanceType), 
+                types => CreateProxyType(types.InterfaceType, types.InstanceType));
+        
+        /// <summary>
+        /// Creates a proxy type implementing the interface type to access the given instance type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Proxy type</returns>
+        /// <exception cref="NullReferenceException">In case the CurrentInstance field is not found</exception>
+        private static Type CreateProxyType(Type interfaceType, Type instanceType)
+        {
+            var typeSignature = $"{interfaceType.Name}-ProxyTo->{instanceType.Name}";
                 
             //Create Type
             var an = new AssemblyName(typeSignature + "Assembly");
@@ -119,18 +192,19 @@ namespace Wanhjor.ObjectInspector
             var typeBuilder = moduleBuilder.DefineType(typeSignature, 
                 TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | 
                 TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
-                typeof(DuckType), new[] { types.InterfaceType });
+                typeof(DuckType), new[] { interfaceType });
             
             // Define .ctor
             typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
             
+            // Gets the current instance field info
             var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
             if (instanceField is null)
                 throw new NullReferenceException();
             
             // Create Members
-            CreateInterfaceProperties(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
-            CreateInterfaceMethods(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
+            CreateInterfaceProperties(interfaceType, instanceType, instanceField, typeBuilder);
+            CreateInterfaceMethods(interfaceType, instanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();
