@@ -28,6 +28,10 @@ namespace Wanhjor.ObjectInspector
         private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentBag<DynamicMethod> DynamicMethods = new ConcurrentBag<DynamicMethod>();
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo GetInnerDuckTypeMethodInfo = typeof(DuckType).GetMethod("GetInnerDuckType", BindingFlags.Static | BindingFlags.NonPublic);
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo SetInnerDuckTypeMethodInfo = typeof(DuckType).GetMethod("SetInnerDuckType", BindingFlags.Static | BindingFlags.NonPublic);
 
         /// <summary>
         /// Current instance
@@ -140,12 +144,13 @@ namespace Wanhjor.ObjectInspector
         /// <param name="interfaceType">Interface type</param>
         /// <param name="value">Property value</param>
         /// <returns>DuckType instance</returns>
-        private static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
+        protected static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
             if (value is null)
                 return null!;
-            if (field is null || field.Type != value.GetType())
-                field = Create(interfaceType, value.GetType());
+            var valueType = value.GetType();
+            if (field is null || field.Type != valueType)
+                field = Create(interfaceType, valueType);
             field.Instance = value;
             return field;
         }
@@ -156,7 +161,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="field">Field reference</param>
         /// <param name="value">DuckType instance</param>
         /// <returns>Property value</returns>
-        private static object? SetInnerDuckType(ref DuckType field, DuckType? value)
+        protected static object? SetInnerDuckType(ref DuckType field, DuckType? value)
         {
             if (value is null)
                 return null;
@@ -288,6 +293,17 @@ namespace Wanhjor.ObjectInspector
                 var innerDuck = false;
                 if (iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
                 {
+                    if (propMethod.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dt" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
                     il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                     innerDuck = true;
@@ -311,7 +327,7 @@ namespace Wanhjor.ObjectInspector
                 }
 
                 if (innerDuck)
-                    il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                    il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                 else if (prop.PropertyType != iProperty.PropertyType)
                     TypeConversion(il, prop.PropertyType, iProperty.PropertyType);
 
@@ -389,6 +405,17 @@ namespace Wanhjor.ObjectInspector
             var innerDuck = false;
             if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
             {
+                if (field.IsStatic)
+                {
+                    var innerField = typeBuilder.DefineField("_dtStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                    il.Emit(OpCodes.Ldsflda, innerField);
+                }
+                else
+                {
+                    var innerField = typeBuilder.DefineField("_dt" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
+                }
                 il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
                 il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                 innerDuck = true;
@@ -432,7 +459,7 @@ namespace Wanhjor.ObjectInspector
             }
             
             if (innerDuck)
-                il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
             else if (field.FieldType != iProperty.PropertyType)
                 TypeConversion(il, field.FieldType, iProperty.PropertyType);
 
