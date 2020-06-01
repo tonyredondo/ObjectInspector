@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Wanhjor.ObjectInspector
 {

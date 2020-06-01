@@ -10,6 +10,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public sealed class ObjectInspector
     {
+        private static readonly InspectName[] EmptyNames = new InspectName[0];
         private readonly InspectName[] _names;
         private readonly Dictionary<Type, TypeStructure> _structures = new Dictionary<Type, TypeStructure>();
         private readonly bool _autoGrow;
@@ -20,7 +21,7 @@ namespace Wanhjor.ObjectInspector
         public ObjectInspector()
         {
             _autoGrow = true;
-            _names = Array.Empty<InspectName>();
+            _names = EmptyNames;
         }
 
         /// <summary>

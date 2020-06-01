@@ -25,7 +25,7 @@ namespace Wanhjor.ObjectInspector
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly MethodInfo DuckTypeCreate = typeof(DuckType).GetMethod("Create", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Type), typeof(object) }, null)!;
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
-        private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
+        private static readonly ConcurrentDictionary<VTuple<Type,Type>, Type> DuckTypeCache = new ConcurrentDictionary<VTuple<Type,Type>, Type>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentBag<DynamicMethod> DynamicMethods = new ConcurrentBag<DynamicMethod>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
@@ -177,8 +177,8 @@ namespace Wanhjor.ObjectInspector
         /// <param name="instanceType">Instance type</param>
         /// <returns>Proxy type</returns>
         private static Type GetOrCreateProxyType(Type interfaceType, Type instanceType)
-            => DuckTypeCache.GetOrAdd((interfaceType, instanceType), 
-                types => CreateProxyType(types.InterfaceType, types.InstanceType));
+            => DuckTypeCache.GetOrAdd(new VTuple<Type, Type>(interfaceType, instanceType), 
+                types => CreateProxyType(types.Item1, types.Item2));
         
         /// <summary>
         /// Creates a proxy type implementing the interface type to access the given instance type
