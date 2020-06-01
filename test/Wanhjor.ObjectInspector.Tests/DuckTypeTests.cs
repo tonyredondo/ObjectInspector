@@ -136,6 +136,8 @@ namespace Wanhjor.ObjectInspector.Tests
         
         
         string this[int idx] { get; set; }
+
+        public T GetDefault<T>();
     }
     
     

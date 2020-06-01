@@ -643,6 +643,13 @@ namespace Wanhjor.ObjectInspector
                     MethodAttributes.Public | MethodAttributes.Virtual | 
                     MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
                     iMethod.ReturnType, iMethodParametersTypes);
+
+                var iMethodGenericArguments = iMethod.GetGenericArguments();
+                var iMethodGenericNames = iMethodGenericArguments.Select((t, i) => "T" + (i + 1)).ToArray();
+                if (iMethodGenericNames.Length > 0)
+                {
+                    var genericParameters = methodBuilder.DefineGenericParameters(iMethodGenericNames);
+                }
                 for (var j = 0; j < iMethodParameters.Length; j++)
                 {
                     var cParam = iMethodParameters[j];
@@ -651,6 +658,7 @@ namespace Wanhjor.ObjectInspector
                         nParam.SetConstant(cParam.RawDefaultValue);
                     paramBuilders[j] = nParam;
                 }
+                
                 var il = methodBuilder.GetILGenerator();
 
                 // We select the method to call
