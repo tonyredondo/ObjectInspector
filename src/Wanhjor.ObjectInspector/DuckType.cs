@@ -361,8 +361,30 @@ namespace Wanhjor.ObjectInspector
                 if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
                 
-                // Load value
-                il.Emit(OpCodes.Ldarg_1);
+                // Check if a duck type object
+                if (iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                {
+                    if (propMethod.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSetStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSet" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, typeof(DuckType));
+                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+                }
+                else
+                {
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                }
                 var propRootType = Util.GetRootType(prop.PropertyType);
                 var iPropRootType = Util.GetRootType(iProperty.PropertyType);
                 TypeConversion(il, iPropRootType, propRootType);
@@ -490,8 +512,31 @@ namespace Wanhjor.ObjectInspector
                 if (!field.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
 
-                // Load value
-                il.Emit(OpCodes.Ldarg_1);
+                // Check if a duck type object
+                if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
+                {
+                    if (field.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSetStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSet" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, typeof(DuckType));
+                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+                }
+                else
+                {
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+                
                 var fieldRootType = Util.GetRootType(field.FieldType);
                 var iPropRootType = Util.GetRootType(iProperty.PropertyType);
                 TypeConversion(il, iPropRootType, fieldRootType);

@@ -12,7 +12,7 @@ namespace Wanhjor.ObjectInspector.Tests
         private string PrivateName { get; set; } = "My private name";
         public float Number { get; set; } = 3.225f;
         public TestEnum MyEnumValue { get; set; } = TestEnum.Second;
-        public TestObject Self => this;
+        public TestObject Self { get; set; }
         public List<string> MyList { get; set; } = new List<string>();
 
         
@@ -27,6 +27,7 @@ namespace Wanhjor.ObjectInspector.Tests
         
         public TestObject()
         {
+            Self = this;
             ValueSelf = this;
         }
         
