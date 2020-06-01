@@ -11,7 +11,7 @@ namespace Wanhjor.ObjectInspector
     /// </summary>
     public sealed class DynamicFetcher : Fetcher
     {
-        private static readonly ConcurrentDictionary<(string Name, Type Type), Fetcher> Fetchers = new ConcurrentDictionary<(string, Type), Fetcher>();
+        private static readonly ConcurrentDictionary<VTuple<string,Type>, Fetcher> Fetchers = new ConcurrentDictionary<VTuple<string,Type>, Fetcher>();
         private readonly BindingFlags? _bindingFlags;
         private readonly Func<MethodInfo, bool>? _methodSelector;
         private Fetcher _fetcher = null!;
@@ -103,10 +103,10 @@ namespace Wanhjor.ObjectInspector
             if (obj is null)
                 return new Fetcher(string.Empty);
 
-            return Fetchers.GetOrAdd((Name, obj.GetType()), t =>
+            return Fetchers.GetOrAdd(new VTuple<string, Type>(Name, obj.GetType()), t =>
             {
-                var name = t.Name;
-                var typeInfo = t.Type.GetTypeInfo();
+                var name = t.Item1;
+                var typeInfo = t.Item2.GetTypeInfo();
 
                 var pInfo = _bindingFlags.HasValue ? typeInfo.GetProperty(name, _bindingFlags.Value) : typeInfo.GetDeclaredProperty(name) ?? typeInfo.GetRuntimeProperty(name);
                 if (!(pInfo is null))
@@ -153,7 +153,7 @@ namespace Wanhjor.ObjectInspector
                         _ => new Fetcher(Name)
                     };
             
-                return new Fetcher(t.Name);
+                return new Fetcher(t.Item1);
                 
             });
             
