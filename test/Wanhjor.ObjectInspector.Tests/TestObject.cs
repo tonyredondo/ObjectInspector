@@ -50,6 +50,8 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             return val;
         }
+
+        public T GetDefault<T>() => default;
     }
     
     public enum TestEnum

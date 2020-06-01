@@ -677,7 +677,11 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                     innerDuck = true;
-                } 
+                }
+
+                // Create generic method call
+                if (iMethodGenericArguments.Length > 0)
+                    method = method.MakeGenericMethod(iMethodGenericArguments);
                 
                 // Load instance
                 if (!method.IsStatic)
