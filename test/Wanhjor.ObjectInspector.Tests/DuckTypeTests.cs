@@ -24,9 +24,14 @@ namespace Wanhjor.ObjectInspector.Tests
                 var tObj = DuckType.Create<IDuckTestName>(tTmp!);
                 tObj.Name = "My new setter";
                 
+                
                 Console.WriteLine($"Type = {iObj.Type}");
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
                 Console.WriteLine();
+                Console.WriteLine(iObj[0]);
+                Console.WriteLine(iObj[50]);
+                Console.WriteLine();
+
                 
                 Runner.RunF("Get Public Property", () => tObject.Name, () => iObj.Name);
                 Runner.RunA("Set Public Property", () => tObject.Name = "SetTest", () => iObj.Name = "SetTest");
@@ -130,6 +135,9 @@ namespace Wanhjor.ObjectInspector.Tests
         TestEnum ShowEnum(TestEnum val);
         [Duck(Flags = BindingFlags.Instance | BindingFlags.NonPublic)]
         object InternalSum(int a, int b);
+        
+        
+        string this[int idx] { get; }
     }
     
     

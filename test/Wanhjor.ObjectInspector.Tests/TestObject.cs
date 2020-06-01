@@ -29,6 +29,15 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             Self = this;
             ValueSelf = this;
+            _arr[0] = "Hello";
+            _arr[50] = "World";
+        }
+
+        private readonly string[] _arr = new string[100];
+        public string this[int idx]
+        {
+            get => _arr[idx];
+            set => _arr[idx] = value;
         }
         
         public int Sum(int a, int b) => a + b;

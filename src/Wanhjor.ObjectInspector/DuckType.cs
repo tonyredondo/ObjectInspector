@@ -279,10 +279,11 @@ namespace Wanhjor.ObjectInspector
         private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
+            var idxParams = iProperty.GetIndexParameters();
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
                 MethodAttributes.Public | MethodAttributes.SpecialName | 
                 MethodAttributes.HideBySig | MethodAttributes.Virtual, 
-                iProperty.PropertyType, Type.EmptyTypes);
+                iProperty.PropertyType, idxParams.Length == 0 ? Type.EmptyTypes : idxParams.Select(p =>p.ParameterType).ToArray());
 
             var il = method.GetILGenerator();
 
@@ -290,8 +291,9 @@ namespace Wanhjor.ObjectInspector
             {
                 var propMethod = prop.GetMethod;
 
+                // Check if an inner duck type is needed
                 var innerDuck = false;
-                if (iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -309,9 +311,24 @@ namespace Wanhjor.ObjectInspector
                     innerDuck = true;
                 } 
                 
+                // Load the instance
                 if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
 
+                // If we have index parameters we need to pass it
+                if (idxParams.Length > 0)
+                {
+                    var propIdxParams = prop.GetIndexParameters();
+                    for (var i = 0; i < idxParams.Length; i++)
+                    {
+                        WriteLoadArgument(i, il, propMethod);
+                        var iPType = Util.GetRootType(idxParams[i].ParameterType);
+                        var pType = Util.GetRootType(propIdxParams[i].ParameterType);
+                        TypeConversion(il, iPType, pType);
+                    }
+                }
+                
+                // Method call
                 if (propMethod.IsPublic)
                 {
                     il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
@@ -326,6 +343,7 @@ namespace Wanhjor.ObjectInspector
                         null);
                 }
 
+                // Handle return value
                 if (innerDuck)
                     il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                 else if (prop.PropertyType != iProperty.PropertyType)
@@ -619,33 +637,8 @@ namespace Wanhjor.ObjectInspector
                 var parameters = method.GetParameters();
                 for (var i = 0; i < Math.Min(parameters.Length, iMethodParameters.Length); i++)
                 {
-                    static void WriteLoadArg(int index, ILGenerator il, MethodInfo iMethod)
-                    {
-                        switch (index)
-                        {
-                            case 0:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
-                                break;
-                            case 1:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
-                                break;
-                            case 2:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
-                                break;
-                            case 3:
-                                if (iMethod.IsStatic)
-                                    il.Emit(OpCodes.Ldarg_3);
-                                else
-                                    il.Emit(OpCodes.Ldarg_S, 4);
-                                break;
-                            default:
-                                il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
-                                break;
-                        }
-                    }
-
                     // Load value
-                    WriteLoadArg(i, il, iMethod);
+                    WriteLoadArgument(i, il, iMethod);
                     var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
                     var pType = Util.GetRootType(parameters[i].ParameterType);
                     TypeConversion(il, iPType, pType);
@@ -748,6 +741,8 @@ namespace Wanhjor.ObjectInspector
             return null;
         }
         
+        
+        
         private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
@@ -761,6 +756,31 @@ namespace Wanhjor.ObjectInspector
             else if (instanceType != typeof(object))
             {
                 il.Emit(OpCodes.Castclass, instanceType);
+            }
+        }
+        
+        private static void WriteLoadArgument(int index, ILGenerator il, MethodInfo iMethod)
+        {
+            switch (index)
+            {
+                case 0:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+                    break;
+                case 1:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
+                    break;
+                case 2:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
+                    break;
+                case 3:
+                    if (iMethod.IsStatic)
+                        il.Emit(OpCodes.Ldarg_3);
+                    else
+                        il.Emit(OpCodes.Ldarg_S, 4);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
+                    break;
             }
         }
 
