@@ -147,7 +147,10 @@ namespace Wanhjor.ObjectInspector
         protected static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
             if (value is null)
-                return null!;
+            {
+                field = null!;
+                return field;
+            }
             var valueType = value.GetType();
             if (field is null || field.Type != valueType)
                 field = Create(interfaceType, valueType);
@@ -163,10 +166,8 @@ namespace Wanhjor.ObjectInspector
         /// <returns>Property value</returns>
         protected static object? SetInnerDuckType(ref DuckType field, DuckType? value)
         {
-            if (value is null)
-                return null;
-            field = value;
-            return field.Instance;
+            field = value!;
+            return field?.Instance;
         }
 
         /// <summary>
@@ -642,6 +643,13 @@ namespace Wanhjor.ObjectInspector
                     MethodAttributes.Public | MethodAttributes.Virtual | 
                     MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
                     iMethod.ReturnType, iMethodParametersTypes);
+
+                var iMethodGenericArguments = iMethod.GetGenericArguments();
+                var iMethodGenericNames = iMethodGenericArguments.Select((t, i) => "T" + (i + 1)).ToArray();
+                if (iMethodGenericNames.Length > 0)
+                {
+                    var genericParameters = methodBuilder.DefineGenericParameters(iMethodGenericNames);
+                }
                 for (var j = 0; j < iMethodParameters.Length; j++)
                 {
                     var cParam = iMethodParameters[j];
@@ -650,6 +658,7 @@ namespace Wanhjor.ObjectInspector
                         nParam.SetConstant(cParam.RawDefaultValue);
                     paramBuilders[j] = nParam;
                 }
+                
                 var il = methodBuilder.GetILGenerator();
 
                 // We select the method to call
@@ -668,7 +677,11 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                     innerDuck = true;
-                } 
+                }
+
+                // Create generic method call
+                if (iMethodGenericArguments.Length > 0)
+                    method = method.MakeGenericMethod(iMethodGenericArguments);
                 
                 // Load instance
                 if (!method.IsStatic)

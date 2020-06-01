@@ -27,7 +27,6 @@ namespace Wanhjor.ObjectInspector.Tests
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
                 Console.WriteLine();
 
-                
                 Runner.RunF("Get Public Property", () => tObject.Name, () => iObj.Name);
                 Runner.RunA("Set Public Property", () => tObject.Name = "SetTest", () => iObj.Name = "SetTest");
                 Runner.RunF("Get Public Static Property", () => TestObject.PublicStaticProp, () => iObj.PublicStaticProp);
@@ -45,7 +44,8 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Property. Object(Int)->Float conversion", () => tObject.Number = (float) Convert.ChangeType(42, typeof(float)), () => iObj.NumberObject = 42);
                 Runner.RunF("Get Public Property. IList conversion", () => (IList) tObject.MyList, () => iObj.MyList);
                 Runner.RunF("Get Indexer Property", () => tObject[50], () => iObj[50]);
-                Runner.RunF("Set Indexer Property", () => tObject[51] = "next one", () => iObj[51] = "next one with duck");
+                Runner.RunA("Set Indexer Property", () => tObject[51] = "next one", () => iObj[51] = "next one with duck");
+                Runner.RunF("Generic Method Call", () => tObject.GetDefault<Guid>(), () => iObj.GetDefault<Guid>());
                 Console.WriteLine();
                 Console.WriteLine();
 
@@ -137,6 +137,8 @@ namespace Wanhjor.ObjectInspector.Tests
         
         
         string this[int idx] { get; set; }
+
+        public T GetDefault<T>();
     }
     
     
