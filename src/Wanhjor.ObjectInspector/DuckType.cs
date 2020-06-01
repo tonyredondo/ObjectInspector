@@ -147,7 +147,10 @@ namespace Wanhjor.ObjectInspector
         protected static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
             if (value is null)
-                return null!;
+            {
+                field = null!;
+                return field;
+            }
             var valueType = value.GetType();
             if (field is null || field.Type != valueType)
                 field = Create(interfaceType, valueType);
@@ -163,10 +166,8 @@ namespace Wanhjor.ObjectInspector
         /// <returns>Property value</returns>
         protected static object? SetInnerDuckType(ref DuckType field, DuckType? value)
         {
-            if (value is null)
-                return null;
-            field = value;
-            return field.Instance;
+            field = value!;
+            return field?.Instance;
         }
 
         /// <summary>

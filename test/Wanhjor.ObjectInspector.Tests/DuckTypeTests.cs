@@ -27,7 +27,6 @@ namespace Wanhjor.ObjectInspector.Tests
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
                 Console.WriteLine();
 
-                
                 Runner.RunF("Get Public Property", () => tObject.Name, () => iObj.Name);
                 Runner.RunA("Set Public Property", () => tObject.Name = "SetTest", () => iObj.Name = "SetTest");
                 Runner.RunF("Get Public Static Property", () => TestObject.PublicStaticProp, () => iObj.PublicStaticProp);
