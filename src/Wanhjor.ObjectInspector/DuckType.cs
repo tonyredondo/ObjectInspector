@@ -28,14 +28,25 @@ namespace Wanhjor.ObjectInspector
         private static readonly ConcurrentDictionary<(Type InterfaceType, Type InstanceType), Type> DuckTypeCache = new ConcurrentDictionary<(Type, Type), Type>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentBag<DynamicMethod> DynamicMethods = new ConcurrentBag<DynamicMethod>();
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo GetInnerDuckTypeMethodInfo = typeof(DuckType).GetMethod("GetInnerDuckType", BindingFlags.Static | BindingFlags.NonPublic);
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo SetInnerDuckTypeMethodInfo = typeof(DuckType).GetMethod("SetInnerDuckType", BindingFlags.Static | BindingFlags.NonPublic);
 
         /// <summary>
         /// Current instance
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         protected object? CurrentInstance;
-
+        /// <summary>
+        /// Instance type
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private Type? _type;
+        /// <summary>
+        /// Assembly version
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private Version? _version;
 
         /// <summary>
@@ -57,7 +68,7 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Assembly version
         /// </summary>
-        public Version? AssemblyVersion => _version ??= _type?.Assembly?.GetName().Version;
+        public Version? AssemblyVersion => _version ??= Type?.Assembly?.GetName().Version;
         
         /// <summary>
         /// Duck type
@@ -73,22 +84,21 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Create<T>(object instance)
         {
-            return (T) Create(typeof(T), instance);
+            return (T)(object) Create(typeof(T), instance);
         }
+        
         /// <summary>
         /// Create duck type proxy from an interface type
         /// </summary>
         /// <param name="interfaceType">Interface type</param>
         /// <param name="instance">Instance object</param>
         /// <returns>Duck Type proxy</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Create(Type interfaceType, object instance)
+        public static DuckType Create(Type interfaceType, object instance)
         {
             EnsureArguments(interfaceType, instance);
 
             // Create Type
-            var type = DuckTypeCache.GetOrAdd((interfaceType, instance.GetType()), 
-                types => CreateType(types));
+            var type = GetOrCreateProxyType(interfaceType, instance.GetType()); 
             
             // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
@@ -96,6 +106,25 @@ namespace Wanhjor.ObjectInspector
             return objInstance;
         }
 
+        /// <summary>
+        /// Create a duck type proxy from an interface type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Duck Type proxy</returns>
+        public static DuckType Create(Type interfaceType, Type instanceType)
+        {
+            var type = GetOrCreateProxyType(interfaceType, instanceType);
+            return (DuckType) FormatterServices.GetUninitializedObject(type);
+        }
+
+        /// <summary>
+        /// Checks and ensures the arguments for the Create methods
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instance">Instance value</param>
+        /// <exception cref="ArgumentNullException">If the interface type or the instance value is null</exception>
+        /// <exception cref="ArgumentException">If the interface type is not an interface or is neither public or nested public</exception>
         private static void EnsureArguments(Type interfaceType, object instance)
         {
             if (interfaceType is null)
@@ -107,10 +136,59 @@ namespace Wanhjor.ObjectInspector
             if (!interfaceType.IsPublic && !interfaceType.IsNestedPublic)
                 throw new ArgumentException("The interface type must be public", nameof(interfaceType));
         }
-
-        private static Type CreateType((Type InterfaceType, Type InstanceType) types)
+        
+        /// <summary>
+        /// Get inner DuckType
+        /// </summary>
+        /// <param name="field">Field reference</param>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="value">Property value</param>
+        /// <returns>DuckType instance</returns>
+        protected static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
-            var typeSignature = $"{types.InterfaceType.Name}-ProxyTo->{types.InstanceType.Name}";
+            if (value is null)
+                return null!;
+            var valueType = value.GetType();
+            if (field is null || field.Type != valueType)
+                field = Create(interfaceType, valueType);
+            field.Instance = value;
+            return field;
+        }
+
+        /// <summary>
+        /// Set inner DuckType
+        /// </summary>
+        /// <param name="field">Field reference</param>
+        /// <param name="value">DuckType instance</param>
+        /// <returns>Property value</returns>
+        protected static object? SetInnerDuckType(ref DuckType field, DuckType? value)
+        {
+            if (value is null)
+                return null;
+            field = value;
+            return field.Instance;
+        }
+
+        /// <summary>
+        /// Get or creates a proxy type implementing the interface type to access the given instance type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Proxy type</returns>
+        private static Type GetOrCreateProxyType(Type interfaceType, Type instanceType)
+            => DuckTypeCache.GetOrAdd((interfaceType, instanceType), 
+                types => CreateProxyType(types.InterfaceType, types.InstanceType));
+        
+        /// <summary>
+        /// Creates a proxy type implementing the interface type to access the given instance type
+        /// </summary>
+        /// <param name="interfaceType">Interface type</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <returns>Proxy type</returns>
+        /// <exception cref="NullReferenceException">In case the CurrentInstance field is not found</exception>
+        private static Type CreateProxyType(Type interfaceType, Type instanceType)
+        {
+            var typeSignature = $"{interfaceType.Name}-ProxyTo->{instanceType.Name}";
                 
             //Create Type
             var an = new AssemblyName(typeSignature + "Assembly");
@@ -119,18 +197,19 @@ namespace Wanhjor.ObjectInspector
             var typeBuilder = moduleBuilder.DefineType(typeSignature, 
                 TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | 
                 TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
-                typeof(DuckType), new[] { types.InterfaceType });
+                typeof(DuckType), new[] { interfaceType });
             
             // Define .ctor
             typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
             
+            // Gets the current instance field info
             var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
             if (instanceField is null)
                 throw new NullReferenceException();
             
             // Create Members
-            CreateInterfaceProperties(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
-            CreateInterfaceMethods(types.InterfaceType, types.InstanceType, instanceField, typeBuilder);
+            CreateInterfaceProperties(interfaceType, instanceType, instanceField, typeBuilder);
+            CreateInterfaceMethods(interfaceType, instanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();
@@ -145,7 +224,7 @@ namespace Wanhjor.ObjectInspector
             {
                 var propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
 
-                var duckAttrs = iProperty.GetCustomAttributes<DuckAttribute>(true).ToList();
+                var duckAttrs = new List<DuckAttribute>(iProperty.GetCustomAttributes<DuckAttribute>(true));
                 if (duckAttrs.Count == 0)
                     duckAttrs.Add(new DuckAttribute());
                 duckAttrs.Sort((x, y) =>
@@ -200,10 +279,22 @@ namespace Wanhjor.ObjectInspector
         private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
+            Type[] parameterTypes;
+            var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+            }
+            else
+            {
+                parameterTypes = Type.EmptyTypes;
+            }
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
                 MethodAttributes.Public | MethodAttributes.SpecialName | 
                 MethodAttributes.HideBySig | MethodAttributes.Virtual, 
-                iProperty.PropertyType, Type.EmptyTypes);
+                iProperty.PropertyType, parameterTypes);
 
             var il = method.GetILGenerator();
 
@@ -211,17 +302,44 @@ namespace Wanhjor.ObjectInspector
             {
                 var propMethod = prop.GetMethod;
 
+                // Check if an inner duck type is needed
                 var innerDuck = false;
-                if (iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
                 {
+                    if (propMethod.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dt" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
                     il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                     innerDuck = true;
                 } 
                 
+                // Load the instance
                 if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
 
+                // If we have index parameters we need to pass it
+                if (parameterTypes.Length > 0)
+                {
+                    var propIdxParams = prop.GetIndexParameters();
+                    for (var i = 0; i < parameterTypes.Length; i++)
+                    {
+                        WriteLoadArgument(i, il, propMethod);
+                        var iPType = Util.GetRootType(parameterTypes[i]);
+                        var pType = Util.GetRootType(propIdxParams[i].ParameterType);
+                        TypeConversion(il, iPType, pType);
+                    }
+                }
+                
+                // Method call
                 if (propMethod.IsPublic)
                 {
                     il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
@@ -236,8 +354,9 @@ namespace Wanhjor.ObjectInspector
                         null);
                 }
 
+                // Handle return value
                 if (innerDuck)
-                    il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                    il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                 else if (prop.PropertyType != iProperty.PropertyType)
                     TypeConversion(il, prop.PropertyType, iProperty.PropertyType);
 
@@ -255,11 +374,24 @@ namespace Wanhjor.ObjectInspector
         private static MethodBuilder GetPropertySetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
+            Type[] parameterTypes;
+            var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length + 1];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+                parameterTypes[idxParams.Length] = iProperty.PropertyType;
+            }
+            else
+            {
+                parameterTypes = new[] {iProperty.PropertyType};
+            }
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
                 MethodAttributes.Public | MethodAttributes.SpecialName | 
                 MethodAttributes.HideBySig | MethodAttributes.Virtual, 
                 typeof(void), 
-                new[]{ iProperty.PropertyType });
+                parameterTypes);
 
             var il = method.GetILGenerator();
                         
@@ -271,11 +403,50 @@ namespace Wanhjor.ObjectInspector
                 if (!propMethod.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
                 
-                // Load value
-                il.Emit(OpCodes.Ldarg_1);
-                var propRootType = Util.GetRootType(prop.PropertyType);
-                var iPropRootType = Util.GetRootType(iProperty.PropertyType);
-                TypeConversion(il, iPropRootType, propRootType);
+                // Check if a duck type object
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                {
+                    if (propMethod.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSetStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSet" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, typeof(DuckType));
+                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+                }
+                else
+                {
+                    // Load values
+                    // If we have index parameters we need to pass it
+                    Type[] propTypes;
+                    var idxPropParams = prop.GetIndexParameters();
+                    if (idxPropParams.Length > 0)
+                    {
+                        propTypes = new Type[idxPropParams.Length + 1];
+                        for (var i = 0; i < idxPropParams.Length; i++)
+                            propTypes[i] = idxPropParams[i].ParameterType;
+                        propTypes[idxParams.Length] = prop.PropertyType;
+                    }
+                    else
+                    {
+                        propTypes = new[] {prop.PropertyType};
+                    }
+                    for (var i = 0; i < parameterTypes.Length; i++)
+                    {
+                        WriteLoadArgument(i, il, propMethod);
+                        var propRootType = Util.GetRootType(propTypes[i]);
+                        var iPropRootType = Util.GetRootType(parameterTypes[i]);
+                        TypeConversion(il, iPropRootType, propRootType);
+                    }
+                }
                 
                 // Call method
                 if (propMethod.IsPublic)
@@ -315,6 +486,17 @@ namespace Wanhjor.ObjectInspector
             var innerDuck = false;
             if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
             {
+                if (field.IsStatic)
+                {
+                    var innerField = typeBuilder.DefineField("_dtStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                    il.Emit(OpCodes.Ldsflda, innerField);
+                }
+                else
+                {
+                    var innerField = typeBuilder.DefineField("_dt" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
+                }
                 il.Emit(OpCodes.Ldtoken, iProperty.PropertyType);
                 il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
                 innerDuck = true;
@@ -358,7 +540,7 @@ namespace Wanhjor.ObjectInspector
             }
             
             if (innerDuck)
-                il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
             else if (field.FieldType != iProperty.PropertyType)
                 TypeConversion(il, field.FieldType, iProperty.PropertyType);
 
@@ -389,8 +571,31 @@ namespace Wanhjor.ObjectInspector
                 if (!field.IsStatic)
                     LoadInstance(il, instanceField, instanceType);
 
-                // Load value
-                il.Emit(OpCodes.Ldarg_1);
+                // Check if a duck type object
+                if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
+                {
+                    if (field.IsStatic)
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSetStatic" + iProperty.Name, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static);
+                        il.Emit(OpCodes.Ldsflda, innerField);
+                    }
+                    else
+                    {
+                        var innerField = typeBuilder.DefineField("_dtSet" + iProperty.Name, typeof(DuckType), FieldAttributes.Private);
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldflda, innerField);
+                    }
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Castclass, typeof(DuckType));
+                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+                }
+                else
+                {
+                    // Load value
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+                
                 var fieldRootType = Util.GetRootType(field.FieldType);
                 var iPropRootType = Util.GetRootType(iProperty.PropertyType);
                 TypeConversion(il, iPropRootType, fieldRootType);
@@ -473,33 +678,8 @@ namespace Wanhjor.ObjectInspector
                 var parameters = method.GetParameters();
                 for (var i = 0; i < Math.Min(parameters.Length, iMethodParameters.Length); i++)
                 {
-                    static void WriteLoadArg(int index, ILGenerator il, MethodInfo iMethod)
-                    {
-                        switch (index)
-                        {
-                            case 0:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
-                                break;
-                            case 1:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
-                                break;
-                            case 2:
-                                il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
-                                break;
-                            case 3:
-                                if (iMethod.IsStatic)
-                                    il.Emit(OpCodes.Ldarg_3);
-                                else
-                                    il.Emit(OpCodes.Ldarg_S, 4);
-                                break;
-                            default:
-                                il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
-                                break;
-                        }
-                    }
-
                     // Load value
-                    WriteLoadArg(i, il, iMethod);
+                    WriteLoadArgument(i, il, iMethod);
                     var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
                     var pType = Util.GetRootType(parameters[i].ParameterType);
                     TypeConversion(il, iPType, pType);
@@ -602,6 +782,8 @@ namespace Wanhjor.ObjectInspector
             return null;
         }
         
+        
+        
         private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
@@ -615,6 +797,31 @@ namespace Wanhjor.ObjectInspector
             else if (instanceType != typeof(object))
             {
                 il.Emit(OpCodes.Castclass, instanceType);
+            }
+        }
+        
+        private static void WriteLoadArgument(int index, ILGenerator il, MethodInfo iMethod)
+        {
+            switch (index)
+            {
+                case 0:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+                    break;
+                case 1:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
+                    break;
+                case 2:
+                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
+                    break;
+                case 3:
+                    if (iMethod.IsStatic)
+                        il.Emit(OpCodes.Ldarg_3);
+                    else
+                        il.Emit(OpCodes.Ldarg_S, 4);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
+                    break;
             }
         }
 
