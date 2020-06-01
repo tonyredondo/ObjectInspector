@@ -8,7 +8,6 @@ namespace Wanhjor.ObjectInspector.Tests
 {
     public class DuckTypeTests
     {
-        
         [Fact]
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DuckTypeTest()
@@ -24,12 +23,8 @@ namespace Wanhjor.ObjectInspector.Tests
                 var tObj = DuckType.Create<IDuckTestName>(tTmp!);
                 tObj.Name = "My new setter";
                 
-                
                 Console.WriteLine($"Type = {iObj.Type}");
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
-                Console.WriteLine();
-                Console.WriteLine(iObj[0]);
-                Console.WriteLine(iObj[50]);
                 Console.WriteLine();
 
                 
@@ -49,6 +44,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Property. Object(Float)->Float conversion", () => tObject.Number = (float) (object) 51f, () => iObj.NumberObject = 51f);
                 Runner.RunA("Set Public Property. Object(Int)->Float conversion", () => tObject.Number = (float) Convert.ChangeType(42, typeof(float)), () => iObj.NumberObject = 42);
                 Runner.RunF("Get Public Property. IList conversion", () => (IList) tObject.MyList, () => iObj.MyList);
+                Runner.RunF("Get Indexer Property", () => tObject[50], () => iObj[50]);
+                Runner.RunF("Set Indexer Property", () => tObject[51] = "next one", () => iObj[51] = "next one with duck");
+                Console.WriteLine();
+                Console.WriteLine();
 
                 Runner.RunF("Get Public Field", () => tObject.Value, () => iObj.Value);
                 Runner.RunA("Set Public Field", () => tObject.Value = "SetTest", () => iObj.Value = "SetTest");
@@ -137,7 +136,7 @@ namespace Wanhjor.ObjectInspector.Tests
         object InternalSum(int a, int b);
         
         
-        string this[int idx] { get; }
+        string this[int idx] { get; set; }
     }
     
     

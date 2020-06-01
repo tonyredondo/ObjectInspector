@@ -224,7 +224,7 @@ namespace Wanhjor.ObjectInspector
             {
                 var propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
 
-                var duckAttrs = iProperty.GetCustomAttributes<DuckAttribute>(true).ToList();
+                var duckAttrs = new List<DuckAttribute>(iProperty.GetCustomAttributes<DuckAttribute>(true));
                 if (duckAttrs.Count == 0)
                     duckAttrs.Add(new DuckAttribute());
                 duckAttrs.Sort((x, y) =>
@@ -279,11 +279,22 @@ namespace Wanhjor.ObjectInspector
         private static MethodBuilder GetPropertyGetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
+            Type[] parameterTypes;
             var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+            }
+            else
+            {
+                parameterTypes = Type.EmptyTypes;
+            }
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
                 MethodAttributes.Public | MethodAttributes.SpecialName | 
                 MethodAttributes.HideBySig | MethodAttributes.Virtual, 
-                iProperty.PropertyType, idxParams.Length == 0 ? Type.EmptyTypes : idxParams.Select(p =>p.ParameterType).ToArray());
+                iProperty.PropertyType, parameterTypes);
 
             var il = method.GetILGenerator();
 
@@ -316,13 +327,13 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
 
                 // If we have index parameters we need to pass it
-                if (idxParams.Length > 0)
+                if (parameterTypes.Length > 0)
                 {
                     var propIdxParams = prop.GetIndexParameters();
-                    for (var i = 0; i < idxParams.Length; i++)
+                    for (var i = 0; i < parameterTypes.Length; i++)
                     {
                         WriteLoadArgument(i, il, propMethod);
-                        var iPType = Util.GetRootType(idxParams[i].ParameterType);
+                        var iPType = Util.GetRootType(parameterTypes[i]);
                         var pType = Util.GetRootType(propIdxParams[i].ParameterType);
                         TypeConversion(il, iPType, pType);
                     }
@@ -363,11 +374,24 @@ namespace Wanhjor.ObjectInspector
         private static MethodBuilder GetPropertySetMethod(Type instanceType, TypeBuilder typeBuilder, 
             PropertyInfo iProperty, PropertyInfo prop, FieldInfo instanceField)
         {
+            Type[] parameterTypes;
+            var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length + 1];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+                parameterTypes[idxParams.Length] = iProperty.PropertyType;
+            }
+            else
+            {
+                parameterTypes = new[] {iProperty.PropertyType};
+            }
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
                 MethodAttributes.Public | MethodAttributes.SpecialName | 
                 MethodAttributes.HideBySig | MethodAttributes.Virtual, 
                 typeof(void), 
-                new[]{ iProperty.PropertyType });
+                parameterTypes);
 
             var il = method.GetILGenerator();
                         
@@ -380,7 +404,7 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
                 
                 // Check if a duck type object
-                if (iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -400,12 +424,29 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    // Load value
-                    il.Emit(OpCodes.Ldarg_1);
+                    // Load values
+                    // If we have index parameters we need to pass it
+                    Type[] propTypes;
+                    var idxPropParams = prop.GetIndexParameters();
+                    if (idxPropParams.Length > 0)
+                    {
+                        propTypes = new Type[idxPropParams.Length + 1];
+                        for (var i = 0; i < idxPropParams.Length; i++)
+                            propTypes[i] = idxPropParams[i].ParameterType;
+                        propTypes[idxParams.Length] = prop.PropertyType;
+                    }
+                    else
+                    {
+                        propTypes = new[] {prop.PropertyType};
+                    }
+                    for (var i = 0; i < parameterTypes.Length; i++)
+                    {
+                        WriteLoadArgument(i, il, propMethod);
+                        var propRootType = Util.GetRootType(propTypes[i]);
+                        var iPropRootType = Util.GetRootType(parameterTypes[i]);
+                        TypeConversion(il, iPropRootType, propRootType);
+                    }
                 }
-                var propRootType = Util.GetRootType(prop.PropertyType);
-                var iPropRootType = Util.GetRootType(iProperty.PropertyType);
-                TypeConversion(il, iPropRootType, propRootType);
                 
                 // Call method
                 if (propMethod.IsPublic)
