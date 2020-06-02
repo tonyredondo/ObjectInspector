@@ -305,7 +305,10 @@ namespace Wanhjor.ObjectInspector
 
                 // Check if an inner duck type is needed
                 var innerDuck = false;
-                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                var iPropTypeInterface = iProperty.PropertyType;
+                if (iPropTypeInterface.IsGenericType)
+                    iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -405,7 +408,10 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
                 
                 // Check if a duck type object
-                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iProperty.PropertyType.FullName) == null)
+                var iPropTypeInterface = iProperty.PropertyType;
+                if (iPropTypeInterface.IsGenericType)
+                    iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
+                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -485,7 +491,10 @@ namespace Wanhjor.ObjectInspector
             var il = method.GetILGenerator();
             
             var innerDuck = false;
-            if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
+            var iPropTypeInterface = iProperty.PropertyType;
+            if (iPropTypeInterface.IsGenericType)
+                iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
+            if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
             {
                 if (field.IsStatic)
                 {
@@ -573,7 +582,10 @@ namespace Wanhjor.ObjectInspector
                     LoadInstance(il, instanceField, instanceType);
 
                 // Check if a duck type object
-                if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iProperty.PropertyType.FullName) == null)
+                var iPropTypeInterface = iProperty.PropertyType;
+                if (iPropTypeInterface.IsGenericType)
+                    iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
+                if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (field.IsStatic)
                     {
@@ -672,7 +684,10 @@ namespace Wanhjor.ObjectInspector
                 }
                 
                 var innerDuck = false;
-                if (method.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
+                var iMethodReturnType = iMethod.ReturnType;
+                if (iMethodReturnType.IsGenericType)
+                    iMethodReturnType = iMethodReturnType.GetGenericTypeDefinition();
+                if (method.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethodReturnType.FullName) == null)
                 {
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);

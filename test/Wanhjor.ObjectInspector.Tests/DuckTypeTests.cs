@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Xunit;
@@ -67,8 +68,30 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Field. Object(Int)->Float conversion", () => tObject.FieldNumber = (float) Convert.ChangeType(42, typeof(float)), () => iObj.FieldNumberObject = 42);
             }
         }
+
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public void DictioTest()
+        {
+            var dictio = new Dictionary<string, string>();
+            dictio.Add("Key1", "Value1");
+            dictio.Add("Key2", "Value2");
+            dictio.Add("Key3", "Value3");
+
+            var idct = DuckType.Create<IDictio>(dictio);
+            var keys = idct.Keys;
+
+            idct["Key1"] = "Edited";
+            idct["Key4"] = "Value4";
+        }
     }
 
+    public interface IDictio : IDuckType
+    {
+        string this[string key] { get; set; }
+        ICollection<string> Keys { get; } 
+    }
+    
     public interface IDuckTestName : IDuckType
     {
         string Name { get; set; }
