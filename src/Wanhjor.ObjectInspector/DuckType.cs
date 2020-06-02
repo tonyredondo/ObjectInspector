@@ -308,7 +308,7 @@ namespace Wanhjor.ObjectInspector
                 var iPropTypeInterface = iProperty.PropertyType;
                 if (iPropTypeInterface.IsGenericType)
                     iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+                if (iProperty.PropertyType != prop.PropertyType && idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -411,7 +411,7 @@ namespace Wanhjor.ObjectInspector
                 var iPropTypeInterface = iProperty.PropertyType;
                 if (iPropTypeInterface.IsGenericType)
                     iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-                if (idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+                if (iProperty.PropertyType != prop.PropertyType && idxParams.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (propMethod.IsStatic)
                     {
@@ -494,7 +494,7 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
             {
                 if (field.IsStatic)
                 {
@@ -585,7 +585,7 @@ namespace Wanhjor.ObjectInspector
                 var iPropTypeInterface = iProperty.PropertyType;
                 if (iPropTypeInterface.IsGenericType)
                     iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-                if (iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+                if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
                 {
                     if (field.IsStatic)
                     {
@@ -687,7 +687,7 @@ namespace Wanhjor.ObjectInspector
                 var iMethodReturnType = iMethod.ReturnType;
                 if (iMethodReturnType.IsGenericType)
                     iMethodReturnType = iMethodReturnType.GetGenericTypeDefinition();
-                if (method.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethodReturnType.FullName) == null)
+                if (iMethod.ReturnType != method.ReturnType && method.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethodReturnType.FullName) == null)
                 {
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);
