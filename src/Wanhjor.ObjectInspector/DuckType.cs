@@ -58,7 +58,7 @@ namespace Wanhjor.ObjectInspector
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => CurrentInstance;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private set => CurrentInstance = value;
+            internal set => CurrentInstance = value;
         }
 
         /// <summary>

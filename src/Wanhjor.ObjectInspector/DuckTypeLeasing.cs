@@ -23,6 +23,7 @@ namespace Wanhjor.ObjectInspector
             if (Instance is null) return;
             var inst = Instance;
             Instance = default!;
+            ((DuckType) (object) inst).Instance = null;
             Proxies.Push(inst);
         }
 
@@ -30,6 +31,8 @@ namespace Wanhjor.ObjectInspector
         {
             if (!Proxies.TryPop(out var proxy))
                 proxy = factory.Create(instance);
+            else
+                ((DuckType) (object) proxy).Instance = instance;
             return new DuckTypeLeasing<TInterface>
             {
                 Instance = proxy
@@ -39,6 +42,8 @@ namespace Wanhjor.ObjectInspector
         {
             if (!(Proxies.TryPop(out var proxy) && proxy is DuckType dtProxy))
                 dtProxy = factory.Create(instance);
+            else
+                dtProxy.Instance = instance;
             return new DuckTypeLeasing<DuckType>
             {
                 Instance = dtProxy
