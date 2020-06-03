@@ -18,10 +18,10 @@ namespace Wanhjor.ObjectInspector.Tests
                 Console.WriteLine();
 
                 var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
-                var iObj = DuckType.Create<IDuckTestObject>(tObject);
+                var iObj = tObject.DuckAs<IDuckTestObject>();
 
                 var tTmp = Activator.CreateInstance(iObj.Type!);
-                var tObj = DuckType.Create<IDuckTestName>(tTmp!);
+                var tObj = tTmp!.DuckAs<IDuckTestName>();
                 tObj.Name = "My new setter";
                 
                 Console.WriteLine($"Type = {iObj.Type}");
@@ -56,7 +56,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Static Field", () => TestObject._publicStaticField = "PSP", () => _ = iObj.PublicStaticField = "PSP");
                 Runner.RunF("Get Private Field", null, () => iObj.PrivateValue);
                 Runner.RunA("Set Private Field", null, () => iObj.PrivateValue = "PrivateValue");
-                Runner.RunF("Get Self Field as DuckType", () => DuckType.Create<IDuckTestName>(tObject.ValueSelf), () => iObj.ValueSelf);
+                Runner.RunF("Get Self Field as DuckType", () => tObject.ValueSelf.DuckAs<IDuckTestName>(), () => iObj.ValueSelf);
                 Runner.RunA("Set Self Field as DuckType", () => tObject.ValueSelf = (TestObject)tObj.Instance, () => iObj.ValueSelf = tObj);
                 Runner.RunF("Get Private Static Field", null, () => iObj.PrivateStaticField);
                 Runner.RunF("Get Public Field. Float->Int conversion", () => (int) tObject.FieldNumber, () => iObj.FieldNumberInteger);
@@ -78,11 +78,38 @@ namespace Wanhjor.ObjectInspector.Tests
             dictio.Add("Key2", "Value2");
             dictio.Add("Key3", "Value3");
 
-            var idct = DuckType.Create<IDictio>(dictio);
+            var idct = dictio.DuckAs<IDictio>();
             var keys = idct.Keys;
 
             idct["Key1"] = "Edited";
             idct["Key4"] = "Value4";
+        }
+
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public void FactoryTest()
+        {
+            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<IDictio>();
+
+            for (var i = 0; i < 100; i++)
+            {
+                var inst = factory.Create(new Dictionary<string, string>());
+                inst["Changes"] = "Changed";
+            }
+        }
+        
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public void FactoryRentTest()
+        {
+            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<IDictio>();
+
+            for (var i = 0; i < 100; i++)
+            {
+                using var lease = factory.Rent(new Dictionary<string, string>());
+                
+                lease.Instance["Changes"] = "Changed";
+            }
         }
     }
 
