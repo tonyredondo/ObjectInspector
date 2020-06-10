@@ -315,7 +315,12 @@ namespace Wanhjor.ObjectInspector
 
                     break;
                 }
-                
+
+                if (iProperty.CanRead && propertyBuilder.GetMethod is null)
+                    propertyBuilder.SetGetMethod(GetNotFoundGetMethod(instanceType, typeBuilder, iProperty));
+
+                if (iProperty.CanWrite && propertyBuilder.SetMethod is null)
+                    propertyBuilder.SetSetMethod(GetNotFoundSetMethod(instanceType, typeBuilder, iProperty));
             }
         }
 
@@ -410,7 +415,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeRead).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
 
@@ -515,7 +520,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeWritten).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             
@@ -614,7 +619,7 @@ namespace Wanhjor.ObjectInspector
 
             if ((field.Attributes & FieldAttributes.InitOnly) != 0)
             {
-                il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypeFieldIsReadonly).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             else
@@ -679,6 +684,58 @@ namespace Wanhjor.ObjectInspector
             }
             il.Emit(OpCodes.Ret);
 
+            return method;
+        }
+
+        private static MethodBuilder GetNotFoundGetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty)
+        {
+            Type[] parameterTypes;
+            var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+            }
+            else
+            {
+                parameterTypes = Type.EmptyTypes;
+            }
+            var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                iProperty.PropertyType, parameterTypes);
+
+            var il = method.GetILGenerator();
+            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFound).GetConstructor(Type.EmptyTypes)!);
+            il.Emit(OpCodes.Throw);
+            return method;
+        }
+
+        private static MethodBuilder GetNotFoundSetMethod(Type instanceType, TypeBuilder typeBuilder, PropertyInfo iProperty)
+        {
+            Type[] parameterTypes;
+            var idxParams = iProperty.GetIndexParameters();
+            if (idxParams.Length > 0)
+            {
+                parameterTypes = new Type[idxParams.Length + 1];
+                for (var i = 0; i < idxParams.Length; i++)
+                    parameterTypes[i] = idxParams[i].ParameterType;
+                parameterTypes[idxParams.Length] = iProperty.PropertyType;
+            }
+            else
+            {
+                parameterTypes = new[] {iProperty.PropertyType};
+            }
+            var method = typeBuilder.DefineMethod("set_" + iProperty.Name, 
+                MethodAttributes.Public | MethodAttributes.SpecialName | 
+                MethodAttributes.HideBySig | MethodAttributes.Virtual, 
+                typeof(void), 
+                parameterTypes);
+
+            var il = method.GetILGenerator();
+            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFound).GetConstructor(Type.EmptyTypes)!);
+            il.Emit(OpCodes.Throw);
             return method;
         }
         
