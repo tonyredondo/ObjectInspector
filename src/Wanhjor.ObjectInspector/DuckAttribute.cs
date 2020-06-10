@@ -9,6 +9,11 @@ namespace Wanhjor.ObjectInspector
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true)]
     public class DuckAttribute : Attribute
     {
+        /// <summary>
+        /// All flags for static, non static, public and non public members
+        /// </summary>
+        public const BindingFlags AllFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        
         private string? _upToVersion;
         
         /// <summary>
