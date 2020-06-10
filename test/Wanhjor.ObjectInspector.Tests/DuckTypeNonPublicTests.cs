@@ -21,6 +21,8 @@ namespace Wanhjor.ObjectInspector.Tests
             }
         } 
         
+        
+        
         [Fact]
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void TestFieldAccessors()
@@ -30,12 +32,12 @@ namespace Wanhjor.ObjectInspector.Tests
             var duckFieldsNotFound = field.DuckAs<IObjTestFieldsNotFound>();
             Assert.Same(duckFieldsNotFound.PublicField, "Public Field");
             duckFieldsNotFound.PublicField = "Public Field";
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => _ = duckFieldsNotFound.PrivateField);
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => _ = duckFieldsNotFound.ProtectedField);
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => _ = duckFieldsNotFound.InternalField);
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => duckFieldsNotFound.PrivateField = "_");
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => duckFieldsNotFound.ProtectedField = "_");
-            ExpectedException<DuckTypePropertyOrFieldNotFound>(() => duckFieldsNotFound.InternalField = "_");
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => _ = duckFieldsNotFound.PrivateField);
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => _ = duckFieldsNotFound.ProtectedField);
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => _ = duckFieldsNotFound.InternalField);
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => duckFieldsNotFound.PrivateField = "_");
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => duckFieldsNotFound.ProtectedField = "_");
+            ExpectedException<DuckTypePropertyOrFieldNotFoundException>(() => duckFieldsNotFound.InternalField = "_");
 
             var duckField = field.DuckAs<IObjTestFields>();
             Assert.Same(duckField.PublicField, "Public Field");
@@ -52,12 +54,14 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Same(duckReadonlyField.PrivateReadonlyField, "Private Readonly Field");
             Assert.Same(duckReadonlyField.ProtectedReadonlyField, "Protected Readonly Field");
             Assert.Same(duckReadonlyField.InternalReadonlyField, "Internal Readonly Field");
-            ExpectedException<DuckTypeFieldIsReadonly>(() => duckReadonlyField.PublicReadonlyField = "_");
-            ExpectedException<DuckTypeFieldIsReadonly>(() => duckReadonlyField.PrivateReadonlyField = "_");
-            ExpectedException<DuckTypeFieldIsReadonly>(() => duckReadonlyField.ProtectedReadonlyField = "_");
-            ExpectedException<DuckTypeFieldIsReadonly>(() => duckReadonlyField.InternalReadonlyField = "_");
+            ExpectedException<DuckTypeFieldIsReadonlyException>(() => duckReadonlyField.PublicReadonlyField = "_");
+            ExpectedException<DuckTypeFieldIsReadonlyException>(() => duckReadonlyField.PrivateReadonlyField = "_");
+            ExpectedException<DuckTypeFieldIsReadonlyException>(() => duckReadonlyField.ProtectedReadonlyField = "_");
+            ExpectedException<DuckTypeFieldIsReadonlyException>(() => duckReadonlyField.InternalReadonlyField = "_");
         }
 
+        #region Inner Types for TestFieldAccessors
+        
         public interface IObjTestFieldsNotFound
         {
             [Duck(Kind = DuckKind.Field)]
@@ -107,7 +111,10 @@ namespace Wanhjor.ObjectInspector.Tests
             internal readonly string InternalReadonlyField = "Internal Readonly Field";
         }
 
+        #endregion
 
+        
+        
         [Fact]
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void TestPropertyAccessors()
@@ -116,8 +123,41 @@ namespace Wanhjor.ObjectInspector.Tests
 
             var duckProperties = objProperties.DuckAs<IObjTestProperties>();
             
+            // Getter
+            Assert.Same(duckProperties.PublicGetterPublicSetterProp, "Public getter / Public setter property");
+            Assert.Same(duckProperties.PrivateGetterPrivateSetterProp, "Private getter / Private setter property");
+            Assert.Same(duckProperties.ProtectedGetterProtectedSetterProp, "Protected getter / Protected setter property");
+            Assert.Same(duckProperties.InternalGetterInternalSetterProp, "Internal getter / Internal setter property");
+            
+            Assert.Same(duckProperties.PublicGetterPrivateSetterProp, "Public getter / Private setter property");
+            Assert.Same(duckProperties.PublicGetterProtectedSetterProp, "Public getter / Protected setter property");
+            Assert.Same(duckProperties.PublicGetterInternalSetterProp, "Public getter / Internal setter property");
+            Assert.Same(duckProperties.PublicGetterNoSetterProp, "Public getter / no setter property");
+            
+            Assert.Same(duckProperties.PrivateGetterPublicSetterProp, "Private getter / Public setter property");
+            Assert.Same(duckProperties.ProtectedGetterPublicSetterProp, "Protected getter / Public setter property");
+            Assert.Same(duckProperties.InternalGetterPublicSetterProp, "Internal getter / Public setter property");
+            ExpectedException<DuckTypePropertyCantBeReadException>(() => _ = duckProperties.NoGetterPublicSetterProp);
+
+            // Setter
+            duckProperties.PublicGetterPublicSetterProp = "Public getter / Public setter property";
+            duckProperties.PrivateGetterPrivateSetterProp = "Private getter / Private setter property";
+            duckProperties.ProtectedGetterProtectedSetterProp = "Protected getter / Protected setter property";
+            duckProperties.InternalGetterInternalSetterProp = "Internal getter / Internal setter property";
+            
+            duckProperties.PublicGetterPrivateSetterProp = "Public getter / Private setter property";
+            duckProperties.PublicGetterProtectedSetterProp = "Public getter / Protected setter property";
+            duckProperties.PublicGetterInternalSetterProp = "Public getter / Internal setter property";
+            ExpectedException<DuckTypePropertyCantBeWrittenException>(() => duckProperties.PublicGetterNoSetterProp = "Public getter / no setter property");
+
+            duckProperties.PrivateGetterPublicSetterProp = "Private getter / Public setter property";
+            duckProperties.ProtectedGetterPublicSetterProp = "Protected getter / Public setter property";
+            duckProperties.InternalGetterPublicSetterProp = "Internal getter / Public setter property";
+            duckProperties.NoGetterPublicSetterProp = "No getter / Public setter property";
         }
 
+        #region Inner Types for TestPropertyAccessors
+        
         public interface IObjTestProperties
         {
             [Duck(Flags = DuckAttribute.AllFlags)]
@@ -182,5 +222,31 @@ namespace Wanhjor.ObjectInspector.Tests
             }
             public string NoGetterPublicSetterProp {  set => _noGetterPublicSetterProp = value; }
         }
+        
+        #endregion
+
+
+        
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public void TestNonPublicInstance()
+        {
+            var intObj = new InternalObject();
+            ExpectedException<DuckTypeTypeIsNotPublicException>(() => _ = intObj.DuckAs<IInternalObject>());
+        }
+
+        #region Inner Types for TestNonPublicInstance
+
+        public interface IInternalObject
+        {
+            public string Name { get; set; }
+        }
+        
+        internal class InternalObject
+        {
+            public string Name { get; set; } = "Name";
+        }
+
+        #endregion
     }
 }

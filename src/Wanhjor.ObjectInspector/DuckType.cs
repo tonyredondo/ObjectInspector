@@ -174,9 +174,12 @@ namespace Wanhjor.ObjectInspector
             if (instance is null)
                 throw new ArgumentNullException(nameof(instance), "The object instance can't be null");
             if (!interfaceType.IsInterface)
-                throw new ArgumentException("The type is not an interface type", nameof(interfaceType));
+                throw new DuckTypeTypeIsNotAnInterfaceException(interfaceType, nameof(interfaceType));
             if (!interfaceType.IsPublic && !interfaceType.IsNestedPublic)
-                throw new ArgumentException("The interface type must be public", nameof(interfaceType));
+                throw new DuckTypeTypeIsNotPublicException(interfaceType, nameof(interfaceType));
+            var instanceType = instance.GetType();
+            if (!instanceType.IsPublic && !instanceType.IsNestedPublic)
+                throw new DuckTypeTypeIsNotPublicException(instanceType, nameof(instance));
         }
         
         /// <summary>
@@ -415,7 +418,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeRead).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeReadException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
 
@@ -520,7 +523,7 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeWritten).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyCantBeWrittenException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             
@@ -619,7 +622,7 @@ namespace Wanhjor.ObjectInspector
 
             if ((field.Attributes & FieldAttributes.InitOnly) != 0)
             {
-                il.Emit(OpCodes.Newobj, typeof(DuckTypeFieldIsReadonly).GetConstructor(Type.EmptyTypes)!);
+                il.Emit(OpCodes.Newobj, typeof(DuckTypeFieldIsReadonlyException).GetConstructor(Type.EmptyTypes)!);
                 il.Emit(OpCodes.Throw);
             }
             else
@@ -707,7 +710,7 @@ namespace Wanhjor.ObjectInspector
                 iProperty.PropertyType, parameterTypes);
 
             var il = method.GetILGenerator();
-            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFound).GetConstructor(Type.EmptyTypes)!);
+            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFoundException).GetConstructor(Type.EmptyTypes)!);
             il.Emit(OpCodes.Throw);
             return method;
         }
@@ -734,7 +737,7 @@ namespace Wanhjor.ObjectInspector
                 parameterTypes);
 
             var il = method.GetILGenerator();
-            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFound).GetConstructor(Type.EmptyTypes)!);
+            il.Emit(OpCodes.Newobj, typeof(DuckTypePropertyOrFieldNotFoundException).GetConstructor(Type.EmptyTypes)!);
             il.Emit(OpCodes.Throw);
             return method;
         }
