@@ -2,6 +2,8 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Xunit;
+// ReSharper disable InconsistentNaming
+#pragma warning disable 414
 
 namespace Wanhjor.ObjectInspector.Tests
 {
@@ -232,7 +234,11 @@ namespace Wanhjor.ObjectInspector.Tests
         public void TestNonPublicInstance()
         {
             var intObj = new InternalObject();
-            ExpectedException<DuckTypeTypeIsNotPublicException>(() => _ = intObj.DuckAs<IInternalObject>());
+            var duckObj = intObj.DuckAs<IInternalObject>();
+            Assert.Same("My Name", duckObj.Name);
+            Assert.Same("My Value", duckObj.Value);
+            Assert.Same("My Private Name", duckObj.PrivateName);
+            Assert.Same("My Private Value", duckObj.PrivateValue);
         }
 
         #region Inner Types for TestNonPublicInstance
@@ -240,11 +246,23 @@ namespace Wanhjor.ObjectInspector.Tests
         public interface IInternalObject
         {
             public string Name { get; set; }
+            [Duck(Kind = DuckKind.Field)]
+            public string Value { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            public string PrivateName { get; set; }
+            [Duck(Kind = DuckKind.Field, Flags = DuckAttribute.AllFlags)]
+            public string PrivateValue { get; set; }
         }
         
         internal class InternalObject
         {
-            public string Name { get; set; } = "Name";
+            public string Name { get; set; } = "My Name";
+
+            public string Value = "My Value";
+
+            private string PrivateName { get; set; } = "My Private Name";
+
+            private string PrivateValue = "My Private Value";
         }
 
         #endregion
