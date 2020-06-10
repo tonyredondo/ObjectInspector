@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Wanhjor.ObjectInspector.Tests
 {
-    public class DuckTypeNonPublicTests
+    public class DuckTypeNonPublicTestsPrivateClass
     {
         private static void ExpectedException<TException>(Action action)
         {
@@ -100,7 +100,7 @@ namespace Wanhjor.ObjectInspector.Tests
             string InternalReadonlyField { get; set; }
         }
         
-        public class ObjTestFields
+        private class ObjTestFields
         {
             public string PublicField = "Public Field";
             private string PrivateField = "Private Field";
@@ -190,7 +190,7 @@ namespace Wanhjor.ObjectInspector.Tests
             string NoGetterPublicSetterProp { get; set; }
         }
         
-        public class ObjTestProperties
+        private class ObjTestProperties
         {
             private string _privateGetterPublicSetterProp = "Private getter / Public setter property";
             private string _protectedGetterPublicSetterProp = "Protected getter / Public setter property";
@@ -227,53 +227,5 @@ namespace Wanhjor.ObjectInspector.Tests
         
         #endregion
 
-
-        
-        [Fact]
-        [MethodImpl(MethodImplOptions.NoOptimization)]
-        public void TestNonPublicInstance()
-        {
-            var intObj = new InternalObject();
-            var duckObj = intObj.DuckAs<IInternalObject>();
-            Assert.Same("My Name", duckObj.Name);
-            Assert.Same("My Value", duckObj.Value);
-            Assert.Same("My Private Name", duckObj.PrivateName);
-            Assert.Same("My Private Value", duckObj.PrivateValue);
-
-            duckObj.Name = "New Name";
-            Assert.Same("New Name", duckObj.Name);
-            duckObj.Value = "New Value";
-            Assert.Same("New Value", duckObj.Value);
-            duckObj.PrivateName = "New Private Name";
-            Assert.Same("New Private Name", duckObj.PrivateName);
-            duckObj.PrivateValue = "New Private Value";
-            Assert.Same("New Private Value", duckObj.PrivateValue);
-        }
-
-        #region Inner Types for TestNonPublicInstance
-
-        public interface IInternalObject
-        {
-            public string Name { get; set; }
-            [Duck(Kind = DuckKind.Field)]
-            public string Value { get; set; }
-            [Duck(Flags = DuckAttribute.AllFlags)]
-            public string PrivateName { get; set; }
-            [Duck(Kind = DuckKind.Field, Flags = DuckAttribute.AllFlags)]
-            public string PrivateValue { get; set; }
-        }
-        
-        internal class InternalObject
-        {
-            public string Name { get; set; } = "My Name";
-
-            public string Value = "My Value";
-
-            private string PrivateName { get; set; } = "My Private Name";
-
-            private string PrivateValue = "My Private Value";
-        }
-
-        #endregion
     }
 }

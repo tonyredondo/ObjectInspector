@@ -527,10 +527,30 @@ namespace Wanhjor.ObjectInspector
             {
                 var propMethod = prop.SetMethod;
 
-                // Load instance
-                if (!propMethod.IsStatic)
-                    LoadInstance(il, instanceField, instanceType);
-                
+                if (instanceType.IsPublic || instanceType.IsNestedPublic)
+                {
+                    // Load instance
+                    if (!propMethod.IsStatic)
+                        LoadInstance(il, instanceField, instanceType);
+                }
+                else
+                {
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                        tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
+                    il.Emit(OpCodes.Ldstr, prop.Name);
+                    if (!propMethod.IsStatic)
+                    {
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldfld, instanceField);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldnull);
+                    }
+                }
+
                 // Check if a duck type object
                 var iPropTypeInterface = iProperty.PropertyType;
                 if (iPropTypeInterface.IsGenericType)
@@ -580,21 +600,29 @@ namespace Wanhjor.ObjectInspector
                         TypeConversion(il, iPropRootType, propRootType);
                     }
                 }
-                
-                // Call method
-                if (propMethod.IsPublic)
+
+                if (instanceType.IsPublic || instanceType.IsNestedPublic)
                 {
-                    il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
+                    // Call method
+                    if (propMethod.IsPublic)
+                    {
+                        il.EmitCall(propMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, propMethod, null);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
+                        il.Emit(OpCodes.Conv_I);
+                        il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
+                            propMethod.ReturnType,
+                            propMethod.GetParameters().Select(p => p.ParameterType).ToArray(),
+                            null);
+                    }
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldc_I8, (long) propMethod.MethodHandle.GetFunctionPointer());
-                    il.Emit(OpCodes.Conv_I);
-                    il.EmitCalli(OpCodes.Calli, propMethod.CallingConvention,
-                        propMethod.ReturnType, 
-                        propMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
-                        null);
+                    il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);
                 }
+
                 il.Emit(OpCodes.Ret);
             }
             else
@@ -727,9 +755,29 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                // Load instance
-                if (!field.IsStatic)
-                    LoadInstance(il, instanceField, instanceType);
+                if (instanceType.IsPublic || instanceType.IsNestedPublic)
+                {
+                    // Load instance
+                    if (!field.IsStatic)
+                        LoadInstance(il, instanceField, instanceType);
+                }
+                else
+                {
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                        tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
+                    il.Emit(OpCodes.Ldstr, field.Name);
+                    if (!field.IsStatic)
+                    {
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldfld, instanceField);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldnull);
+                    }
+                }
 
                 // Check if a duck type object
                 var iPropTypeInterface = iProperty.PropertyType;
@@ -764,27 +812,34 @@ namespace Wanhjor.ObjectInspector
                 var fieldRootType = Util.GetRootType(field.FieldType);
                 var iPropRootType = Util.GetRootType(iProperty.PropertyType);
                 TypeConversion(il, iPropRootType, fieldRootType);
-                
-                // Call method
-                if (field.IsPublic)
+
+                if (instanceType.IsPublic || instanceType.IsNestedPublic)
                 {
-                    il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                    // Call method
+                    if (field.IsPublic)
+                    {
+                        il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                    }
+                    else
+                    {
+                        var setMethod = new DynamicMethod($"SetField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
+                        EmitAccessors.CreateSetAccessor(setMethod.GetILGenerator(), field);
+
+                        var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
+                        var handle = (RuntimeMethodHandle) getMethodDescriptorInfo!.Invoke(setMethod, null);
+
+                        il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
+                        il.Emit(OpCodes.Conv_I);
+                        il.EmitCalli(OpCodes.Calli, setMethod.CallingConvention,
+                            setMethod.ReturnType,
+                            setMethod.GetParameters().Select(p => p.ParameterType).ToArray(),
+                            null);
+                        DynamicMethods.Add(setMethod);
+                    }
                 }
                 else
                 {
-                    var setMethod = new DynamicMethod($"SetField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
-                    EmitAccessors.CreateSetAccessor(setMethod.GetILGenerator(), field);
-
-                    var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var handle = (RuntimeMethodHandle)getMethodDescriptorInfo!.Invoke(setMethod, null);
-                
-                    il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
-                    il.Emit(OpCodes.Conv_I);
-                    il.EmitCalli(OpCodes.Calli, setMethod.CallingConvention,
-                        setMethod.ReturnType, 
-                        setMethod.GetParameters().Select(p => p.ParameterType).ToArray(), 
-                        null);
-                    DynamicMethods.Add(setMethod);
+                    il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);
                 }
             }
             il.Emit(OpCodes.Ret);
