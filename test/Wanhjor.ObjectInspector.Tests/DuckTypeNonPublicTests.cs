@@ -112,7 +112,40 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void TestPropertyAccessors()
         {
+            var objProperties = new ObjTestProperties();
+
+            var duckProperties = objProperties.DuckAs<IObjTestProperties>();
             
+        }
+
+        public interface IObjTestProperties
+        {
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PublicGetterPublicSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PrivateGetterPrivateSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string ProtectedGetterProtectedSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string InternalGetterInternalSetterProp { get; set; }
+            
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PublicGetterPrivateSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PublicGetterProtectedSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PublicGetterInternalSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PublicGetterNoSetterProp { get; set; }
+            
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string PrivateGetterPublicSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string ProtectedGetterPublicSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string InternalGetterPublicSetterProp { get; set; }
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            string NoGetterPublicSetterProp { get; set; }
         }
         
         public class ObjTestProperties
