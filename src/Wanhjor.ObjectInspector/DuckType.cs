@@ -38,6 +38,8 @@ namespace Wanhjor.ObjectInspector
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly MethodInfo ShoveMethodInfo = typeof(DuckType).GetMethod("Shove", BindingFlags.Static | BindingFlags.NonPublic);
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
+        private static readonly MethodInfo InvokeMethodInfo = typeof(DuckType).GetMethod("Invoke", BindingFlags.Static | BindingFlags.NonPublic);
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentDictionary<VTuple<string, TypeBuilder>, FieldInfo> DynamicFields = new ConcurrentDictionary<VTuple<string, TypeBuilder>, FieldInfo>();
         
         #region Fields
@@ -264,6 +266,20 @@ namespace Wanhjor.ObjectInspector
                 fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
             fetcher.Shove(instance, value);
         }
+        /// <summary>
+        /// Invoke a method from a dynamic fetcher
+        /// </summary>
+        /// <param name="fetcher">Dynamic Fetcher instance</param>
+        /// <param name="fetcherName">Property or Field name</param>
+        /// <param name="instance">Object instance</param>
+        /// <param name="parameters">Method parameters</param>
+        /// <returns></returns>
+        protected static object? Invoke(ref DynamicFetcher fetcher, string fetcherName, object? instance, object[] parameters)
+        {
+            if (fetcher is null)
+                fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
+            return fetcher.Invoke(instance, parameters);
+        }
         #endregion
 
         /// <summary>
@@ -465,7 +481,9 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                    // We can't access to a non public instance using IL, So we need to get the property value using a dynamic fetcher
+
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + iProperty.Name, typeBuilder), tuple =>
                         tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldflda, innerField);
@@ -535,7 +553,9 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                    // We can't access to a non public instance using IL, So we need to set the property value using a dynamic fetcher
+                    
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + iProperty.Name, typeBuilder), tuple =>
                         tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldflda, innerField);
@@ -620,6 +640,8 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
+                    // We can't access to a non public instance using IL, So we need to set the property value using a dynamic fetcher
+                    
                     il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);
                 }
 
@@ -710,7 +732,8 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                // We can't access to a non public instance using IL, So we need to get the field value using a dynamic fetcher
+                var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + iProperty.Name, typeBuilder), tuple =>
                     tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldflda, innerField);
@@ -763,7 +786,8 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtFetcher" + iProperty.Name, typeBuilder), tuple =>
+                    // We can't access to a non public instance using IL, So we need to set the field value using a dynamic fetcher
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + iProperty.Name, typeBuilder), tuple =>
                         tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldflda, innerField);
@@ -839,6 +863,7 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
+                    // We can't access to a non public instance using IL, So we need to set the field value using a dynamic fetcher
                     il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);
                 }
             }
@@ -956,46 +981,94 @@ namespace Wanhjor.ObjectInspector
                 // Create generic method call
                 if (iMethodGenericArguments.Length > 0)
                     method = method.MakeGenericMethod(iMethodGenericArguments);
-                
-                // Load instance
-                if (!method.IsStatic)
-                    LoadInstance(il, instanceField, instanceType);
-                
-                // Load arguments
-                var parameters = method.GetParameters();
-                for (var i = 0; i < Math.Min(parameters.Length, iMethodParameters.Length); i++)
+
+                if (instanceType.IsPublic || instanceType.IsNestedPublic)
                 {
-                    // Load value
-                    WriteLoadArgument(i, il, iMethod);
-                    var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
-                    var pType = Util.GetRootType(parameters[i].ParameterType);
-                    TypeConversion(il, iPType, pType);
-                }
-                
-                // Call method
-                if (method.IsPublic)
-                {
-                    il.EmitCall(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method, null);
+                    // Load instance
+                    if (!method.IsStatic)
+                        LoadInstance(il, instanceField, instanceType);
+                    
+                    // Load arguments
+                    var parameters = method.GetParameters();
+                    var minParametersLength = Math.Min(parameters.Length, iMethodParameters.Length);
+                    for (var i = 0; i < minParametersLength; i++)
+                    {
+                        // Load value
+                        WriteLoadArgument(i, il, iMethod);
+                        var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
+                        var pType = Util.GetRootType(parameters[i].ParameterType);
+                        TypeConversion(il, iPType, pType);
+                    }
+                    
+                    // Call method
+                    if (method.IsPublic)
+                    {
+                        il.EmitCall(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method, null);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldc_I8, (long) method.MethodHandle.GetFunctionPointer());
+                        il.Emit(OpCodes.Conv_I);
+                        il.EmitCalli(OpCodes.Calli, method.CallingConvention,
+                            method.ReturnType,
+                            method.GetParameters().Select(p => p.ParameterType).ToArray(),
+                            null);
+                    }
+                    
+                    // Covert return value
+                    if (method.ReturnType != typeof(void)) 
+                    {
+                        if (innerDuck)
+                            il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                        else if (method.ReturnType != iMethod.ReturnType)
+                            TypeConversion(il, method.ReturnType, iMethod.ReturnType);
+                    }
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldc_I8, (long) method.MethodHandle.GetFunctionPointer());
-                    il.Emit(OpCodes.Conv_I);
-                    il.EmitCalli(OpCodes.Calli, method.CallingConvention,
-                        method.ReturnType, 
-                        method.GetParameters().Select(p => p.ParameterType).ToArray(), 
-                        null);
+                    // We can't access to a non public instance using IL, So we need to call the method using a dynamic fetcher
+                    
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + method.MetadataToken, typeBuilder), tuple =>
+                        tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
+                    il.Emit(OpCodes.Ldstr, method.Name);
+                    if (!method.IsStatic)
+                    {
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldfld, instanceField);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldnull);
+                    }
+                    
+                    // Load arguments
+                    var parameters = method.GetParameters();
+                    var minParametersLength = Math.Min(parameters.Length, iMethodParameters.Length);
+                    WriteIlIntValue(il, minParametersLength);
+                    il.Emit(OpCodes.Newarr, typeof(object));
+                    for (var i = 0; i < minParametersLength; i++)
+                    {
+                        // Load value
+                        il.Emit(OpCodes.Dup);
+                        WriteIlIntValue(il, i);
+                        WriteLoadArgument(i, il, iMethod);
+                        var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
+                        TypeConversion(il, iPType, typeof(object));
+                        il.Emit(OpCodes.Stelem_Ref);
+                    }
+                    il.EmitCall(OpCodes.Call, InvokeMethodInfo, null);
+                    
+                    // Covert return value
+                    if (method.ReturnType != typeof(void)) 
+                    {
+                        if (innerDuck)
+                            il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                        else if (iMethod.ReturnType != typeof(object))
+                            TypeConversion(il, typeof(object), iMethod.ReturnType);
+                    }
                 }
-
-                // Covert return value
-                if (method.ReturnType != typeof(void)) 
-                {
-                    if (innerDuck)
-                        il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
-                    else if (method.ReturnType != iMethod.ReturnType)
-                        TypeConversion(il, method.ReturnType, iMethod.ReturnType);
-                }
-
                 il.Emit(OpCodes.Ret);
             }
         }
@@ -1239,6 +1312,43 @@ namespace Wanhjor.ObjectInspector
                 return true;
             }
             return false;
+        }
+
+        private static void WriteIlIntValue(ILGenerator il, int value)
+        {
+            switch (value)
+            {
+                case 0: 
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldc_I4_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldc_I4_3);
+                    break;
+                case 4:
+                    il.Emit(OpCodes.Ldc_I4_4);
+                    break;
+                case 5:
+                    il.Emit(OpCodes.Ldc_I4_5);
+                    break;
+                case 6:
+                    il.Emit(OpCodes.Ldc_I4_6);
+                    break;
+                case 7:
+                    il.Emit(OpCodes.Ldc_I4_7);
+                    break;
+                case 8:
+                    il.Emit(OpCodes.Ldc_I4_8);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldc_I4_S, value);
+                    break;
+            }
         }
         
         

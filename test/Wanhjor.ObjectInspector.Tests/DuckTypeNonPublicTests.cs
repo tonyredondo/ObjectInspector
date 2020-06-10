@@ -248,6 +248,9 @@ namespace Wanhjor.ObjectInspector.Tests
             Assert.Same("New Private Name", duckObj.PrivateName);
             duckObj.PrivateValue = "New Private Value";
             Assert.Same("New Private Value", duckObj.PrivateValue);
+            
+            Assert.Equal(4, duckObj.Sum(2,2));
+            Assert.Equal(9, duckObj.Mult(3,3));
         }
 
         #region Inner Types for TestNonPublicInstance
@@ -261,6 +264,9 @@ namespace Wanhjor.ObjectInspector.Tests
             public string PrivateName { get; set; }
             [Duck(Kind = DuckKind.Field, Flags = DuckAttribute.AllFlags)]
             public string PrivateValue { get; set; }
+
+            public int Sum(int a, int b);
+            public int Mult(int a, int b);
         }
         
         internal class InternalObject
@@ -272,6 +278,9 @@ namespace Wanhjor.ObjectInspector.Tests
             private string PrivateName { get; set; } = "My Private Name";
 
             private string PrivateValue = "My Private Value";
+
+            public int Sum(int a, int b) => a + b;
+            public int Mult(int a, int b) => a * b;
         }
 
         #endregion
