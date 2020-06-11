@@ -251,6 +251,7 @@ namespace Wanhjor.ObjectInspector.Tests
             
             Assert.Equal(4, duckObj.Sum(2,2));
             Assert.Equal(9, duckObj.Mult(3,3));
+            duckObj.Add(42);
         }
 
         #region Inner Types for TestNonPublicInstance
@@ -267,6 +268,7 @@ namespace Wanhjor.ObjectInspector.Tests
 
             public int Sum(int a, int b);
             public int Mult(int a, int b);
+            void Add(int a);
         }
         
         internal class InternalObject
@@ -281,6 +283,8 @@ namespace Wanhjor.ObjectInspector.Tests
 
             public int Sum(int a, int b) => a + b;
             public int Mult(int a, int b) => a * b;
+            
+            public void Add(int a) {}
         }
 
         #endregion

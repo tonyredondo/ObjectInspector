@@ -1068,6 +1068,10 @@ namespace Wanhjor.ObjectInspector
                         else if (iMethod.ReturnType != typeof(object))
                             TypeConversion(il, typeof(object), iMethod.ReturnType);
                     }
+                    else
+                    {
+                        il.Emit(OpCodes.Pop);
+                    }
                 }
                 il.Emit(OpCodes.Ret);
             }
