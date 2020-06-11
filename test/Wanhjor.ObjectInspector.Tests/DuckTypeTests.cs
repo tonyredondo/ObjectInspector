@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Wanhjor.ObjectInspector.Tests
@@ -27,6 +28,8 @@ namespace Wanhjor.ObjectInspector.Tests
                 Console.WriteLine($"Type = {iObj.Type}");
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
                 Console.WriteLine();
+                
+                Assert.Equal(tObject.Status, iObj.Status);
 
                 Runner.RunF("Get Public Property", () => tObject.Name, () => iObj.Name);
                 Runner.RunA("Set Public Property", () => tObject.Name = "SetTest", () => iObj.Name = "SetTest");
@@ -189,6 +192,8 @@ namespace Wanhjor.ObjectInspector.Tests
         string this[int idx] { get; set; }
 
         public T GetDefault<T>();
+        
+        TaskStatus Status { get; set; }
     }
     
     
