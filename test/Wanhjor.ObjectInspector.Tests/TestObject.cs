@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 // ReSharper disable UnusedMember.Local
 #pragma warning disable 414
 
@@ -52,6 +54,8 @@ namespace Wanhjor.ObjectInspector.Tests
         }
 
         public T GetDefault<T>() => default;
+        
+        public TaskStatus Status { get; set; } = TaskStatus.RanToCompletion;
     }
     
     public enum TestEnum

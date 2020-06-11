@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Xunit;
 // ReSharper disable InconsistentNaming
 #pragma warning disable 414
@@ -234,7 +235,18 @@ namespace Wanhjor.ObjectInspector.Tests
         public void TestNonPublicInstance()
         {
             var intObj = new InternalObject();
+            var duckStatus = intObj.DuckAs<IStatus>();
             var duckObj = intObj.DuckAs<IInternalObject>();
+            
+            Assert.Equal(intObj.Status, duckStatus.Status);
+            Assert.Equal(intObj.StatusField, duckStatus.StatusField);
+
+            duckStatus.Status = TaskStatus.WaitingForActivation;
+            duckStatus.StatusField = TaskStatus.WaitingForChildrenToComplete;
+
+            Assert.Equal(intObj.Status, duckStatus.Status);
+            Assert.Equal(intObj.StatusField, duckStatus.StatusField);
+
             Assert.Same("My Name", duckObj.Name);
             Assert.Same("My Value", duckObj.Value);
             Assert.Same("My Private Name", duckObj.PrivateName);
@@ -256,7 +268,7 @@ namespace Wanhjor.ObjectInspector.Tests
 
         #region Inner Types for TestNonPublicInstance
 
-        public interface IInternalObject
+        public interface IInternalObject : IStatus
         {
             public string Name { get; set; }
             [Duck(Kind = DuckKind.Field)]
@@ -269,6 +281,14 @@ namespace Wanhjor.ObjectInspector.Tests
             public int Sum(int a, int b);
             public int Mult(int a, int b);
             void Add(int a);
+            
+        }
+        
+        public interface IStatus
+        {
+            public TaskStatus Status { get; set; }
+            [Duck(Kind = DuckKind.Field)]
+            public TaskStatus StatusField { get; set; }
         }
         
         internal class InternalObject
@@ -285,6 +305,9 @@ namespace Wanhjor.ObjectInspector.Tests
             public int Mult(int a, int b) => a * b;
             
             public void Add(int a) {}
+
+            public TaskStatus Status { get; set; } = TaskStatus.RanToCompletion;
+            public TaskStatus StatusField = TaskStatus.Created;
         }
 
         #endregion
