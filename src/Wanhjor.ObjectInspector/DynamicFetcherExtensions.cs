@@ -33,14 +33,14 @@ namespace Wanhjor.ObjectInspector
         /// <param name="value">Property or field value</param>
         /// <returns>True if the value could be retrieved; otherwise false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryGetMemberValue(this object obj, string propertyOrFieldName, out object? value)
+        public static bool TryGetMemberValue<TValue>(this object obj, string propertyOrFieldName, out TValue value)
         {
             if (!TryGetDynamicFetcher(obj, propertyOrFieldName, out var fetcher))
             {
-                value = null;
+                value = default!;
                 return false;
             }
-            value = fetcher!.Fetch(obj);
+            value = (TValue)fetcher!.Fetch(obj)!;
             return true;
         }
         
@@ -68,14 +68,14 @@ namespace Wanhjor.ObjectInspector
         /// <param name="returnValue">Return value</param>
         /// <returns>True if the method could be executed; otherwise false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryInvokeMethod(this object obj, string methodName, object[] arguments, out object? returnValue)
+        public static bool TryInvokeMethod<TReturn>(this object obj, string methodName, object[] arguments, out TReturn returnValue)
         {
             if (!TryGetDynamicFetcher(obj, methodName, out var fetcher))
             {
-                returnValue = null;
+                returnValue = default!;
                 return false;
             }
-            returnValue = fetcher!.Invoke(obj, arguments);
+            returnValue = (TReturn)fetcher!.Invoke(obj, arguments)!;
             return true;
         }
         
