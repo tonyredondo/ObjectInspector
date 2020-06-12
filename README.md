@@ -1,9 +1,17 @@
 # <img src="https://raw.githubusercontent.com/tonyredondo/ObjectInspector/master/icon.png" alt="Duck" width="45px" height="45px" /> .NET Object Inspector
 [![Nuget](https://img.shields.io/nuget/vpre/Wanhjor.ObjectInspector?style=for-the-badge)](https://www.nuget.org/packages/Wanhjor.ObjectInspector/)
 
-An efficient .NET object inspector/accesor to avoid reflection. 
+An efficient .NET object inspector/accesor to avoid reflection usage. 
 
 PropertyFetcher, FieldFetcher, MethodCaller and DuckTyping for .NET by Expression Trees or Emitting IL at runtime.
+
+## Target Frameworks
+`netstandard2.0`, `netstandard2.1`, `netcoreapp2.0`, `netcoreapp2.1`, `net461`, `net462`, `net471`, `net472`, `net48` and `net45`.
+
+### Dependencies for *netstandard2.0*:
+
+- `System.Reflection.Emit (>= 4.7.0)`
+- `System.Reflection.Emit.Lightweight (>= 4.7.0)`
 
 ## Usage
 
