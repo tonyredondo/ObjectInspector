@@ -50,8 +50,8 @@ namespace Wanhjor.ObjectInspector.Tests
             
             void GetterTest(string name, string fieldValue)
             {
-                if (field.TryGetMemberValue(name, out var value))
-                    Assert.Equal(fieldValue, (string) value);
+                if (field.TryGetMemberValue(name, out string value))
+                    Assert.Equal(fieldValue, value);
                 else
                     throw new KeyNotFoundException();
             }
@@ -105,8 +105,8 @@ namespace Wanhjor.ObjectInspector.Tests
             
             void GetterTest(string name, string pValue)
             {
-                if (objProperties.TryGetMemberValue(name, out var value))
-                    Assert.Equal(pValue, (string) value);
+                if (objProperties.TryGetMemberValue(name, out string value))
+                    Assert.Equal(pValue, value);
                 else
                     throw new KeyNotFoundException();
             }
@@ -121,7 +121,7 @@ namespace Wanhjor.ObjectInspector.Tests
             
             void CallerTest(string name, object[] arguments, object expectedValue)
             {
-                if (objProperties.TryInvokeMethod(name, arguments, out var value))
+                if (objProperties.TryInvokeMethod(name, arguments, out object value))
                     Assert.Equal(expectedValue, value);
                 else
                     throw new KeyNotFoundException();
