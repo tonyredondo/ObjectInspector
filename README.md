@@ -128,8 +128,8 @@ namespace MyAssembly
 		public static void HandleObject(object obj) 
 		{
 			var inspector = new ObjectInspector(new InspectName("_privateField", DuckAttribute.AllFlags), 
-												new InspectName("PrivateProperty", DuckAttribute.AllFlags), 
-												new InspectName("PrivateConsoleWrite", DuckAttribute.AllFlags));
+							new InspectName("PrivateProperty", DuckAttribute.AllFlags), 
+							new InspectName("PrivateConsoleWrite", DuckAttribute.AllFlags));
 			
 			var viewer = inspector.With(obj);
 			
@@ -166,8 +166,8 @@ namespace MyAssembly
 		public static void HandleObject(object obj) 
 		{
 			var inspTuple = new InspectorTuple<string, string, object>(new InspectName("_privateField", DuckAttribute.AllFlags), 
-																	   new InspectName("PrivateProperty", DuckAttribute.AllFlags), 
-																	   new InspectName("PrivateConsoleWrite", DuckAttribute.AllFlags));
+												new InspectName("PrivateProperty", DuckAttribute.AllFlags), 
+												new InspectName("PrivateConsoleWrite", DuckAttribute.AllFlags));
 			
 			inspTuple.SetInstance(obj);
 			
