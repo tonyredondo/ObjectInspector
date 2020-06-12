@@ -76,7 +76,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     // Load instance
                     if (!method.IsStatic)
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
                     
                     // Load arguments
                     var parameters = method.GetParameters();
@@ -84,10 +84,10 @@ namespace Wanhjor.ObjectInspector
                     for (var i = 0; i < minParametersLength; i++)
                     {
                         // Load value
-                        WriteLoadArgument(i, il, iMethod);
+                        ILHelpers.WriteLoadArgument(i, il, iMethod.IsStatic);
                         var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
                         var pType = Util.GetRootType(parameters[i].ParameterType);
-                        TypeConversion(il, iPType, pType);
+                        ILHelpers.TypeConversion(il, iPType, pType);
                     }
                     
                     // Call method
@@ -111,7 +111,7 @@ namespace Wanhjor.ObjectInspector
                         if (innerDuck)
                             il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
                         else if (method.ReturnType != iMethod.ReturnType)
-                            TypeConversion(il, method.ReturnType, iMethod.ReturnType);
+                            ILHelpers.TypeConversion(il, method.ReturnType, iMethod.ReturnType);
                     }
                 }
                 else
@@ -136,16 +136,16 @@ namespace Wanhjor.ObjectInspector
                     // Load arguments
                     var parameters = method.GetParameters();
                     var minParametersLength = Math.Min(parameters.Length, iMethodParameters.Length);
-                    WriteIlIntValue(il, minParametersLength);
+                    ILHelpers.WriteIlIntValue(il, minParametersLength);
                     il.Emit(OpCodes.Newarr, typeof(object));
                     for (var i = 0; i < minParametersLength; i++)
                     {
                         // Load value
                         il.Emit(OpCodes.Dup);
-                        WriteIlIntValue(il, i);
-                        WriteLoadArgument(i, il, iMethod);
+                        ILHelpers.WriteIlIntValue(il, i);
+                        ILHelpers.WriteLoadArgument(i, il, iMethod.IsStatic);
                         var iPType = Util.GetRootType(iMethodParameters[i].ParameterType);
-                        TypeConversion(il, iPType, typeof(object));
+                        ILHelpers.TypeConversion(il, iPType, typeof(object));
                         il.Emit(OpCodes.Stelem_Ref);
                     }
                     il.EmitCall(OpCodes.Call, InvokeMethodInfo, null);
@@ -156,7 +156,7 @@ namespace Wanhjor.ObjectInspector
                         if (innerDuck)
                             il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
                         else if (iMethod.ReturnType != typeof(object))
-                            TypeConversion(il, typeof(object), iMethod.ReturnType);
+                            ILHelpers.TypeConversion(il, typeof(object), iMethod.ReturnType);
                     }
                     else
                     {

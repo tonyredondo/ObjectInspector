@@ -51,7 +51,6 @@ namespace Wanhjor.ObjectInspector
                 il.EmitCall(OpCodes.Call, property.GetMethod, null);
                 if (property.PropertyType.IsValueType)
                     il.Emit(OpCodes.Box, property.PropertyType);
-                il.Emit(OpCodes.Ret);
             }
             else
             {
@@ -70,8 +69,8 @@ namespace Wanhjor.ObjectInspector
                 il.EmitCall(OpCodes.Callvirt, property.GetMethod, null);
                 if (property.PropertyType.IsValueType)
                     il.Emit(OpCodes.Box, property.PropertyType);
-                il.Emit(OpCodes.Ret);
             }
+            il.Emit(OpCodes.Ret);
         }
 
         /// <summary>
@@ -115,7 +114,6 @@ namespace Wanhjor.ObjectInspector
                 else if (property.PropertyType != typeof(object))
                     il.Emit(OpCodes.Castclass, property.PropertyType);
                 il.EmitCall(OpCodes.Call, property.SetMethod, null);
-                il.Emit(OpCodes.Ret);
             }
             else
             {
@@ -144,8 +142,8 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Box, property.DeclaringType);
                     il.Emit(OpCodes.Stind_Ref);
                 }
-                il.Emit(OpCodes.Ret);
             }
+            il.Emit(OpCodes.Ret);
         }
         
         
@@ -180,7 +178,6 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Ldsfld, field);
                 if (field.FieldType.IsValueType)
                     il.Emit(OpCodes.Box, field.FieldType);
-                il.Emit(OpCodes.Ret);
             }
             else
             {
@@ -192,8 +189,8 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Ldfld, field);
                 if (field.FieldType.IsValueType)
                     il.Emit(OpCodes.Box, field.FieldType);
-                il.Emit(OpCodes.Ret);
             }
+            il.Emit(OpCodes.Ret);
         }
         
         /// <summary>
@@ -237,7 +234,6 @@ namespace Wanhjor.ObjectInspector
                 else if (field.FieldType != typeof(object))
                     il.Emit(OpCodes.Castclass, field.FieldType);
                 il.Emit(OpCodes.Stsfld, field);
-                il.Emit(OpCodes.Ret);
             }
             else
             {
@@ -266,8 +262,8 @@ namespace Wanhjor.ObjectInspector
                     il.Emit(OpCodes.Box, field.DeclaringType);
                     il.Emit(OpCodes.Stind_Ref);
                 }
-                il.Emit(OpCodes.Ret);
             }
+            il.Emit(OpCodes.Ret);
         }
 
         
@@ -333,39 +329,7 @@ namespace Wanhjor.ObjectInspector
                 }
                     
                 il.Emit(OpCodes.Ldarg_1);
-                switch (i)
-                {
-                    case 0:
-                        il.Emit(OpCodes.Ldc_I4_0);
-                        break;
-                    case 1:
-                        il.Emit(OpCodes.Ldc_I4_1);
-                        break;
-                    case 2:
-                        il.Emit(OpCodes.Ldc_I4_2);
-                        break;
-                    case 3:
-                        il.Emit(OpCodes.Ldc_I4_3);
-                        break;
-                    case 4:
-                        il.Emit(OpCodes.Ldc_I4_4);
-                        break;
-                    case 5:
-                        il.Emit(OpCodes.Ldc_I4_5);
-                        break;
-                    case 6:
-                        il.Emit(OpCodes.Ldc_I4_6);
-                        break;
-                    case 7:
-                        il.Emit(OpCodes.Ldc_I4_7);
-                        break;
-                    case 8:
-                        il.Emit(OpCodes.Ldc_I4_8);
-                        break;
-                    default:
-                        il.Emit(OpCodes.Ldc_I4_S, i);
-                        break;
-                }
+                ILHelpers.WriteIlIntValue(il, i);
                 il.Emit(OpCodes.Ldelem_Ref);
 
                 if (callEnum)

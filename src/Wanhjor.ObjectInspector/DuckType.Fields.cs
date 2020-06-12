@@ -51,7 +51,7 @@ namespace Wanhjor.ObjectInspector
                     }
                     else
                     {
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
                         il.Emit(OpCodes.Ldfld, field);
                     }
                 }
@@ -63,7 +63,7 @@ namespace Wanhjor.ObjectInspector
                     }
                     else
                     {
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
                     }
 
                     var getMethod = new DynamicMethod($"GetField+{field.DeclaringType!.Name}.{field.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
@@ -84,7 +84,7 @@ namespace Wanhjor.ObjectInspector
                 if (innerDuck)
                     il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                 else if (field.FieldType != iProperty.PropertyType)
-                    TypeConversion(il, field.FieldType, iProperty.PropertyType);
+                    ILHelpers.TypeConversion(il, field.FieldType, iProperty.PropertyType);
 
             }
             else
@@ -109,7 +109,7 @@ namespace Wanhjor.ObjectInspector
                 if (innerDuck)
                     il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                 else if (iProperty.PropertyType != typeof(object))
-                    TypeConversion(il, typeof(object), iProperty.PropertyType);
+                    ILHelpers.TypeConversion(il, typeof(object), iProperty.PropertyType);
             }
 
             il.Emit(OpCodes.Ret);
@@ -138,7 +138,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     // Load instance
                     if (!field.IsStatic)
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
                 }
                 else
                 {
@@ -193,7 +193,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     var fieldRootType = Util.GetRootType(field.FieldType);
                     var iPropRootType = Util.GetRootType(iProperty.PropertyType);
-                    TypeConversion(il, iPropRootType, fieldRootType);
+                    ILHelpers.TypeConversion(il, iPropRootType, fieldRootType);
                     
                     // Call method
                     if (field.IsPublic)
@@ -220,7 +220,7 @@ namespace Wanhjor.ObjectInspector
                 else
                 {
                     var iPropRootType = Util.GetRootType(iProperty.PropertyType);
-                    TypeConversion(il, iPropRootType, typeof(object));
+                    ILHelpers.TypeConversion(il, iPropRootType, typeof(object));
                     
                     // We can't access to a non public instance using IL, So we need to set the field value using a dynamic fetcher
                     il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);

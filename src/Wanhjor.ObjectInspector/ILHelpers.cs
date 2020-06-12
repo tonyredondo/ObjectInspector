@@ -2,11 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+// ReSharper disable InconsistentNaming
 
 namespace Wanhjor.ObjectInspector
 {
-    public partial class DuckType
+    /// <summary>
+    /// Internal IL Helpers
+    /// </summary>
+    internal static class ILHelpers
     {
+        private static readonly MethodInfo GetTypeFromHandleMethodInfo = typeof(Type).GetMethod("GetTypeFromHandle")!;
+        private static readonly MethodInfo ConvertTypeMethodInfo = typeof(Util).GetMethod("ConvertType")!;
+
+        /// <summary>
+        /// Conversion OpCodes
+        /// </summary>
         private static readonly Dictionary<Type, OpCode> ConvOpCodes = new Dictionary<Type,OpCode>
         {
             {typeof(sbyte),  OpCodes.Conv_I1},
@@ -24,8 +34,13 @@ namespace Wanhjor.ObjectInspector
             {typeof(double),  OpCodes.Conv_R8},
         };
         
-        
-        private static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
+        /// <summary>
+        /// Load instance field
+        /// </summary>
+        /// <param name="il">IlGenerator</param>
+        /// <param name="instanceField">Instance field</param>
+        /// <param name="instanceType">Instance type</param>
+        internal static void LoadInstance(ILGenerator il, FieldInfo instanceField, Type instanceType)
         {
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, instanceField);
@@ -41,32 +56,86 @@ namespace Wanhjor.ObjectInspector
             }
         }
         
-        private static void WriteLoadArgument(int index, ILGenerator il, MethodInfo iMethod)
+        /// <summary>
+        /// Write load arguments
+        /// </summary>
+        /// <param name="index">Argument index</param>
+        /// <param name="il">IlGenerator</param>
+        /// <param name="isStatic">Define if we need to take into account the instance argument</param>
+        internal static void WriteLoadArgument(int index, ILGenerator il, bool isStatic)
         {
             switch (index)
             {
                 case 0:
-                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+                    il.Emit(isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
                     break;
                 case 1:
-                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
+                    il.Emit(isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
                     break;
                 case 2:
-                    il.Emit(iMethod.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
+                    il.Emit(isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3);
                     break;
                 case 3:
-                    if (iMethod.IsStatic)
+                    if (isStatic)
                         il.Emit(OpCodes.Ldarg_3);
                     else
                         il.Emit(OpCodes.Ldarg_S, 4);
                     break;
                 default:
-                    il.Emit(OpCodes.Ldarg_S, iMethod.IsStatic ? index : index + 1);
+                    il.Emit(OpCodes.Ldarg_S, isStatic ? index : index + 1);
                     break;
             }
         }
 
-        private static void TypeConversion(ILGenerator il, Type actualType, Type expectedType)
+        /// <summary>
+        /// Write int value
+        /// </summary>
+        /// <param name="il">ILGenerator</param>
+        /// <param name="value">Integer value</param>
+        internal static void WriteIlIntValue(ILGenerator il, int value)
+        {
+            switch (value)
+            {
+                case 0: 
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldc_I4_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldc_I4_3);
+                    break;
+                case 4:
+                    il.Emit(OpCodes.Ldc_I4_4);
+                    break;
+                case 5:
+                    il.Emit(OpCodes.Ldc_I4_5);
+                    break;
+                case 6:
+                    il.Emit(OpCodes.Ldc_I4_6);
+                    break;
+                case 7:
+                    il.Emit(OpCodes.Ldc_I4_7);
+                    break;
+                case 8:
+                    il.Emit(OpCodes.Ldc_I4_8);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldc_I4_S, value);
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// Convert a current type to an expected type
+        /// </summary>
+        /// <param name="il">ILGenerator</param>
+        /// <param name="actualType">Actual type</param>
+        /// <param name="expectedType">Expected type</param>
+        internal static void TypeConversion(ILGenerator il, Type actualType, Type expectedType)
         {
             if (actualType == expectedType) return;
             
@@ -106,6 +175,13 @@ namespace Wanhjor.ObjectInspector
             }
         }
 
+        /// <summary>
+        /// Converts basic value types using the conversion OpCodes
+        /// </summary>
+        /// <param name="il">ILGenerator</param>
+        /// <param name="currentType">Current value type</param>
+        /// <param name="expectedType">Expected value type</param>
+        /// <returns>True if the conversion was made; otherwise, false</returns>
         private static bool ConvertValueTypes(ILGenerator il, Type currentType, Type expectedType)
         {
             if (currentType == expectedType) return false;
@@ -176,43 +252,6 @@ namespace Wanhjor.ObjectInspector
                 return true;
             }
             return false;
-        }
-
-        private static void WriteIlIntValue(ILGenerator il, int value)
-        {
-            switch (value)
-            {
-                case 0: 
-                    il.Emit(OpCodes.Ldc_I4_0);
-                    break;
-                case 1:
-                    il.Emit(OpCodes.Ldc_I4_1);
-                    break;
-                case 2:
-                    il.Emit(OpCodes.Ldc_I4_2);
-                    break;
-                case 3:
-                    il.Emit(OpCodes.Ldc_I4_3);
-                    break;
-                case 4:
-                    il.Emit(OpCodes.Ldc_I4_4);
-                    break;
-                case 5:
-                    il.Emit(OpCodes.Ldc_I4_5);
-                    break;
-                case 6:
-                    il.Emit(OpCodes.Ldc_I4_6);
-                    break;
-                case 7:
-                    il.Emit(OpCodes.Ldc_I4_7);
-                    break;
-                case 8:
-                    il.Emit(OpCodes.Ldc_I4_8);
-                    break;
-                default:
-                    il.Emit(OpCodes.Ldc_I4_S, value);
-                    break;
-            }
         }
     }
 }

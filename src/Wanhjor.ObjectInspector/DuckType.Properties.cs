@@ -62,7 +62,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     // Load the instance
                     if (!propMethod.IsStatic)
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
 
                     // If we have index parameters we need to pass it
                     if (parameterTypes.Length > 0)
@@ -70,10 +70,10 @@ namespace Wanhjor.ObjectInspector
                         var propIdxParams = prop.GetIndexParameters();
                         for (var i = 0; i < parameterTypes.Length; i++)
                         {
-                            WriteLoadArgument(i, il, propMethod);
+                            ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
                             var iPType = Util.GetRootType(parameterTypes[i]);
                             var pType = Util.GetRootType(propIdxParams[i].ParameterType);
-                            TypeConversion(il, iPType, pType);
+                            ILHelpers.TypeConversion(il, iPType, pType);
                         }
                     }
                     
@@ -97,7 +97,7 @@ namespace Wanhjor.ObjectInspector
                     if (innerDuck)
                         il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                     else if (prop.PropertyType != iProperty.PropertyType)
-                        TypeConversion(il, prop.PropertyType, iProperty.PropertyType);
+                        ILHelpers.TypeConversion(il, prop.PropertyType, iProperty.PropertyType);
                 }
                 else
                 {
@@ -123,7 +123,7 @@ namespace Wanhjor.ObjectInspector
                     if (innerDuck)
                         il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
                     else if (iProperty.PropertyType != typeof(object))
-                        TypeConversion(il, typeof(object), iProperty.PropertyType);
+                        ILHelpers.TypeConversion(il, typeof(object), iProperty.PropertyType);
                 }
 
                 il.Emit(OpCodes.Ret);
@@ -169,7 +169,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     // Load instance
                     if (!propMethod.IsStatic)
-                        LoadInstance(il, instanceField, instanceType);
+                        ILHelpers.LoadInstance(il, instanceField, instanceType);
                     
                     // Check if a duck type object
                     var iPropTypeInterface = iProperty.PropertyType;
@@ -214,10 +214,10 @@ namespace Wanhjor.ObjectInspector
                         }
                         for (var i = 0; i < parameterTypes.Length; i++)
                         {
-                            WriteLoadArgument(i, il, propMethod);
+                            ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
                             var propRootType = Util.GetRootType(propTypes[i]);
                             var iPropRootType = Util.GetRootType(parameterTypes[i]);
-                            TypeConversion(il, iPropRootType, propRootType);
+                            ILHelpers.TypeConversion(il, iPropRootType, propRootType);
                         }
                     }
 
@@ -284,9 +284,9 @@ namespace Wanhjor.ObjectInspector
                         // Load values
                         for (var i = 0; i < parameterTypes.Length; i++)
                         {
-                            WriteLoadArgument(i, il, propMethod);
+                            ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
                             var iPropRootType = Util.GetRootType(parameterTypes[i]);
-                            TypeConversion(il, iPropRootType, typeof(object));
+                            ILHelpers.TypeConversion(il, iPropRootType, typeof(object));
                         }
                     }
                     
