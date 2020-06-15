@@ -1,3 +1,4 @@
+using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
 namespace Wanhjor.ObjectInspector.Benchmark
@@ -10,7 +11,8 @@ namespace Wanhjor.ObjectInspector.Benchmark
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly Fetcher _delegateFetcher;
-        
+        private readonly PropertyInfo _pInfo;
+
         public PublicClassPublicPropertySetterObject()
         {
             _duckObject = _testObject.DuckAs<ISomeObject>();
@@ -19,6 +21,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
             _emitFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.Emit };
             _emitFetcher.Load(_testObject);
             _delegateFetcher = new DelegatePropertyFetcher<SomeObject, string>(typeof(SomeObject).GetProperty("Name")!);
+            _pInfo = typeof(SomeObject).GetProperty("Name", DuckAttribute.AllFlags);
         }
 
         [Benchmark]
@@ -31,5 +34,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         public void EmitFetcher() => _emitFetcher.Shove(_testObject, "Value");
         [Benchmark]
         public void DelegateFetcher() => _delegateFetcher.Shove(_testObject, "Value");
+        [Benchmark]
+        public void Reflection() => _pInfo.SetValue(_testObject, "Value");
     }
 }
