@@ -68,9 +68,7 @@ namespace Wanhjor.ObjectInspector
 
                     var getMethod = new DynamicMethod($"GetField+{field.DeclaringType!.Name}.{field.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
                     EmitAccessors.CreateGetAccessor(getMethod.GetILGenerator(), field);
-
-                    var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var handle = (RuntimeMethodHandle) getMethodDescriptorInfo!.Invoke(getMethod, null);
+                    var handle = GetRuntimeHandle(getMethod);
 
                     il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
                     il.Emit(OpCodes.Conv_I);
@@ -204,9 +202,7 @@ namespace Wanhjor.ObjectInspector
                     {
                         var setMethod = new DynamicMethod($"SetField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
                         EmitAccessors.CreateSetAccessor(setMethod.GetILGenerator(), field);
-
-                        var getMethodDescriptorInfo = typeof(DynamicMethod).GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance);
-                        var handle = (RuntimeMethodHandle) getMethodDescriptorInfo!.Invoke(setMethod, null);
+                        var handle = GetRuntimeHandle(setMethod);
 
                         il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
                         il.Emit(OpCodes.Conv_I);

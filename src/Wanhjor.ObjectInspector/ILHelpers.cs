@@ -44,6 +44,7 @@ namespace Wanhjor.ObjectInspector
         {
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, instanceField);
+            if (!instanceType.IsPublic && !instanceType.IsNestedPublic) return;
             if (instanceType.IsValueType)
             {
                 il.DeclareLocal(instanceType);
