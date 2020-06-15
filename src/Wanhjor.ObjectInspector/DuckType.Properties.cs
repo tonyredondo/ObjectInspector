@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -39,6 +38,7 @@ namespace Wanhjor.ObjectInspector
             }
 
             var propMethod = prop.GetMethod;
+            var publicInstance = instanceType.IsPublic || instanceType.IsNestedPublic;
 
             // Check if an inner duck type is needed
             var innerDuck = false;
@@ -70,7 +70,7 @@ namespace Wanhjor.ObjectInspector
             if (!propMethod.IsStatic)
                 ILHelpers.LoadInstance(il, instanceField, instanceType);
 
-            if (instanceType.IsPublic || instanceType.IsNestedPublic)
+            if (publicInstance)
             {
                 // If we have index parameters we need to pass it
                 if (parameterTypes.Length > 0)
@@ -118,10 +118,7 @@ namespace Wanhjor.ObjectInspector
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
                 il.Emit(OpCodes.Conv_I);
-                il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention,
-                    dynMethod.ReturnType,
-                    dynParameters.ToArray(),
-                    null);
+                il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention, dynMethod.ReturnType, dynParameters.ToArray(), null);
                 DynamicMethods.Add(dynMethod);
 
                 // Handle return value
@@ -154,53 +151,57 @@ namespace Wanhjor.ObjectInspector
                 return method;
             }
 
-            var propMethod = prop.SetMethod;
+            var propMethod = prop.SetMethod; 
+            var publicInstance = instanceType.IsPublic || instanceType.IsNestedPublic;
 
-            if (instanceType.IsPublic || instanceType.IsNestedPublic)
+            // Load instance
+            if (!propMethod.IsStatic)
+                ILHelpers.LoadInstance(il, instanceField, instanceType);
+
+            // Check if a duck type object
+            var iPropTypeInterface = iProperty.PropertyType;
+            if (iPropTypeInterface.IsGenericType)
+                iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
+            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
             {
-                // Load instance
-                if (!propMethod.IsStatic)
-                    ILHelpers.LoadInstance(il, instanceField, instanceType);
-
-                // Check if a duck type object
-                var iPropTypeInterface = iProperty.PropertyType;
-                if (iPropTypeInterface.IsGenericType)
-                    iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-                if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+                if (propMethod.IsStatic)
                 {
-                    if (propMethod.IsStatic)
-                    {
-                        var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtStatic" + iProperty.Name, typeBuilder), tuple =>
-                            tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static));
-                        il.Emit(OpCodes.Ldsflda, innerField);
-                    }
-                    else
-                    {
-                        var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dt" + iProperty.Name, typeBuilder), tuple =>
-                            tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private));
-                        il.Emit(OpCodes.Ldarg_0);
-                        il.Emit(OpCodes.Ldflda, innerField);
-                    }
-
-                    // Load value
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Castclass, typeof(DuckType));
-                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtStatic" + iProperty.Name, typeBuilder), tuple =>
+                        tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static));
+                    il.Emit(OpCodes.Ldsflda, innerField);
                 }
                 else
                 {
-                    // Load values
-                    // If we have index parameters we need to pass it
-                    var propTypes = GetPropertyParameterTypes(prop, true);
-                    for (var i = 0; i < parameterTypes.Length; i++)
-                    {
-                        ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
-                        var propRootType = Util.GetRootType(propTypes[i]);
-                        var iPropRootType = Util.GetRootType(parameterTypes[i]);
-                        ILHelpers.TypeConversion(il, iPropRootType, propRootType);
-                    }
+                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dt" + iProperty.Name, typeBuilder), tuple =>
+                        tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private));
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldflda, innerField);
                 }
 
+                // Load value
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Castclass, typeof(DuckType));
+                il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
+            }
+            else
+            {
+                if (!publicInstance && propMethod.IsStatic)
+                    il.Emit(OpCodes.Ldnull);
+
+                // Load values
+                // If we have index parameters we need to pass it
+                var propTypes = GetPropertyParameterTypes(prop, true);
+                for (var i = 0; i < parameterTypes.Length; i++)
+                {
+                    ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
+                    var iPropRootType = Util.GetRootType(parameterTypes[i]);
+                    var propRootType = publicInstance ? Util.GetRootType(propTypes[i]) : typeof(object);
+                    ILHelpers.TypeConversion(il, iPropRootType, propRootType);
+                }
+            }
+
+            if (publicInstance)
+            {
                 // Call method
                 if (propMethod.IsPublic)
                 {
@@ -218,65 +219,18 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                // We can't access to a non public instance using IL, So we need to set the property value using a dynamic fetcher
+                var dynParameters = new[] {typeof(object), typeof(object)};
+                var dynMethod = new DynamicMethod("setDyn_" + prop.Name, typeof(void), dynParameters, typeof(EmitAccessors).Module);
+                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), prop);
+                var handle = GetRuntimeHandle(dynMethod);
 
-                var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + iProperty.Name, typeBuilder), tuple =>
-                    tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldflda, innerField);
-                il.Emit(OpCodes.Ldstr, prop.Name);
-                if (!propMethod.IsStatic)
-                {
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldfld, instanceField);
-                }
-                else
-                {
-                    il.Emit(OpCodes.Ldnull);
-                }
-
-                // Check if a duck type object
-                var iPropTypeInterface = iProperty.PropertyType;
-                if (iPropTypeInterface.IsGenericType)
-                    iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-                if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
-                {
-                    if (propMethod.IsStatic)
-                    {
-                        var iField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dtStatic" + iProperty.Name, typeBuilder), tuple =>
-                            tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private | FieldAttributes.Static));
-                        il.Emit(OpCodes.Ldsflda, iField);
-                    }
-                    else
-                    {
-                        var iField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dt" + iProperty.Name, typeBuilder), tuple =>
-                            tuple.Item2.DefineField(tuple.Item1, typeof(DuckType), FieldAttributes.Private));
-                        il.Emit(OpCodes.Ldarg_0);
-                        il.Emit(OpCodes.Ldflda, iField);
-                    }
-
-                    // Load value
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Castclass, typeof(DuckType));
-                    il.EmitCall(OpCodes.Call, SetInnerDuckTypeMethodInfo, null);
-                }
-                else
-                {
-                    // Load values
-                    for (var i = 0; i < parameterTypes.Length; i++)
-                    {
-                        ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
-                        var iPropRootType = Util.GetRootType(parameterTypes[i]);
-                        ILHelpers.TypeConversion(il, iPropRootType, typeof(object));
-                    }
-                }
-
-                // We can't access to a non public instance using IL, So we need to set the property value using a dynamic fetcher
-                il.EmitCall(OpCodes.Call, ShoveMethodInfo, null);
+                il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
+                il.Emit(OpCodes.Conv_I);
+                il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention, dynMethod.ReturnType, dynParameters, null);
+                DynamicMethods.Add(dynMethod);
             }
 
             il.Emit(OpCodes.Ret);
-
             return method;
         }
     }
