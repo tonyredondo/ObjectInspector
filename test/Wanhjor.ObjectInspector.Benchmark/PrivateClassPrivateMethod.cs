@@ -20,7 +20,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Sum") { FetcherType = FetcherType.Emit };
             _emitFetcher.Load(_testObject);
-            _mInfo = typeof(SomeObject).GetMethod("Sum", DuckAttribute.AllFlags);
+            _mInfo = typeof(PrivateSomeObject).GetMethod("Sum", DuckAttribute.AllFlags);
         }
 
         [Benchmark]
