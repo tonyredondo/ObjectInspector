@@ -1,21 +1,22 @@
+using System;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     [MinColumn, MaxColumn, MemoryDiagnoser, MarkdownExporter]
-    public class PublicClassPublicPropertySetterObject
+    public class PrivateClassPrivatePropertySetterObject
     {
-        private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
+        private readonly IPrivateSomeObject _duckObject;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly Fetcher _delegateFetcher;
         private readonly PropertyInfo _pInfo;
 
-        public PublicClassPublicPropertySetterObject()
+        public PrivateClassPrivatePropertySetterObject()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.Emit };
@@ -25,7 +26,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         }
 
         [Benchmark]
-        public void Direct() => _testObject.Name = "Value";
+        public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
         public void DuckType() => _duckObject.Name = "Value";
         [Benchmark]

@@ -1,22 +1,21 @@
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     [MinColumn, MaxColumn, MemoryDiagnoser, MarkdownExporter]
-    public class PublicClassPublicMethod
+    public class PrivateClassPrivateMethod
     {
-        private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
+        private readonly IPrivateSomeObject _duckObject;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly MethodInfo _mInfo;
 
-        public PublicClassPublicMethod()
+        public PrivateClassPrivateMethod()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("Sum") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Sum") { FetcherType = FetcherType.Emit };
@@ -25,7 +24,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         }
 
         [Benchmark]
-        public void Direct() => _ = _testObject.Sum(2,2);
+        public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
         public void DuckType() => _ = _duckObject.Sum(2,2);
         [Benchmark]

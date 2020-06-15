@@ -55,46 +55,5 @@ namespace Wanhjor.ObjectInspector
             field = value!;
             return field?.Instance;
         }
-
-        /// <summary>
-        /// Fetch from a dynamic fetcher
-        /// </summary>
-        /// <param name="fetcher">Dynamic Fetcher instance</param>
-        /// <param name="fetcherName">Property or Field name</param>
-        /// <param name="instance">Object instance</param>
-        /// <returns>Fetch value</returns>
-        protected static object? Fetch(ref DynamicFetcher fetcher, string fetcherName, object? instance)
-        {
-            if (fetcher is null)
-                fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
-            return fetcher.Fetch(instance);
-        }
-        /// <summary>
-        /// Shove to a dynamic fetcher
-        /// </summary>
-        /// <param name="fetcher">Dynamic Fetcher instance</param>
-        /// <param name="fetcherName">Property or Field name</param>
-        /// <param name="instance">Object instance</param>
-        /// <param name="value">Value to shove</param>
-        protected static void Shove(ref DynamicFetcher fetcher, string fetcherName, object? instance, object? value)
-        {
-            if (fetcher is null)
-                fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
-            fetcher.Shove(instance, value);
-        }
-        /// <summary>
-        /// Invoke a method from a dynamic fetcher
-        /// </summary>
-        /// <param name="fetcher">Dynamic Fetcher instance</param>
-        /// <param name="fetcherName">Property or Field name</param>
-        /// <param name="instance">Object instance</param>
-        /// <param name="parameters">Method parameters</param>
-        /// <returns></returns>
-        protected static object? Invoke(ref DynamicFetcher fetcher, string fetcherName, object? instance, object[] parameters)
-        {
-            if (fetcher is null)
-                fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
-            return fetcher.Invoke(instance, parameters);
-        }
     }
 }

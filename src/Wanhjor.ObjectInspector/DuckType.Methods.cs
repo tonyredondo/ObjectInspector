@@ -46,6 +46,7 @@ namespace Wanhjor.ObjectInspector
                 }
                 
                 var il = methodBuilder.GetILGenerator();
+                var publicInstance = instanceType.IsPublic || instanceType.IsNestedPublic;
 
                 // We select the method to call
                 var method = SelectMethod(instanceType, iMethod, iMethodParameters, iMethodParametersTypes);
@@ -72,7 +73,7 @@ namespace Wanhjor.ObjectInspector
                 if (iMethodGenericArguments.Length > 0)
                     method = method.MakeGenericMethod(iMethodGenericArguments);
 
-                if (instanceType.IsPublic || instanceType.IsNestedPublic)
+                if (publicInstance)
                 {
                     // Load instance
                     if (!method.IsStatic)
@@ -116,13 +117,6 @@ namespace Wanhjor.ObjectInspector
                 }
                 else
                 {
-                    // We can't access to a non public instance using IL, So we need to call the method using a dynamic fetcher
-                    
-                    var innerField = DynamicFields.GetOrAdd(new VTuple<string, TypeBuilder>("_dFetcher" + method.MetadataToken, typeBuilder), tuple =>
-                        tuple.Item2.DefineField(tuple.Item1, typeof(DynamicFetcher), FieldAttributes.Private));
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldflda, innerField);
-                    il.Emit(OpCodes.Ldstr, method.Name);
                     if (!method.IsStatic)
                     {
                         il.Emit(OpCodes.Ldarg_0);
@@ -148,9 +142,18 @@ namespace Wanhjor.ObjectInspector
                         ILHelpers.TypeConversion(il, iPType, typeof(object));
                         il.Emit(OpCodes.Stelem_Ref);
                     }
-                    il.EmitCall(OpCodes.Call, InvokeMethodInfo, null);
                     
-                    // Covert return value
+                    var dynParameters = new[] {typeof(object), typeof(object[])};
+                    var dynMethod = new DynamicMethod("callDyn_" + method.Name, typeof(object), dynParameters, typeof(EmitAccessors).Module);
+                    EmitAccessors.CreateMethodAccessor(dynMethod.GetILGenerator(), method, false);
+                    var handle = GetRuntimeHandle(dynMethod);
+
+                    il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
+                    il.Emit(OpCodes.Conv_I);
+                    il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention, dynMethod.ReturnType, dynParameters, null);
+                    DynamicMethods.Add(dynMethod);
+                    
+                    // Convert return value
                     if (method.ReturnType != typeof(void)) 
                     {
                         if (innerDuck)

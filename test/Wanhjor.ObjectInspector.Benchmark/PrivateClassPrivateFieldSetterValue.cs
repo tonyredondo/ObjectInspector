@@ -5,36 +5,35 @@ using BenchmarkDotNet.Attributes;
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     [MinColumn, MaxColumn, MemoryDiagnoser, MarkdownExporter]
-    public class PublicClassPublicFieldGetterValue
+    public class PrivateClassPrivateFieldSetterValue
     {
-        private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
+        private readonly IPrivateSomeObject _duckObject;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly FieldInfo _fInfo;
 
-        public PublicClassPublicFieldGetterValue()
+        public PrivateClassPrivateFieldSetterValue()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.Emit };
             _emitFetcher.Load(_testObject);
             _fInfo = typeof(SomeObject).GetField("ValueField", DuckAttribute.AllFlags);
-
         }
 
         [Benchmark]
-        public void Direct() => _ = _testObject.ValueField;
+        public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
-        public void DuckType() => _ = _duckObject.ValueField;
+        public void DuckType() => _duckObject.ValueField = 42;
         [Benchmark]
-        public void ExpressionTreeFetcher() => _ = (int)_expressionFetcher.Fetch(_testObject);
+        public void ExpressionTreeFetcher() => _expressionFetcher.Shove(_testObject, 42);
         [Benchmark]
-        public void EmitFetcher() => _ = (int)_emitFetcher.Fetch(_testObject);
+        public void EmitFetcher() => _emitFetcher.Shove(_testObject, 42);
         [Benchmark]
         public void DelegateFetcher() => throw new NotImplementedException();
         [Benchmark]
-        public void Reflection() => _ = (int)_fInfo.GetValue(_testObject);
+        public void Reflection() => _fInfo.SetValue(_testObject, 42);
     }
 }

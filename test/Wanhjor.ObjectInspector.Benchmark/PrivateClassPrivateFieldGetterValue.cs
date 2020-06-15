@@ -5,17 +5,17 @@ using BenchmarkDotNet.Attributes;
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     [MinColumn, MaxColumn, MemoryDiagnoser, MarkdownExporter]
-    public class PublicClassPublicFieldGetterValue
+    public class PrivateClassPrivateFieldGetterValue
     {
-        private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
+        private readonly IPrivateSomeObject _duckObject;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly FieldInfo _fInfo;
 
-        public PublicClassPublicFieldGetterValue()
+        public PrivateClassPrivateFieldGetterValue()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.Emit };
@@ -25,7 +25,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         }
 
         [Benchmark]
-        public void Direct() => _ = _testObject.ValueField;
+        public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
         public void DuckType() => _ = _duckObject.ValueField;
         [Benchmark]

@@ -1,21 +1,22 @@
+using System;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     [MinColumn, MaxColumn, MemoryDiagnoser, MarkdownExporter]
-    public class PublicClassPublicPropertySetterObject
+    public class PrivateClassPrivatePropertyGetterObject
     {
-        private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
+        private readonly IPrivateSomeObject _duckObject;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly Fetcher _delegateFetcher;
         private readonly PropertyInfo _pInfo;
 
-        public PublicClassPublicPropertySetterObject()
+        public PrivateClassPrivatePropertyGetterObject()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.Emit };
@@ -25,16 +26,16 @@ namespace Wanhjor.ObjectInspector.Benchmark
         }
 
         [Benchmark]
-        public void Direct() => _testObject.Name = "Value";
+        public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
-        public void DuckType() => _duckObject.Name = "Value";
+        public void DuckType() => _ = _duckObject.Name;
         [Benchmark]
-        public void ExpressionTreeFetcher() => _expressionFetcher.Shove(_testObject, "Value");
+        public void ExpressionTreeFetcher() => _ = (string)_expressionFetcher.Fetch(_testObject);
         [Benchmark]
-        public void EmitFetcher() => _emitFetcher.Shove(_testObject, "Value");
+        public void EmitFetcher() => _ = (string)_emitFetcher.Fetch(_testObject);
         [Benchmark]
-        public void DelegateFetcher() => _delegateFetcher.Shove(_testObject, "Value");
+        public void DelegateFetcher() => _ = (string)_delegateFetcher.Fetch(_testObject);
         [Benchmark]
-        public void Reflection() => _pInfo.SetValue(_testObject, "Value");
+        public void Reflection() => _ = (string)_pInfo.GetValue(_testObject);
     }
 }
