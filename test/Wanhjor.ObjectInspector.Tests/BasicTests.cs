@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -139,6 +140,47 @@ namespace Wanhjor.ObjectInspector.Tests
                     var p = new object[] {2, 2};
                     Runner.RunF("Method Fetcher", () => tObject.Sum(2, 2), () => sumFetcher.Invoke(tObject, p)!);
                 }
+            }
+        }
+
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DynamicFetcherExpressionTreeTest()
+        {
+            var keyFetcher = new DynamicFetcher("Key") {FetcherType = FetcherType.ExpressionTree};
+            var valueFetcher = new DynamicFetcher("Value") {FetcherType = FetcherType.ExpressionTree};
+            var dictio = new Dictionary<string, string>();
+            dictio.Add("Key1", "Value1");
+            dictio.Add("Key2", "Value2");
+
+            foreach (var item in (IEnumerable) dictio)
+            {
+                var key = keyFetcher.Fetch(item);
+                var value = valueFetcher.Fetch(item);
+                
+                Assert.NotNull(key);
+                Assert.NotNull(value);
+            }
+        }
+        
+        
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DynamicFetcherEmitTest()
+        {
+            var keyFetcher = new DynamicFetcher("Key") {FetcherType = FetcherType.Emit};
+            var valueFetcher = new DynamicFetcher("Value") {FetcherType = FetcherType.Emit};
+            var dictio = new Dictionary<string, string>();
+            dictio.Add("Key1", "Value1");
+            dictio.Add("Key2", "Value2");
+
+            foreach (var item in (IEnumerable) dictio)
+            {
+                var key = keyFetcher.Fetch(item);
+                var value = valueFetcher.Fetch(item);
+                
+                Assert.NotNull(key);
+                Assert.NotNull(value);
             }
         }
     }

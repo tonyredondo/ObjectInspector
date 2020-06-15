@@ -46,6 +46,7 @@ namespace Wanhjor.ObjectInspector
             il.Emit(OpCodes.Ldfld, instanceField);
             if (instanceType.IsValueType)
             {
+                il.DeclareLocal(instanceType);
                 il.Emit(OpCodes.Unbox_Any, instanceType);
                 il.Emit(OpCodes.Stloc_0);
                 il.Emit(OpCodes.Ldloca_S, 0);

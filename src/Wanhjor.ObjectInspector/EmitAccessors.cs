@@ -57,6 +57,7 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Ldarg_0);
                 if (property.DeclaringType!.IsValueType)
                 {
+                    il.DeclareLocal(property.DeclaringType);
                     il.Emit( OpCodes.Unbox_Any, property.DeclaringType);
                     il.Emit( OpCodes.Stloc_0);
                     il.Emit( OpCodes.Ldloca_S, 0);
@@ -120,6 +121,7 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Ldarg_0);
                 if (property.DeclaringType!.IsValueType)
                 {
+                    il.DeclareLocal(property.DeclaringType);
                     il.Emit(OpCodes.Ldind_Ref);
                     il.Emit( OpCodes.Unbox_Any, property.DeclaringType);
                     il.Emit( OpCodes.Stloc_0);
@@ -240,6 +242,7 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Ldarg_0);
                 if (field.DeclaringType!.IsValueType)
                 {
+                    il.DeclareLocal(field.DeclaringType);
                     il.Emit(OpCodes.Ldind_Ref);
                     il.Emit( OpCodes.Unbox_Any, field.DeclaringType);
                     il.Emit( OpCodes.Stloc_0);

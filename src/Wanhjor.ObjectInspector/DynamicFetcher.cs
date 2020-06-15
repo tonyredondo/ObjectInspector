@@ -15,7 +15,7 @@ namespace Wanhjor.ObjectInspector
         private readonly BindingFlags? _bindingFlags;
         private readonly Func<MethodInfo, bool>? _methodSelector;
         private Fetcher _fetcher = null!;
-        private FetcherType _fetcherType = FetcherType.ExpressionTree;
+        private FetcherType _fetcherType = FetcherType.Emit;
         
         /// <summary>
         /// Gets or sets the fetcher Type
