@@ -21,7 +21,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.Emit };
             _emitFetcher.Load(_testObject);
-            _delegateFetcher = new DelegatePropertyFetcher<PrivateSomeObject, string>(typeof(PrivateSomeObject).GetProperty("Name")!);
+            _delegateFetcher = new DelegatePropertyFetcher<PrivateSomeObject, string>(typeof(PrivateSomeObject).GetProperty("Name", DuckAttribute.AllFlags)!);
             _pInfo = typeof(PrivateSomeObject).GetProperty("Name", DuckAttribute.AllFlags);
         }
 
