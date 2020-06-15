@@ -46,6 +46,7 @@ namespace Wanhjor.ObjectInspector
                 }
                 
                 var il = methodBuilder.GetILGenerator();
+                var publicInstance = instanceType.IsPublic || instanceType.IsNestedPublic;
 
                 // We select the method to call
                 var method = SelectMethod(instanceType, iMethod, iMethodParameters, iMethodParametersTypes);
@@ -72,7 +73,7 @@ namespace Wanhjor.ObjectInspector
                 if (iMethodGenericArguments.Length > 0)
                     method = method.MakeGenericMethod(iMethodGenericArguments);
 
-                if (instanceType.IsPublic || instanceType.IsNestedPublic)
+                if (publicInstance)
                 {
                     // Load instance
                     if (!method.IsStatic)

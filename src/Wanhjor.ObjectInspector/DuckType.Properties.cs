@@ -118,7 +118,7 @@ namespace Wanhjor.ObjectInspector
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
                 il.Emit(OpCodes.Conv_I);
-                il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention, dynMethod.ReturnType, dynParameters.ToArray(), null);
+                il.EmitCalli(OpCodes.Calli, dynMethod.CallingConvention, dynMethod.ReturnType, dynParameters, null);
                 DynamicMethods.Add(dynMethod);
 
                 // Handle return value
