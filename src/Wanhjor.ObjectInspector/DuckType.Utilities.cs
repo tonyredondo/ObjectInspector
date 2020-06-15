@@ -55,20 +55,5 @@ namespace Wanhjor.ObjectInspector
             field = value!;
             return field?.Instance;
         }
-
-        /// <summary>
-        /// Invoke a method from a dynamic fetcher
-        /// </summary>
-        /// <param name="fetcher">Dynamic Fetcher instance</param>
-        /// <param name="fetcherName">Property or Field name</param>
-        /// <param name="instance">Object instance</param>
-        /// <param name="parameters">Method parameters</param>
-        /// <returns></returns>
-        protected static object? Invoke(ref DynamicFetcher fetcher, string fetcherName, object? instance, object[] parameters)
-        {
-            if (fetcher is null)
-                fetcher = new DynamicFetcher(fetcherName, DuckAttribute.AllFlags);
-            return fetcher.Invoke(instance, parameters);
-        }
     }
 }

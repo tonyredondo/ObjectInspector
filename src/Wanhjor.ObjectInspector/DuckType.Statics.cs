@@ -21,13 +21,11 @@ namespace Wanhjor.ObjectInspector
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly MethodInfo SetInnerDuckTypeMethodInfo = typeof(DuckType).GetMethod("SetInnerDuckType", BindingFlags.Static | BindingFlags.NonPublic);
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
-        private static readonly MethodInfo InvokeMethodInfo = typeof(DuckType).GetMethod("Invoke", BindingFlags.Static | BindingFlags.NonPublic);
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)] 
         private static readonly ConcurrentDictionary<VTuple<string, TypeBuilder>, FieldInfo> DynamicFields = new ConcurrentDictionary<VTuple<string, TypeBuilder>, FieldInfo>();
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private static Func<DynamicMethod, RuntimeMethodHandle>? _dynamicGetMethodDescriptor;
 
-        internal static RuntimeMethodHandle GetRuntimeHandle(DynamicMethod dynamicMethod)
+        private static RuntimeMethodHandle GetRuntimeHandle(DynamicMethod dynamicMethod)
         {
             _dynamicGetMethodDescriptor ??= (Func<DynamicMethod, RuntimeMethodHandle>) typeof(DynamicMethod)
                 .GetMethod("GetMethodDescriptor", BindingFlags.NonPublic | BindingFlags.Instance)
