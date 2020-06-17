@@ -20,7 +20,7 @@ namespace Wanhjor.ObjectInspector.Tests
 
                 var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
                 var iObj = tObject.DuckAs<IDuckTestObject>();
-
+                    
                 var tTmp = Activator.CreateInstance(iObj.Type!);
                 var tObj = tTmp!.DuckAs<IDuckTestName>();
                 tObj.Name = "My new setter";

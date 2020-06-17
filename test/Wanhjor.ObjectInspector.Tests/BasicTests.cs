@@ -20,13 +20,14 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
 
-            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum", "ShowEnum");
+            var objInsp = new ObjectInspector("Name", "Value", "PrivateName", "_privateValue", "Sum", "ShowEnum", "MyEnumValue");
             var objData = objInsp.With(tObject);
 
             Assert.Equal("Tony", objData["Name"]);
             Assert.Equal("Redondo", objData["Value"]);
             Assert.Equal("My private name", objData["PrivateName"]);
             Assert.Equal("my private value", objData["_privateValue"]);
+            Assert.Equal(TestEnum.Second, objData["MyEnumValue"]);
             Assert.Equal(4, objData.Invoke("Sum", 2, 2));
             Assert.Equal(TestEnum.Second, objData.Invoke("ShowEnum", 1));
             Assert.Equal(4, objData.Invoke("Sum", 2d, 2f));

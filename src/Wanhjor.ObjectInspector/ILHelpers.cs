@@ -163,19 +163,16 @@ namespace Wanhjor.ObjectInspector
         internal static void TypeConversion(ILGenerator il, Type actualType, Type expectedType)
         {
             if (actualType == expectedType) return;
+            var actualUnderlyingType = actualType.IsEnum ? Enum.GetUnderlyingType(actualType) : actualType;
+            var expectedUnderlyingType = expectedType.IsEnum ? Enum.GetUnderlyingType(expectedType) : expectedType;
             
-            if (actualType.IsEnum)
-                actualType = Enum.GetUnderlyingType(actualType);
-            if (expectedType.IsEnum)
-                expectedType = Enum.GetUnderlyingType(expectedType);
-
-            if (actualType.IsValueType)
+            if (actualUnderlyingType.IsValueType)
             {
-                if (expectedType.IsValueType)
+                if (expectedUnderlyingType.IsValueType)
                 {
-                    if (ConvertValueTypes(il, actualType, expectedType)) return;
-                    il.Emit(OpCodes.Box, actualType);
-                    il.Emit(OpCodes.Unbox_Any, expectedType);
+                    if (ConvertValueTypes(il, actualUnderlyingType, expectedUnderlyingType)) return;
+                    il.Emit(OpCodes.Box, actualUnderlyingType);
+                    il.Emit(OpCodes.Unbox_Any, expectedUnderlyingType);
                 }
                 else
                 {
@@ -187,8 +184,7 @@ namespace Wanhjor.ObjectInspector
             {
                 if (expectedType.IsValueType)
                 {
-                    il.Emit(OpCodes.Box, actualType); 
-                    il.Emit(OpCodes.Ldtoken, expectedType); 
+                    il.Emit(OpCodes.Ldtoken, expectedUnderlyingType); 
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null); 
                     il.EmitCall(OpCodes.Call, ConvertTypeMethodInfo, null); 
                     il.Emit(OpCodes.Unbox_Any, expectedType);
@@ -209,7 +205,7 @@ namespace Wanhjor.ObjectInspector
         /// <returns>True if the conversion was made; otherwise, false</returns>
         private static bool ConvertValueTypes(ILGenerator il, Type currentType, Type expectedType)
         {
-            if (currentType == expectedType) return false;
+            if (currentType == expectedType) return true;
 
             if (currentType == typeof(byte) &&
                 expectedType != typeof(sbyte) && expectedType != typeof(short) &&
