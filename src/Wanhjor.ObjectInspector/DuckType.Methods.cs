@@ -110,7 +110,10 @@ namespace Wanhjor.ObjectInspector
                     if (method.ReturnType != typeof(void)) 
                     {
                         if (innerDuck)
+                        {
+                            ILHelpers.TypeConversion(il, method.ReturnType, typeof(object));
                             il.EmitCall(OpCodes.Call, DuckTypeCreate, null);
+                        } 
                         else if (method.ReturnType != iMethod.ReturnType)
                             ILHelpers.TypeConversion(il, method.ReturnType, iMethod.ReturnType);
                     }
