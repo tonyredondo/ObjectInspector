@@ -114,9 +114,12 @@ namespace Wanhjor.ObjectInspector
                 if (propMethod.IsStatic)
                     il.Emit(OpCodes.Ldnull);
 
+                var dynReturnType = typeof(object);
                 var dynParameters = new[] {typeof(object)};
-                var dynMethod = new DynamicMethod("getDyn_" + prop.Name, typeof(object), dynParameters, typeof(EmitAccessors).Module);
-                EmitAccessors.CreateGetAccessor(dynMethod.GetILGenerator(), prop);
+                if (prop.PropertyType.IsPublic || prop.PropertyType.IsNestedPublic)
+                    dynReturnType = prop.PropertyType;
+                var dynMethod = new DynamicMethod("getDyn_" + prop.Name, dynReturnType, dynParameters, typeof(EmitAccessors).Module);
+                EmitAccessors.CreateGetAccessor(dynMethod.GetILGenerator(), prop, typeof(object), dynReturnType);
                 var handle = GetRuntimeHandle(dynMethod);
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
@@ -126,9 +129,12 @@ namespace Wanhjor.ObjectInspector
 
                 // Handle return value
                 if (innerDuck)
+                {
+                    ILHelpers.TypeConversion(il, dynReturnType, typeof(object));
                     il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
-                else if (typeof(object) != iProperty.PropertyType)
-                    ILHelpers.TypeConversion(il, typeof(object), iProperty.PropertyType);
+                }
+                else 
+                    ILHelpers.TypeConversion(il, dynReturnType, iProperty.PropertyType);
             }
 
             il.Emit(OpCodes.Ret);
@@ -222,9 +228,12 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
-                var dynParameters = new[] {typeof(object), typeof(object)};
+                var dynValueType = typeof(object);
+                if (prop.PropertyType.IsPublic || prop.PropertyType.IsNestedPublic)
+                    dynValueType = prop.PropertyType;
+                var dynParameters = new[] {typeof(object), dynValueType};
                 var dynMethod = new DynamicMethod("setDyn_" + prop.Name, typeof(void), dynParameters, typeof(EmitAccessors).Module);
-                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), prop);
+                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), prop, typeof(object), dynValueType);
                 var handle = GetRuntimeHandle(dynMethod);
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
