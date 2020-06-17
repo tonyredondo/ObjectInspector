@@ -76,7 +76,10 @@ namespace Wanhjor.ObjectInspector
             }
 
             if (innerDuck)
+            {
+                ILHelpers.TypeConversion(il, returnType, typeof(object));
                 il.EmitCall(OpCodes.Call, GetInnerDuckTypeMethodInfo, null);
+            }
             else if (returnType != iProperty.PropertyType)
                 ILHelpers.TypeConversion(il, returnType, iProperty.PropertyType);
 
