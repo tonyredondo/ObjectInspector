@@ -142,7 +142,7 @@ namespace Wanhjor.ObjectInspector
         public static Func<object, object> BuildGetAccessor(FieldInfo field)
         {
             var getMethod = new DynamicMethod($"GetField+{field.DeclaringType!.Name}.{field.Name}", typeof(object), new[] {typeof(object)}, typeof(EmitAccessors).Module);
-            CreateGetAccessor(getMethod.GetILGenerator(), field);
+            CreateGetAccessor(getMethod.GetILGenerator(), field, typeof(object), typeof(object));
             return (Func<object, object>) getMethod.CreateDelegate(typeof(Func<object, object>));
         }
 
@@ -155,26 +155,23 @@ namespace Wanhjor.ObjectInspector
         /// </remarks>
         /// <param name="il">Il Generator</param>
         /// <param name="field">Field info</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <param name="returnType">Return type</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CreateGetAccessor(ILGenerator il, FieldInfo field)
+        public static void CreateGetAccessor(ILGenerator il, FieldInfo field, Type instanceType, Type returnType)
         {
             if (field.IsStatic)
             {
                 il.Emit(OpCodes.Ldsfld, field);
-                if (field.FieldType.IsValueType)
-                    il.Emit(OpCodes.Box, field.FieldType);
             }
             else
             {
                 il.Emit(OpCodes.Ldarg_0);
-                if (field.DeclaringType!.IsValueType)
-                    il.Emit( OpCodes.Unbox, field.DeclaringType);
-                else if (field.DeclaringType != typeof(object))
-                    il.Emit(OpCodes.Castclass, field.DeclaringType);
+                if (field.DeclaringType != instanceType)
+                    il.Emit(field.DeclaringType!.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, field.DeclaringType);
                 il.Emit(OpCodes.Ldfld, field);
-                if (field.FieldType.IsValueType)
-                    il.Emit(OpCodes.Box, field.FieldType);
             }
+            ILHelpers.TypeConversion(il, field.FieldType, returnType);
             il.Emit(OpCodes.Ret);
         }
         
@@ -187,7 +184,7 @@ namespace Wanhjor.ObjectInspector
         public static Action<object, object> BuildSetAccessor(FieldInfo field)
         {
             var setMethod = new DynamicMethod($"SetField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), new[] {typeof(object), typeof(object)}, typeof(EmitAccessors).Module);
-            CreateSetAccessor(setMethod.GetILGenerator(), field);
+            CreateSetAccessor(setMethod.GetILGenerator(), field, typeof(object), typeof(object));
             return (Action<object, object>) setMethod.CreateDelegate(typeof(Action<object, object>));
         }
         
@@ -202,8 +199,10 @@ namespace Wanhjor.ObjectInspector
         /// </remarks>
         /// <param name="il">Il Generator</param>
         /// <param name="field">Field info</param>
+        /// <param name="instanceType">Instance type</param>
+        /// <param name="valueType">Value type</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CreateSetAccessor(ILGenerator il, FieldInfo field)
+        public static void CreateSetAccessor(ILGenerator il, FieldInfo field, Type instanceType, Type valueType)
         {
             if ((field.Attributes & FieldAttributes.InitOnly) != 0)
             {
@@ -214,10 +213,7 @@ namespace Wanhjor.ObjectInspector
             if (field.IsStatic)
             {
                 il.Emit(OpCodes.Ldarg_1);
-                if (field.FieldType.IsValueType)
-                    il.Emit( OpCodes.Unbox_Any, field.FieldType);
-                else if (field.FieldType != typeof(object))
-                    il.Emit(OpCodes.Castclass, field.FieldType);
+                ILHelpers.TypeConversion(il, valueType, field.FieldType);
                 il.Emit(OpCodes.Stsfld, field);
             }
             else
@@ -231,15 +227,12 @@ namespace Wanhjor.ObjectInspector
                     il.Emit( OpCodes.Stloc_0);
                     il.Emit( OpCodes.Ldloca_S, 0);
                 }
-                else if (field.DeclaringType != typeof(object))
+                else if (field.DeclaringType != instanceType)
                 {
                     il.Emit(OpCodes.Castclass, field.DeclaringType);
                 }
                 il.Emit(OpCodes.Ldarg_1);
-                if (field.FieldType.IsValueType)
-                    il.Emit( OpCodes.Unbox_Any, field.FieldType);
-                else if (field.FieldType != typeof(object))
-                    il.Emit(OpCodes.Castclass, field.FieldType);
+                ILHelpers.TypeConversion(il, valueType, field.FieldType);
                 il.Emit(OpCodes.Stfld, field);
                 if (field.DeclaringType.IsValueType)
                 {

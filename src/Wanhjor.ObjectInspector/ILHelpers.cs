@@ -67,6 +67,7 @@ namespace Wanhjor.ObjectInspector
         internal static void LoadInstanceArgument(ILGenerator il, Type actualType, Type expectedType)
         {
             il.Emit(OpCodes.Ldarg_0);
+            if (actualType == expectedType) return;
             if (expectedType.IsValueType)
             {
                 il.DeclareLocal(expectedType);
@@ -74,7 +75,7 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Stloc_0);
                 il.Emit(OpCodes.Ldloca_S, 0);
             }
-            else if (expectedType != actualType)
+            else
             {
                 il.Emit(OpCodes.Castclass, expectedType);
             }

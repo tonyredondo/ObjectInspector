@@ -233,7 +233,7 @@ namespace Wanhjor.ObjectInspector
                     dynValueType = prop.PropertyType;
                 var dynParameters = new[] {typeof(object), dynValueType};
                 var dynMethod = new DynamicMethod("setDyn_" + prop.Name, typeof(void), dynParameters, typeof(EmitAccessors).Module);
-                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), prop, typeof(object), dynValueType);
+                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), prop, dynParameters[0], dynParameters[1]);
                 var handle = GetRuntimeHandle(dynMethod);
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());

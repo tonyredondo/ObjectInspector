@@ -64,9 +64,11 @@ namespace Wanhjor.ObjectInspector
                     ILHelpers.LoadInstance(il, instanceField, instanceType);
 
                 returnType = typeof(object);
+                if (field.FieldType.IsPublic || field.FieldType.IsNestedPublic)
+                    returnType = field.FieldType;
                 var dynParameters = new[] {typeof(object)};
                 var dynMethod = new DynamicMethod($"_getField+{field.DeclaringType!.Name}.{field.Name}", returnType, dynParameters, typeof(EmitAccessors).Module);
-                EmitAccessors.CreateGetAccessor(dynMethod.GetILGenerator(), field);
+                EmitAccessors.CreateGetAccessor(dynMethod.GetILGenerator(), field, typeof(object), returnType);
                 var handle = GetRuntimeHandle(dynMethod);
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
@@ -161,12 +163,15 @@ namespace Wanhjor.ObjectInspector
             }
             else
             {
+                var dynValueType = typeof(object);
+                if (field.FieldType.IsPublic || field.FieldType.IsNestedPublic)
+                    dynValueType = field.FieldType;
                 var iPropRootType = Util.GetRootType(iProperty.PropertyType);
-                ILHelpers.TypeConversion(il, iPropRootType, typeof(object));
+                ILHelpers.TypeConversion(il, iPropRootType, dynValueType);
 
-                var dynParameters = new[] {typeof(object), typeof(object)};
+                var dynParameters = new[] {typeof(object), dynValueType};
                 var dynMethod = new DynamicMethod($"_setField+{field.DeclaringType!.Name}.{field.Name}", typeof(void), dynParameters, typeof(EmitAccessors).Module);
-                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), field);
+                EmitAccessors.CreateSetAccessor(dynMethod.GetILGenerator(), field, dynParameters[0], dynParameters[1]);
                 var handle = GetRuntimeHandle(dynMethod);
 
                 il.Emit(OpCodes.Ldc_I8, (long) handle.GetFunctionPointer());
