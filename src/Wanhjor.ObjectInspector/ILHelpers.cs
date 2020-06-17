@@ -57,6 +57,29 @@ namespace Wanhjor.ObjectInspector
                 il.Emit(OpCodes.Castclass, instanceType);
             }
         }
+
+        /// <summary>
+        /// Load instance argument
+        /// </summary>
+        /// <param name="il">ILGenerator</param>
+        /// <param name="actualType">Actual type</param>
+        /// <param name="expectedType">Expected type</param>
+        internal static void LoadInstanceArgument(ILGenerator il, Type actualType, Type expectedType)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+            if (actualType == expectedType) return;
+            if (expectedType.IsValueType)
+            {
+                il.DeclareLocal(expectedType);
+                il.Emit(OpCodes.Unbox_Any, expectedType);
+                il.Emit(OpCodes.Stloc_0);
+                il.Emit(OpCodes.Ldloca_S, 0);
+            }
+            else
+            {
+                il.Emit(OpCodes.Castclass, expectedType);
+            }
+        }
         
         /// <summary>
         /// Write load arguments
@@ -163,7 +186,7 @@ namespace Wanhjor.ObjectInspector
             else
             {
                 if (expectedType.IsValueType)
-                { 
+                {
                     il.Emit(OpCodes.Box, actualType); 
                     il.Emit(OpCodes.Ldtoken, expectedType); 
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null); 

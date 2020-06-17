@@ -246,6 +246,8 @@ namespace Wanhjor.ObjectInspector.Tests
 
             Assert.Equal(intObj.Status, duckStatus.Status);
             Assert.Equal(intObj.StatusField, duckStatus.StatusField);
+            
+            Assert.Equal(intObj.NumValue, duckObj.NumValue);
 
             Assert.Same("My Name", duckObj.Name);
             Assert.Same("My Value", duckObj.Value);
@@ -277,6 +279,10 @@ namespace Wanhjor.ObjectInspector.Tests
             public string PrivateName { get; set; }
             [Duck(Kind = DuckKind.Field, Flags = DuckAttribute.AllFlags)]
             public string PrivateValue { get; set; }
+            
+            [Duck(Flags = DuckAttribute.AllFlags)]
+            public int NumValue { get; set; }
+
 
             public int Sum(int a, int b);
             public int Mult(int a, int b);
@@ -301,6 +307,8 @@ namespace Wanhjor.ObjectInspector.Tests
 
             private string PrivateValue = "My Private Value";
 
+            public int NumValue { get; set; } = 42;
+            
             public int Sum(int a, int b) => a + b;
             public int Mult(int a, int b) => a * b;
             
