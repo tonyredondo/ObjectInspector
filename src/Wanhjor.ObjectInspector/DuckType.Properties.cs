@@ -204,7 +204,7 @@ namespace Wanhjor.ObjectInspector
                 {
                     ILHelpers.WriteLoadArgument(i, il, propMethod.IsStatic);
                     var iPropRootType = Util.GetRootType(parameterTypes[i]);
-                    var propRootType = publicInstance ? Util.GetRootType(propTypes[i]) : typeof(object);
+                    var propRootType = propTypes[i].IsPublic || propTypes[i].IsNestedPublic ? Util.GetRootType(propTypes[i]) : typeof(object);
                     ILHelpers.TypeConversion(il, iPropRootType, propRootType);
                 }
             }

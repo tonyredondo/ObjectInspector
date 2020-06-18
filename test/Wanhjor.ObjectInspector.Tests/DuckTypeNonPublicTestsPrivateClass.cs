@@ -163,6 +163,9 @@ namespace Wanhjor.ObjectInspector.Tests
         public interface IObjTestProperties
         {
             [Duck(Flags = DuckAttribute.AllFlags)]
+            int PrivateValueProp { get; set; }
+            
+            [Duck(Flags = DuckAttribute.AllFlags)]
             string PublicGetterPublicSetterProp { get; set; }
             [Duck(Flags = DuckAttribute.AllFlags)]
             string PrivateGetterPrivateSetterProp { get; set; }
@@ -192,6 +195,8 @@ namespace Wanhjor.ObjectInspector.Tests
         
         private class ObjTestProperties
         {
+            private int PrivateValueProp { get; set; }
+
             private string _privateGetterPublicSetterProp = "Private getter / Public setter property";
             private string _protectedGetterPublicSetterProp = "Protected getter / Public setter property";
             private string _internalGetterPublicSetterProp = "Internal getter / Public setter property";

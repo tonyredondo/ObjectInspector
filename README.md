@@ -210,93 +210,93 @@ AMD Ryzen Threadripper 2950X, 1 CPU, 32 logical and 16 physical cores
 #### Public Property / Getter / Object Type
 |                Method |       Mean |     Error |    StdDev |     Median |        Min |        Max |  Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-----------:|-------:|--------:|------:|------:|------:|----------:|
-|                Direct |  0.0161 ns | 0.0290 ns | 0.0257 ns |  0.0035 ns |  0.0000 ns |  0.0728 ns |  0.007 |    0.01 |     - |     - |     - |         - |
-|              DuckType |  2.2125 ns | 0.0046 ns | 0.0043 ns |  2.2116 ns |  2.2055 ns |  2.2202 ns |  1.000 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  3.4792 ns | 0.0302 ns | 0.0283 ns |  3.4853 ns |  3.4342 ns |  3.5224 ns |  1.573 |    0.01 |     - |     - |     - |         - |
-|           EmitFetcher |  3.6111 ns | 0.0906 ns | 0.0848 ns |  3.6054 ns |  3.4889 ns |  3.7224 ns |  1.632 |    0.04 |     - |     - |     - |         - |
-|       DelegateFetcher |  4.9922 ns | 0.0385 ns | 0.0360 ns |  5.0016 ns |  4.9133 ns |  5.0446 ns |  2.256 |    0.02 |     - |     - |     - |         - |
-|            Reflection | 90.5706 ns | 0.1098 ns | 0.0974 ns | 90.5540 ns | 90.3597 ns | 90.7462 ns | 40.927 |    0.08 |     - |     - |     - |         - |
+|                Direct |  0.0003 ns | 0.0006 ns | 0.0006 ns |  0.0000 ns |  0.0000 ns |  0.0015 ns |  0.000 |    0.00 |     - |     - |     - |         - |
+|              DuckType |  2.2143 ns | 0.0055 ns | 0.0049 ns |  2.2155 ns |  2.2038 ns |  2.2195 ns |  1.000 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  3.4703 ns | 0.0477 ns | 0.0446 ns |  3.4697 ns |  3.3974 ns |  3.5489 ns |  1.567 |    0.02 |     - |     - |     - |         - |
+|           EmitFetcher |  3.4944 ns | 0.0780 ns | 0.0729 ns |  3.5002 ns |  3.3965 ns |  3.6691 ns |  1.577 |    0.03 |     - |     - |     - |         - |
+|       DelegateFetcher |  5.0758 ns | 0.0636 ns | 0.0595 ns |  5.0816 ns |  4.9652 ns |  5.1827 ns |  2.292 |    0.03 |     - |     - |     - |         - |
+|            Reflection | 90.5687 ns | 0.1199 ns | 0.1002 ns | 90.5632 ns | 90.4181 ns | 90.7815 ns | 40.887 |    0.09 |     - |     - |     - |         - |
 
 #### Public Property / Getter / Value Type
 |                Method |        Mean |     Error |    StdDev |      Median |         Min |         Max |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |------------:|----------:|----------:|------------:|------------:|------------:|-------:|--------:|-------:|------:|------:|----------:|
-|                Direct |   0.0003 ns | 0.0008 ns | 0.0007 ns |   0.0000 ns |   0.0000 ns |   0.0021 ns |  0.000 |    0.00 |      - |     - |     - |         - |
-|              DuckType |   1.7231 ns | 0.0030 ns | 0.0026 ns |   1.7235 ns |   1.7188 ns |   1.7264 ns |  1.000 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |   7.3774 ns | 0.0181 ns | 0.0161 ns |   7.3738 ns |   7.3532 ns |   7.4054 ns |  4.281 |    0.01 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |   7.7896 ns | 0.1194 ns | 0.2154 ns |   7.6887 ns |   7.3799 ns |   8.6753 ns |  4.512 |    0.19 | 0.0057 |     - |     - |      24 B |
-|       DelegateFetcher |   7.5427 ns | 0.0436 ns | 0.0386 ns |   7.5405 ns |   7.4823 ns |   7.6281 ns |  4.377 |    0.02 | 0.0057 |     - |     - |      24 B |
-|            Reflection | 123.6325 ns | 0.7970 ns | 0.7455 ns | 123.4649 ns | 122.7538 ns | 125.1706 ns | 71.754 |    0.44 | 0.0057 |     - |     - |      24 B |
+|                Direct |   0.0005 ns | 0.0009 ns | 0.0008 ns |   0.0000 ns |   0.0000 ns |   0.0029 ns |  0.000 |    0.00 |      - |     - |     - |         - |
+|              DuckType |   1.7137 ns | 0.0023 ns | 0.0021 ns |   1.7140 ns |   1.7093 ns |   1.7166 ns |  1.000 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |   7.7485 ns | 0.0898 ns | 0.0840 ns |   7.7053 ns |   7.6594 ns |   7.8777 ns |  4.524 |    0.05 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |   7.3599 ns | 0.0209 ns | 0.0175 ns |   7.3622 ns |   7.3238 ns |   7.3919 ns |  4.295 |    0.01 | 0.0057 |     - |     - |      24 B |
+|       DelegateFetcher |   7.5484 ns | 0.1571 ns | 0.1392 ns |   7.4919 ns |   7.4229 ns |   7.8198 ns |  4.405 |    0.08 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 123.3160 ns | 0.4250 ns | 0.3975 ns | 123.3559 ns | 122.1645 ns | 123.9097 ns | 71.954 |    0.24 | 0.0057 |     - |     - |      24 B |
 
 #### Public Property / Setter / Object Type
 |                Method |       Mean |     Error |    StdDev |        Min |        Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|------:|--------:|-------:|------:|------:|----------:|
-|                Direct |   1.469 ns | 0.0095 ns | 0.0084 ns |   1.455 ns |   1.487 ns |  0.54 |    0.00 |      - |     - |     - |         - |
-|              DuckType |   2.711 ns | 0.0050 ns | 0.0044 ns |   2.705 ns |   2.718 ns |  1.00 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |   4.928 ns | 0.0594 ns | 0.0555 ns |   4.827 ns |   5.006 ns |  1.82 |    0.02 |      - |     - |     - |         - |
-|           EmitFetcher |   4.925 ns | 0.0780 ns | 0.0730 ns |   4.805 ns |   5.029 ns |  1.82 |    0.02 |      - |     - |     - |         - |
-|       DelegateFetcher |   5.987 ns | 0.1030 ns | 0.0963 ns |   5.757 ns |   6.129 ns |  2.21 |    0.04 |      - |     - |     - |         - |
-|            Reflection | 163.913 ns | 1.6321 ns | 1.5267 ns | 161.401 ns | 166.120 ns | 60.46 |    0.58 | 0.0153 |     - |     - |      64 B |
+|                Direct |   1.480 ns | 0.0042 ns | 0.0040 ns |   1.472 ns |   1.487 ns |  0.54 |    0.00 |      - |     - |     - |         - |
+|              DuckType |   2.716 ns | 0.0063 ns | 0.0056 ns |   2.707 ns |   2.725 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |   4.930 ns | 0.0636 ns | 0.0595 ns |   4.782 ns |   5.035 ns |  1.82 |    0.02 |      - |     - |     - |         - |
+|           EmitFetcher |   4.905 ns | 0.0706 ns | 0.0661 ns |   4.786 ns |   5.003 ns |  1.80 |    0.02 |      - |     - |     - |         - |
+|       DelegateFetcher |   5.848 ns | 0.0651 ns | 0.0577 ns |   5.764 ns |   5.978 ns |  2.15 |    0.02 |      - |     - |     - |         - |
+|            Reflection | 153.585 ns | 1.0538 ns | 0.9857 ns | 152.453 ns | 155.419 ns | 56.57 |    0.34 | 0.0153 |     - |     - |      64 B |
 
 #### Public Property / Setter / Value Type
 |                Method |        Mean |     Error |    StdDev |      Median |         Min |         Max |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |------------:|----------:|----------:|------------:|------------:|------------:|-------:|--------:|-------:|------:|------:|----------:|
-|                Direct |   0.0016 ns | 0.0031 ns | 0.0029 ns |   0.0000 ns |   0.0000 ns |   0.0093 ns |  0.000 |    0.00 |      - |     - |     - |         - |
-|              DuckType |   3.9491 ns | 0.0387 ns | 0.0343 ns |   3.9541 ns |   3.8982 ns |   3.9997 ns |  1.000 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |   7.2476 ns | 0.1542 ns | 0.1442 ns |   7.2403 ns |   6.9978 ns |   7.4962 ns |  1.831 |    0.04 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |   6.9371 ns | 0.0407 ns | 0.0381 ns |   6.9350 ns |   6.8701 ns |   6.9919 ns |  1.757 |    0.02 | 0.0057 |     - |     - |      24 B |
-|       DelegateFetcher |   7.5060 ns | 0.0535 ns | 0.0474 ns |   7.5057 ns |   7.3920 ns |   7.5812 ns |  1.901 |    0.02 | 0.0057 |     - |     - |      24 B |
-|            Reflection | 175.6977 ns | 0.7946 ns | 0.7432 ns | 175.8352 ns | 174.4911 ns | 176.6142 ns | 44.477 |    0.42 | 0.0210 |     - |     - |      88 B |
+|                Direct |   0.0003 ns | 0.0005 ns | 0.0005 ns |   0.0000 ns |   0.0000 ns |   0.0014 ns |  0.000 |    0.00 |      - |     - |     - |         - |
+|              DuckType |   3.8308 ns | 0.0072 ns | 0.0064 ns |   3.8298 ns |   3.8209 ns |   3.8399 ns |  1.000 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |   6.8111 ns | 0.0428 ns | 0.0357 ns |   6.8229 ns |   6.7378 ns |   6.8552 ns |  1.778 |    0.01 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |   7.0808 ns | 0.0598 ns | 0.0499 ns |   7.0902 ns |   6.9320 ns |   7.1448 ns |  1.849 |    0.01 | 0.0057 |     - |     - |      24 B |
+|       DelegateFetcher |   7.1382 ns | 0.0598 ns | 0.0499 ns |   7.1398 ns |   7.0337 ns |   7.2245 ns |  1.864 |    0.01 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 172.1306 ns | 0.9076 ns | 0.8490 ns | 172.1455 ns | 170.6720 ns | 173.6074 ns | 44.929 |    0.26 | 0.0210 |     - |     - |      88 B |
 
 #### Public Field / Getter / Object Type
-|                Method |       Mean |     Error |    StdDev |        Min |        Max |  Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
-|---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-------:|--------:|------:|------:|------:|----------:|
-|                Direct |  0.0075 ns | 0.0116 ns | 0.0091 ns |  0.0000 ns |  0.0331 ns |  0.004 |    0.01 |     - |     - |     - |         - |
-|              DuckType |  1.7084 ns | 0.0072 ns | 0.0067 ns |  1.6884 ns |  1.7172 ns |  1.000 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  3.5019 ns | 0.0438 ns | 0.0388 ns |  3.4391 ns |  3.5804 ns |  2.050 |    0.02 |     - |     - |     - |         - |
-|           EmitFetcher |  3.5379 ns | 0.0464 ns | 0.0434 ns |  3.4572 ns |  3.6206 ns |  2.071 |    0.03 |     - |     - |     - |         - |
-|       DelegateFetcher |         NA |        NA |        NA |         NA |         NA |      ? |       ? |     - |     - |     - |         - |
-|            Reflection | 39.6455 ns | 0.2205 ns | 0.2062 ns | 39.3000 ns | 40.0471 ns | 23.207 |    0.16 |     - |     - |     - |         - |
+|                Method |       Mean |     Error |    StdDev |     Median |        Min |        Max |  Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-----------:|-------:|--------:|------:|------:|------:|----------:|
+|                Direct |  0.0012 ns | 0.0008 ns | 0.0006 ns |  0.0014 ns |  0.0000 ns |  0.0021 ns |  0.001 |    0.00 |     - |     - |     - |         - |
+|              DuckType |  2.2139 ns | 0.0039 ns | 0.0036 ns |  2.2141 ns |  2.2071 ns |  2.2195 ns |  1.000 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  3.5530 ns | 0.0252 ns | 0.0236 ns |  3.5564 ns |  3.5147 ns |  3.6064 ns |  1.605 |    0.01 |     - |     - |     - |         - |
+|           EmitFetcher |  3.5054 ns | 0.0653 ns | 0.0578 ns |  3.4973 ns |  3.4188 ns |  3.6080 ns |  1.584 |    0.03 |     - |     - |     - |         - |
+|       DelegateFetcher |         NA |        NA |        NA |         NA |         NA |         NA |      ? |       ? |     - |     - |     - |         - |
+|            Reflection | 37.2901 ns | 0.0964 ns | 0.0855 ns | 37.2896 ns | 37.0987 ns | 37.4011 ns | 16.846 |    0.04 |     - |     - |     - |         - |
 
 #### Public Field / Getter / Value Type
 |                Method |       Mean |     Error |    StdDev |     Median |        Min |        Max |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-----------:|-------:|--------:|-------:|------:|------:|----------:|
-|                Direct |  0.0006 ns | 0.0010 ns | 0.0009 ns |  0.0000 ns |  0.0000 ns |  0.0025 ns |  0.000 |    0.00 |      - |     - |     - |         - |
-|              DuckType |  1.7133 ns | 0.0018 ns | 0.0017 ns |  1.7135 ns |  1.7104 ns |  1.7162 ns |  1.000 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |  7.1653 ns | 0.0382 ns | 0.0357 ns |  7.1446 ns |  7.1205 ns |  7.2369 ns |  4.182 |    0.02 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |  7.1751 ns | 0.0155 ns | 0.0130 ns |  7.1759 ns |  7.1516 ns |  7.1999 ns |  4.188 |    0.01 | 0.0057 |     - |     - |      24 B |
+|                Direct |  0.0007 ns | 0.0012 ns | 0.0011 ns |  0.0000 ns |  0.0000 ns |  0.0027 ns |  0.000 |    0.00 |      - |     - |     - |         - |
+|              DuckType |  1.7205 ns | 0.0031 ns | 0.0026 ns |  1.7202 ns |  1.7178 ns |  1.7272 ns |  1.000 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |  6.4570 ns | 0.0198 ns | 0.0155 ns |  6.4561 ns |  6.4388 ns |  6.4891 ns |  3.753 |    0.01 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |  7.1592 ns | 0.0396 ns | 0.0370 ns |  7.1509 ns |  7.1062 ns |  7.2304 ns |  4.164 |    0.02 | 0.0057 |     - |     - |      24 B |
 |       DelegateFetcher |         NA |        NA |        NA |         NA |         NA |         NA |      ? |       ? |      - |     - |     - |         - |
-|            Reflection | 51.1339 ns | 0.3108 ns | 0.2907 ns | 51.1279 ns | 50.6730 ns | 51.6586 ns | 29.844 |    0.17 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 51.3539 ns | 0.1701 ns | 0.2747 ns | 51.3883 ns | 50.9071 ns | 51.8365 ns | 29.856 |    0.16 | 0.0057 |     - |     - |      24 B |
 
 #### Public Field / Setter / Object Type
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
-|                Direct |  1.232 ns | 0.0028 ns | 0.0026 ns |  1.226 ns |  1.235 ns |  0.50 |    0.00 |     - |     - |     - |         - |
-|              DuckType |  2.462 ns | 0.0066 ns | 0.0058 ns |  2.453 ns |  2.474 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  4.775 ns | 0.0429 ns | 0.0401 ns |  4.687 ns |  4.848 ns |  1.94 |    0.02 |     - |     - |     - |         - |
-|           EmitFetcher |  4.803 ns | 0.0970 ns | 0.0908 ns |  4.650 ns |  5.010 ns |  1.95 |    0.04 |     - |     - |     - |         - |
+|                Direct |  1.228 ns | 0.0028 ns | 0.0025 ns |  1.225 ns |  1.234 ns |  0.50 |    0.00 |     - |     - |     - |         - |
+|              DuckType |  2.460 ns | 0.0057 ns | 0.0047 ns |  2.452 ns |  2.468 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  4.736 ns | 0.0616 ns | 0.0515 ns |  4.637 ns |  4.829 ns |  1.93 |    0.02 |     - |     - |     - |         - |
+|           EmitFetcher |  4.767 ns | 0.0513 ns | 0.0429 ns |  4.708 ns |  4.873 ns |  1.94 |    0.02 |     - |     - |     - |         - |
 |       DelegateFetcher |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|            Reflection | 60.918 ns | 0.0491 ns | 0.0459 ns | 60.830 ns | 60.995 ns | 24.75 |    0.07 |     - |     - |     - |         - |
+|            Reflection | 60.060 ns | 0.0957 ns | 0.0848 ns | 59.865 ns | 60.173 ns | 24.42 |    0.07 |     - |     - |     - |         - |
 
 #### Public Field / Setter / Value Type
-|                Method |       Mean |     Error |    StdDev |        Min |        Max |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-------:|--------:|-------:|------:|------:|----------:|
-|                Direct |  0.0016 ns | 0.0012 ns | 0.0010 ns |  0.0000 ns |  0.0030 ns |  0.000 |    0.00 |      - |     - |     - |         - |
-|              DuckType |  3.8448 ns | 0.0032 ns | 0.0030 ns |  3.8408 ns |  3.8496 ns |  1.000 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |  7.2409 ns | 0.0835 ns | 0.0781 ns |  7.0971 ns |  7.3457 ns |  1.883 |    0.02 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |  6.7437 ns | 0.0542 ns | 0.0453 ns |  6.6875 ns |  6.8413 ns |  1.754 |    0.01 | 0.0057 |     - |     - |      24 B |
-|       DelegateFetcher |         NA |        NA |        NA |         NA |         NA |      ? |       ? |      - |     - |     - |         - |
-|            Reflection | 67.3292 ns | 0.5001 ns | 0.4678 ns | 66.6080 ns | 68.0917 ns | 17.512 |    0.11 | 0.0057 |     - |     - |      24 B |
+|                Method |       Mean |     Error |    StdDev |     Median |        Min |        Max |  Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------------- |-----------:|----------:|----------:|-----------:|-----------:|-----------:|-------:|--------:|-------:|------:|------:|----------:|
+|                Direct |  0.0000 ns | 0.0002 ns | 0.0001 ns |  0.0000 ns |  0.0000 ns |  0.0004 ns |  0.000 |    0.00 |      - |     - |     - |         - |
+|              DuckType |  3.8203 ns | 0.0028 ns | 0.0024 ns |  3.8205 ns |  3.8141 ns |  3.8232 ns |  1.000 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |  6.7743 ns | 0.0845 ns | 0.1649 ns |  6.6911 ns |  6.6281 ns |  7.2628 ns |  1.807 |    0.05 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |  6.9073 ns | 0.0919 ns | 0.0814 ns |  6.9135 ns |  6.7838 ns |  7.0579 ns |  1.808 |    0.02 | 0.0057 |     - |     - |      24 B |
+|       DelegateFetcher |         NA |        NA |        NA |         NA |         NA |         NA |      ? |       ? |      - |     - |     - |         - |
+|            Reflection | 67.7958 ns | 0.3516 ns | 0.3289 ns | 67.7573 ns | 67.3496 ns | 68.4705 ns | 17.750 |    0.09 | 0.0057 |     - |     - |      24 B |
 
 
 #### Public Method / Invoker
 |                Method |        Mean |     Error |    StdDev |      Median |         Min |         Max |   Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |------------:|----------:|----------:|------------:|------------:|------------:|--------:|--------:|-------:|------:|------:|----------:|
-|                Direct |   0.0003 ns | 0.0009 ns | 0.0007 ns |   0.0000 ns |   0.0000 ns |   0.0024 ns |   0.000 |    0.00 |      - |     - |     - |         - |
-|              DuckType |   1.7245 ns | 0.0023 ns | 0.0022 ns |   1.7244 ns |   1.7215 ns |   1.7292 ns |   1.000 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |  28.7078 ns | 0.4197 ns | 0.3926 ns |  28.7469 ns |  28.1677 ns |  29.4684 ns |  16.647 |    0.23 | 0.0268 |     - |     - |     112 B |
-|           EmitFetcher |  27.2764 ns | 0.3193 ns | 0.2830 ns |  27.3490 ns |  26.7955 ns |  27.6619 ns |  15.817 |    0.16 | 0.0268 |     - |     - |     112 B |
+|                Direct |   0.0007 ns | 0.0012 ns | 0.0009 ns |   0.0000 ns |   0.0000 ns |   0.0026 ns |   0.000 |    0.00 |      - |     - |     - |         - |
+|              DuckType |   2.2199 ns | 0.0052 ns | 0.0046 ns |   2.2196 ns |   2.2120 ns |   2.2257 ns |   1.000 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |  28.4919 ns | 0.2601 ns | 0.2306 ns |  28.4825 ns |  28.2234 ns |  28.9457 ns |  12.835 |    0.10 | 0.0268 |     - |     - |     112 B |
+|           EmitFetcher |  26.9525 ns | 0.1893 ns | 0.1771 ns |  26.8833 ns |  26.7087 ns |  27.2355 ns |  12.136 |    0.08 | 0.0268 |     - |     - |     112 B |
 |       DelegateFetcher |          NA |        NA |        NA |          NA |          NA |          NA |       ? |       ? |      - |     - |     - |         - |
-|            Reflection | 235.0135 ns | 0.5114 ns | 0.4533 ns | 234.8543 ns | 234.3358 ns | 235.7639 ns | 136.278 |    0.34 | 0.0362 |     - |     - |     152 B |
+|            Reflection | 238.9645 ns | 2.8059 ns | 2.6246 ns | 238.4335 ns | 235.1679 ns | 243.5034 ns | 107.688 |    1.33 | 0.0362 |     - |     - |     152 B |
 
 ### Private Class
 
@@ -304,91 +304,91 @@ AMD Ryzen Threadripper 2950X, 1 CPU, 32 logical and 16 physical cores
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
 |                Direct |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|              DuckType |  2.949 ns | 0.0032 ns | 0.0026 ns |  2.945 ns |  2.955 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  3.784 ns | 0.1023 ns | 0.1294 ns |  3.454 ns |  3.937 ns |  1.28 |    0.04 |     - |     - |     - |         - |
-|           EmitFetcher |  3.522 ns | 0.0822 ns | 0.0769 ns |  3.392 ns |  3.667 ns |  1.20 |    0.02 |     - |     - |     - |         - |
-|       DelegateFetcher |  5.281 ns | 0.0480 ns | 0.0449 ns |  5.167 ns |  5.346 ns |  1.79 |    0.01 |     - |     - |     - |         - |
-|            Reflection | 94.705 ns | 0.4683 ns | 0.4152 ns | 94.260 ns | 95.391 ns | 32.10 |    0.14 |     - |     - |     - |         - |
+|              DuckType |  2.960 ns | 0.0195 ns | 0.0163 ns |  2.943 ns |  3.003 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  3.705 ns | 0.0546 ns | 0.0511 ns |  3.606 ns |  3.786 ns |  1.25 |    0.02 |     - |     - |     - |         - |
+|           EmitFetcher |  3.502 ns | 0.0177 ns | 0.0157 ns |  3.476 ns |  3.526 ns |  1.18 |    0.01 |     - |     - |     - |         - |
+|       DelegateFetcher |  5.161 ns | 0.1267 ns | 0.1408 ns |  4.938 ns |  5.391 ns |  1.75 |    0.06 |     - |     - |     - |         - |
+|            Reflection | 93.862 ns | 0.2188 ns | 0.2046 ns | 93.512 ns | 94.119 ns | 31.71 |    0.18 |     - |     - |     - |         - |
 
 #### Private Property / Getter / Value Type
 |                Method |       Mean |     Error |    StdDev |        Min |        Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |         NA |        NA |        NA |         NA |         NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |   2.688 ns | 0.0141 ns | 0.0132 ns |   2.663 ns |   2.708 ns |  1.00 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |   7.151 ns | 0.0669 ns | 0.0593 ns |   7.078 ns |   7.220 ns |  2.66 |    0.02 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |   7.057 ns | 0.0222 ns | 0.0197 ns |   7.021 ns |   7.090 ns |  2.62 |    0.01 | 0.0057 |     - |     - |      24 B |
-|       DelegateFetcher |   7.673 ns | 0.1596 ns | 0.1493 ns |   7.460 ns |   7.956 ns |  2.85 |    0.05 | 0.0057 |     - |     - |      24 B |
-|            Reflection | 126.631 ns | 0.3470 ns | 0.3076 ns | 126.076 ns | 127.139 ns | 47.09 |    0.21 | 0.0057 |     - |     - |      24 B |
+|              DuckType |   2.684 ns | 0.0174 ns | 0.0162 ns |   2.665 ns |   2.715 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |   6.959 ns | 0.1213 ns | 0.1135 ns |   6.698 ns |   7.036 ns |  2.59 |    0.04 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |   7.321 ns | 0.0571 ns | 0.0534 ns |   7.259 ns |   7.406 ns |  2.73 |    0.01 | 0.0057 |     - |     - |      24 B |
+|       DelegateFetcher |   7.470 ns | 0.0311 ns | 0.0276 ns |   7.428 ns |   7.509 ns |  2.78 |    0.02 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 112.011 ns | 0.1858 ns | 0.1647 ns | 111.653 ns | 112.314 ns | 41.75 |    0.27 | 0.0057 |     - |     - |      24 B |
 
 #### Private Property / Setter / Object Type
 |                Method |       Mean |     Error |    StdDev |        Min |        Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |         NA |        NA |        NA |         NA |         NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |   3.936 ns | 0.0045 ns | 0.0040 ns |   3.930 ns |   3.945 ns |  1.00 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |   5.060 ns | 0.1229 ns | 0.1090 ns |   4.744 ns |   5.180 ns |  1.29 |    0.03 |      - |     - |     - |         - |
-|           EmitFetcher |   4.893 ns | 0.0392 ns | 0.0366 ns |   4.830 ns |   4.960 ns |  1.24 |    0.01 |      - |     - |     - |         - |
-|       DelegateFetcher |   5.931 ns | 0.0732 ns | 0.0685 ns |   5.842 ns |   6.077 ns |  1.51 |    0.02 |      - |     - |     - |         - |
-|            Reflection | 165.955 ns | 0.6392 ns | 0.5667 ns | 164.564 ns | 166.636 ns | 42.16 |    0.15 | 0.0153 |     - |     - |      64 B |
+|              DuckType |   3.934 ns | 0.0039 ns | 0.0037 ns |   3.926 ns |   3.940 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |   5.081 ns | 0.0459 ns | 0.0429 ns |   5.024 ns |   5.159 ns |  1.29 |    0.01 |      - |     - |     - |         - |
+|           EmitFetcher |   4.898 ns | 0.0605 ns | 0.0565 ns |   4.807 ns |   4.987 ns |  1.25 |    0.01 |      - |     - |     - |         - |
+|       DelegateFetcher |   5.939 ns | 0.0767 ns | 0.0718 ns |   5.840 ns |   6.036 ns |  1.51 |    0.02 |      - |     - |     - |         - |
+|            Reflection | 161.647 ns | 0.5268 ns | 0.4670 ns | 160.533 ns | 162.355 ns | 41.09 |    0.12 | 0.0153 |     - |     - |      64 B |
 
 #### Private Property / Setter / Value Type
 |                Method |       Mean |     Error |    StdDev |        Min |        Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |-----------:|----------:|----------:|-----------:|-----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |         NA |        NA |        NA |         NA |         NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |   5.439 ns | 0.1307 ns | 0.1342 ns |   5.236 ns |   5.659 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
-| ExpressionTreeFetcher |   6.998 ns | 0.0769 ns | 0.0720 ns |   6.927 ns |   7.107 ns |  1.29 |    0.03 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |   6.738 ns | 0.0559 ns | 0.0496 ns |   6.668 ns |   6.831 ns |  1.24 |    0.03 | 0.0057 |     - |     - |      24 B |
-|       DelegateFetcher |   6.936 ns | 0.0384 ns | 0.0359 ns |   6.846 ns |   6.988 ns |  1.27 |    0.04 | 0.0057 |     - |     - |      24 B |
-|            Reflection | 176.797 ns | 0.8537 ns | 0.7985 ns | 175.256 ns | 178.369 ns | 32.49 |    0.88 | 0.0210 |     - |     - |      88 B |
+|              DuckType |   5.804 ns | 0.0330 ns | 0.0276 ns |   5.746 ns |   5.842 ns |  1.00 |    0.00 | 0.0057 |     - |     - |      24 B |
+| ExpressionTreeFetcher |   6.990 ns | 0.0924 ns | 0.0864 ns |   6.857 ns |   7.119 ns |  1.20 |    0.02 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |   6.669 ns | 0.0387 ns | 0.0362 ns |   6.612 ns |   6.742 ns |  1.15 |    0.01 | 0.0057 |     - |     - |      24 B |
+|       DelegateFetcher |   7.176 ns | 0.0592 ns | 0.0554 ns |   7.072 ns |   7.276 ns |  1.24 |    0.01 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 176.083 ns | 2.2643 ns | 2.1180 ns | 173.121 ns | 180.202 ns | 30.36 |    0.41 | 0.0210 |     - |     - |      88 B |
 
 #### Private Field / Getter / Object Type
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
 |                Direct |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|              DuckType |  2.949 ns | 0.0143 ns | 0.0134 ns |  2.919 ns |  2.967 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  3.123 ns | 0.0226 ns | 0.0212 ns |  3.083 ns |  3.168 ns |  1.06 |    0.01 |     - |     - |     - |         - |
-|           EmitFetcher |  3.681 ns | 0.0812 ns | 0.0759 ns |  3.436 ns |  3.746 ns |  1.25 |    0.03 |     - |     - |     - |         - |
+|              DuckType |  2.918 ns | 0.0074 ns | 0.0058 ns |  2.908 ns |  2.928 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  3.107 ns | 0.0136 ns | 0.0121 ns |  3.078 ns |  3.117 ns |  1.06 |    0.00 |     - |     - |     - |         - |
+|           EmitFetcher |  3.140 ns | 0.0160 ns | 0.0150 ns |  3.119 ns |  3.168 ns |  1.08 |    0.01 |     - |     - |     - |         - |
 |       DelegateFetcher |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|            Reflection | 37.283 ns | 0.3230 ns | 0.2863 ns | 36.818 ns | 37.816 ns | 12.64 |    0.10 |     - |     - |     - |         - |
+|            Reflection | 38.430 ns | 0.7969 ns | 0.6655 ns | 38.169 ns | 40.626 ns | 13.17 |    0.25 |     - |     - |     - |         - |
 
 #### Private Field / Getter / Value Type
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |        NA |        NA |        NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |  2.724 ns | 0.0049 ns | 0.0046 ns |  2.717 ns |  2.731 ns |  1.00 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |  7.579 ns | 0.0468 ns | 0.0438 ns |  7.510 ns |  7.641 ns |  2.78 |    0.02 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |  6.980 ns | 0.0474 ns | 0.0420 ns |  6.909 ns |  7.047 ns |  2.56 |    0.02 | 0.0057 |     - |     - |      24 B |
+|              DuckType |  2.715 ns | 0.0083 ns | 0.0078 ns |  2.704 ns |  2.730 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |  6.058 ns | 0.0484 ns | 0.0453 ns |  5.938 ns |  6.119 ns |  2.23 |    0.02 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |  7.129 ns | 0.0981 ns | 0.0918 ns |  7.035 ns |  7.322 ns |  2.63 |    0.03 | 0.0057 |     - |     - |      24 B |
 |       DelegateFetcher |        NA |        NA |        NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|            Reflection | 51.788 ns | 0.2470 ns | 0.2062 ns | 51.502 ns | 52.116 ns | 19.01 |    0.08 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 49.546 ns | 0.6772 ns | 1.0543 ns | 48.627 ns | 53.299 ns | 18.36 |    0.46 | 0.0057 |     - |     - |      24 B |
 
 #### Private Field / Setter / Object Type
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD | Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|------:|------:|------:|----------:|
 |                Direct |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|              DuckType |  3.932 ns | 0.0045 ns | 0.0042 ns |  3.925 ns |  3.940 ns |  1.00 |    0.00 |     - |     - |     - |         - |
-| ExpressionTreeFetcher |  4.415 ns | 0.0488 ns | 0.0381 ns |  4.378 ns |  4.494 ns |  1.12 |    0.01 |     - |     - |     - |         - |
-|           EmitFetcher |  4.431 ns | 0.0082 ns | 0.0077 ns |  4.423 ns |  4.443 ns |  1.13 |    0.00 |     - |     - |     - |         - |
+|              DuckType |  3.713 ns | 0.0276 ns | 0.0258 ns |  3.685 ns |  3.777 ns |  1.00 |    0.00 |     - |     - |     - |         - |
+| ExpressionTreeFetcher |  4.916 ns | 0.0189 ns | 0.0168 ns |  4.879 ns |  4.942 ns |  1.33 |    0.01 |     - |     - |     - |         - |
+|           EmitFetcher |  4.879 ns | 0.1120 ns | 0.1047 ns |  4.708 ns |  4.989 ns |  1.31 |    0.03 |     - |     - |     - |         - |
 |       DelegateFetcher |        NA |        NA |        NA |        NA |        NA |     ? |       ? |     - |     - |     - |         - |
-|            Reflection | 56.062 ns | 0.2700 ns | 0.2394 ns | 55.334 ns | 56.319 ns | 14.26 |    0.05 |     - |     - |     - |         - |
+|            Reflection | 55.703 ns | 0.4668 ns | 0.3645 ns | 55.199 ns | 56.401 ns | 15.01 |    0.12 |     - |     - |     - |         - |
 
 #### Private Field / Setter / Value Type
 |                Method |      Mean |     Error |    StdDev |       Min |       Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|----------:|----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |        NA |        NA |        NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |  2.473 ns | 0.0154 ns | 0.0137 ns |  2.453 ns |  2.495 ns |  1.00 |    0.00 |      - |     - |     - |         - |
-| ExpressionTreeFetcher |  6.947 ns | 0.1329 ns | 0.1178 ns |  6.839 ns |  7.236 ns |  2.81 |    0.05 | 0.0057 |     - |     - |      24 B |
-|           EmitFetcher |  6.877 ns | 0.0339 ns | 0.0301 ns |  6.838 ns |  6.933 ns |  2.78 |    0.02 | 0.0057 |     - |     - |      24 B |
+|              DuckType |  2.483 ns | 0.0123 ns | 0.0109 ns |  2.470 ns |  2.505 ns |  1.00 |    0.00 |      - |     - |     - |         - |
+| ExpressionTreeFetcher |  6.842 ns | 0.0767 ns | 0.0717 ns |  6.730 ns |  6.954 ns |  2.75 |    0.03 | 0.0057 |     - |     - |      24 B |
+|           EmitFetcher |  6.699 ns | 0.0518 ns | 0.0485 ns |  6.638 ns |  6.792 ns |  2.70 |    0.02 | 0.0057 |     - |     - |      24 B |
 |       DelegateFetcher |        NA |        NA |        NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|            Reflection | 69.359 ns | 0.2287 ns | 0.2139 ns | 69.042 ns | 69.661 ns | 28.05 |    0.20 | 0.0057 |     - |     - |      24 B |
+|            Reflection | 68.085 ns | 0.2334 ns | 0.2069 ns | 67.889 ns | 68.624 ns | 27.42 |    0.16 | 0.0057 |     - |     - |      24 B |
 
 #### Private Method / Invoker
 |                Method |      Mean |    Error |   StdDev |       Min |       Max | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 |---------------------- |----------:|---------:|---------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
 |                Direct |        NA |       NA |       NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|              DuckType |  35.37 ns | 0.357 ns | 0.334 ns |  34.68 ns |  35.98 ns |  1.00 |    0.00 | 0.0268 |     - |     - |     112 B |
-| ExpressionTreeFetcher |  28.61 ns | 0.269 ns | 0.210 ns |  28.26 ns |  28.85 ns |  0.81 |    0.01 | 0.0268 |     - |     - |     112 B |
-|           EmitFetcher |  27.68 ns | 0.579 ns | 0.968 ns |  26.15 ns |  29.06 ns |  0.79 |    0.03 | 0.0268 |     - |     - |     112 B |
+|              DuckType |  36.83 ns | 0.479 ns | 0.448 ns |  35.92 ns |  37.50 ns |  1.00 |    0.00 | 0.0268 |     - |     - |     112 B |
+| ExpressionTreeFetcher |  33.70 ns | 0.641 ns | 0.600 ns |  33.02 ns |  34.78 ns |  0.92 |    0.02 | 0.0268 |     - |     - |     112 B |
+|           EmitFetcher |  34.72 ns | 0.145 ns | 0.135 ns |  34.41 ns |  34.88 ns |  0.94 |    0.01 | 0.0268 |     - |     - |     112 B |
 |       DelegateFetcher |        NA |       NA |       NA |        NA |        NA |     ? |       ? |      - |     - |     - |         - |
-|            Reflection | 241.35 ns | 1.475 ns | 1.380 ns | 238.81 ns | 243.54 ns |  6.82 |    0.06 | 0.0362 |     - |     - |     152 B |
+|            Reflection | 238.71 ns | 1.310 ns | 1.161 ns | 236.47 ns | 241.03 ns |  6.48 |    0.09 | 0.0362 |     - |     - |     152 B |
 
 
 ## Powered By
