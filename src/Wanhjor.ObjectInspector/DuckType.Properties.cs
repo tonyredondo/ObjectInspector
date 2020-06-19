@@ -45,7 +45,8 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 0 && 
+                !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(prop.PropertyType))
             {
                 if (propMethod.IsStatic)
                 {
@@ -171,7 +172,8 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && 
+                !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(prop.PropertyType))
             {
                 if (propMethod.IsStatic)
                 {

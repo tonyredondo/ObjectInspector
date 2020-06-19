@@ -80,7 +80,10 @@ namespace Wanhjor.ObjectInspector
                 var iMethodReturnType = iMethod.ReturnType;
                 if (iMethodReturnType.IsGenericType)
                     iMethodReturnType = iMethodReturnType.GetGenericTypeDefinition();
-                if (iMethod.ReturnType != method.ReturnType && iMethod.ReturnType.IsInterface && method.ReturnType.GetInterface(iMethodReturnType.FullName) == null)
+                
+                if (iMethod.ReturnType != method.ReturnType && 
+                    !iMethod.ReturnType.IsValueType && !iMethod.ReturnType.IsAssignableFrom(method.ReturnType) &&
+                    !iMethod.ReturnType.IsGenericParameter && !method.ReturnType.IsGenericParameter)
                 {
                     il.Emit(OpCodes.Ldtoken, iMethod.ReturnType);
                     il.EmitCall(OpCodes.Call, GetTypeFromHandleMethodInfo, null);

@@ -23,7 +23,7 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != field.FieldType && !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(field.FieldType))
             {
                 if (field.IsStatic)
                 {
@@ -125,7 +125,7 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != field.FieldType && !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(field.FieldType))
             {
                 if (field.IsStatic)
                 {
