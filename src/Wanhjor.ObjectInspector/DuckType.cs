@@ -72,40 +72,40 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Get or creates a proxy type implementing the interface type to access the given instance type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Proxy type</returns>
-        private static Type GetOrCreateProxyType(Type interfaceType, Type instanceType)
-            => DuckTypeCache.GetOrAdd(new VTuple<Type, Type>(interfaceType, instanceType), 
+        private static Type GetOrCreateProxyType(Type duckType, Type instanceType)
+            => DuckTypeCache.GetOrAdd(new VTuple<Type, Type>(duckType, instanceType), 
                 types => CreateProxyType(types.Item1, types.Item2));
         
         /// <summary>
         /// Creates a proxy type implementing the interface type to access the given instance type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Proxy type</returns>
         /// <exception cref="NullReferenceException">In case the CurrentInstance field is not found</exception>
-        private static Type CreateProxyType(Type interfaceType, Type instanceType)
+        private static Type CreateProxyType(Type duckType, Type instanceType)
         {
-            var typeSignature = $"{interfaceType.Name}-ProxyTo->{instanceType.Name}";
+            var typeSignature = $"{duckType.Name}-ProxyTo->{instanceType.Name}";
             
             // Define parent type, interface types
             Type parentType;
             Type[] interfaceTypes;
-            if (interfaceType.IsInterface)
+            if (duckType.IsInterface)
             {
                 parentType = typeof(DuckType);
-                interfaceTypes = new[] {interfaceType};
+                interfaceTypes = new[] {duckType};
             }
-            else if (interfaceType.BaseType == typeof(DuckType))
+            else if (duckType.BaseType == typeof(DuckType))
             {
-                parentType = interfaceType;
+                parentType = duckType;
                 interfaceTypes = Type.EmptyTypes;
             }
             else
             {
-                throw new DuckTypeTypeIsNotValidException(interfaceType, nameof(interfaceType));
+                throw new DuckTypeTypeIsNotValidException(duckType, nameof(duckType));
             }
             
             // Create Type
@@ -126,8 +126,8 @@ namespace Wanhjor.ObjectInspector
                 throw new NullReferenceException();
             
             // Create Members
-            CreateProperties(interfaceType, instanceType, instanceField, typeBuilder);
-            CreateMethods(interfaceType, instanceType, instanceField, typeBuilder);
+            CreateProperties(duckType, instanceType, instanceField, typeBuilder);
+            CreateMethods(duckType, instanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();

@@ -10,7 +10,7 @@ namespace Wanhjor.ObjectInspector
         /// Create duck type proxy from an interface
         /// </summary>
         /// <param name="instance">Instance object</param>
-        /// <typeparam name="T">Interface type</typeparam>
+        /// <typeparam name="T">Duck type</typeparam>
         /// <returns>Duck type proxy</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Create<T>(object instance)
@@ -21,15 +21,15 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Create duck type proxy from an interface type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instance">Instance object</param>
         /// <returns>Duck Type proxy</returns>
-        public static DuckType Create(Type interfaceType, object instance)
+        public static DuckType Create(Type duckType, object instance)
         {
-            EnsureArguments(interfaceType, instance);
+            EnsureArguments(duckType, instance);
 
             // Create Type
-            var type = GetOrCreateProxyType(interfaceType, instance.GetType()); 
+            var type = GetOrCreateProxyType(duckType, instance.GetType()); 
             
             // Create instance
             var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
@@ -40,12 +40,12 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Create a duck type proxy from an interface type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Duck Type proxy</returns>
-        public static DuckType Create(Type interfaceType, Type instanceType)
+        public static DuckType Create(Type duckType, Type instanceType)
         {
-            var type = GetOrCreateProxyType(interfaceType, instanceType);
+            var type = GetOrCreateProxyType(duckType, instanceType);
             return (DuckType) FormatterServices.GetUninitializedObject(type);
         }
     }

@@ -1,6 +1,6 @@
 namespace Wanhjor.ObjectInspector.Benchmark
 {
-    public class VirtualClassSomeObject
+    public class VirtualClassSomeObject : DuckType
     {
         public virtual string Name { get; set; }
         public virtual int Value { get; set; }
@@ -14,7 +14,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         public virtual int Sum(int a, int b) => 0;
     }
     
-    public class VirtualClassPrivateSomeObject
+    public class VirtualClassPrivateSomeObject : DuckType
     {
         [Duck(Flags = DuckAttribute.AllFlags)]
         public virtual string Name { get; set; }

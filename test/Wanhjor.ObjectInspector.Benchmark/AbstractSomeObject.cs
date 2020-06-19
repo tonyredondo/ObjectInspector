@@ -1,6 +1,6 @@
 namespace Wanhjor.ObjectInspector.Benchmark
 {
-    public abstract class AbstractSomeObject
+    public abstract class AbstractSomeObject : DuckType
     {
         public abstract string Name { get; set; }
         public abstract int Value { get; set; }
@@ -14,7 +14,7 @@ namespace Wanhjor.ObjectInspector.Benchmark
         public abstract int Sum(int a, int b);
     }
     
-    public abstract class AbstractPrivateSomeObject
+    public abstract class AbstractPrivateSomeObject : DuckType
     {
         [Duck(Flags = DuckAttribute.AllFlags)]
         public abstract string Name { get; set; }
