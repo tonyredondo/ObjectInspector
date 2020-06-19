@@ -8,7 +8,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
     public class PrivateClassPrivatePropertySetterValue
     {
         private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
-        private readonly IPrivateSomeObject _duckObject;
+        private readonly IPrivateSomeObject _duckObjectInterface;
+        private readonly AbstractPrivateSomeObject _duckObjectAbstract;
+        private readonly VirtualClassPrivateSomeObject _duckObjectVirtualClass;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly Fetcher _delegateFetcher;
@@ -16,7 +18,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         public PrivateClassPrivatePropertySetterValue()
         {
-            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
+            _duckObjectInterface = _testObject.DuckAs<IPrivateSomeObject>();
+            _duckObjectAbstract = _testObject.DuckAs<AbstractPrivateSomeObject>();
+            _duckObjectVirtualClass = _testObject.DuckAs<VirtualClassPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("Value") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Value") { FetcherType = FetcherType.Emit };
@@ -28,7 +32,11 @@ namespace Wanhjor.ObjectInspector.Benchmark
         [Benchmark]
         public void Direct() => throw new NotImplementedException();
         [Benchmark(Baseline = true)]
-        public void DuckType() => _duckObject.Value = 42;
+        public void DuckTypeInterface() => _duckObjectInterface.Value = 42;
+        [Benchmark]
+        public void DuckTypeAbstract() => _duckObjectAbstract.Value = 42;
+        [Benchmark]
+        public void DuckTypeVirtual() => _duckObjectVirtualClass.Value = 42;
         [Benchmark]
         public void ExpressionTreeFetcher() => _expressionFetcher.Shove(_testObject, 42);
         [Benchmark]

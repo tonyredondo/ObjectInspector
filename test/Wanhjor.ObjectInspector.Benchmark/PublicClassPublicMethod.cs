@@ -9,14 +9,18 @@ namespace Wanhjor.ObjectInspector.Benchmark
     public class PublicClassPublicMethod
     {
         private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly ISomeObject _duckObjectInterface;
+        private readonly AbstractSomeObject _duckObjectAbstract;
+        private readonly VirtualClassSomeObject _duckObjectVirtualClass;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly MethodInfo _mInfo;
 
         public PublicClassPublicMethod()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObjectInterface = _testObject.DuckAs<ISomeObject>();
+            _duckObjectAbstract = _testObject.DuckAs<AbstractSomeObject>();
+            _duckObjectVirtualClass = _testObject.DuckAs<VirtualClassSomeObject>();
             _expressionFetcher = new DynamicFetcher("Sum") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Sum") { FetcherType = FetcherType.Emit };
@@ -27,7 +31,11 @@ namespace Wanhjor.ObjectInspector.Benchmark
         [Benchmark]
         public void Direct() => _ = _testObject.Sum(2,2);
         [Benchmark(Baseline = true)]
-        public void DuckType() => _ = _duckObject.Sum(2,2);
+        public void DuckTypeInterface() => _ = _duckObjectInterface.Sum(2,2);
+        [Benchmark]
+        public void DuckTypeAbstract() => _ = _duckObjectAbstract.Sum(2,2);
+        [Benchmark]
+        public void DuckTypeVirtual() => _ = _duckObjectVirtualClass.Sum(2,2);
         [Benchmark]
         public void ExpressionTreeFetcher() => _ = (int)_expressionFetcher.Invoke(_testObject, 2, 2);
         [Benchmark]

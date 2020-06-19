@@ -8,26 +8,33 @@ namespace Wanhjor.ObjectInspector.Benchmark
     public class PublicClassPublicFieldGetterValue
     {
         private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly ISomeObject _duckObjectInterface;
+        private readonly AbstractSomeObject _duckObjectAbstract;
+        private readonly VirtualClassSomeObject _duckObjectVirtualClass;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly FieldInfo _fInfo;
 
         public PublicClassPublicFieldGetterValue()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObjectInterface = _testObject.DuckAs<ISomeObject>();
+            _duckObjectAbstract = _testObject.DuckAs<AbstractSomeObject>();
+            _duckObjectVirtualClass = _testObject.DuckAs<VirtualClassSomeObject>();
             _expressionFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("ValueField") { FetcherType = FetcherType.Emit };
             _emitFetcher.Load(_testObject);
             _fInfo = typeof(SomeObject).GetField("ValueField", DuckAttribute.AllFlags);
-
         }
 
         [Benchmark]
         public void Direct() => _ = _testObject.ValueField;
         [Benchmark(Baseline = true)]
-        public void DuckType() => _ = _duckObject.ValueField;
+        public void DuckTypeInterface() => _ = _duckObjectInterface.ValueField;
+        [Benchmark]
+        public void DuckTypeAbstract() => _ = _duckObjectAbstract.ValueField;
+        [Benchmark]
+        public void DuckTypeVirtual() => _ = _duckObjectVirtualClass.ValueField;
         [Benchmark]
         public void ExpressionTreeFetcher() => _ = (int)_expressionFetcher.Fetch(_testObject);
         [Benchmark]
