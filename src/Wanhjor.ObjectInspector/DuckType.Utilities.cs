@@ -17,8 +17,8 @@ namespace Wanhjor.ObjectInspector
                 throw new ArgumentNullException(nameof(interfaceType), "The interface type can't be null");
             if (instance is null)
                 throw new ArgumentNullException(nameof(instance), "The object instance can't be null");
-            if (!interfaceType.IsInterface)
-                throw new DuckTypeTypeIsNotAnInterfaceException(interfaceType, nameof(interfaceType));
+            //if (!interfaceType.IsInterface)
+            //    throw new DuckTypeTypeIsNotAnInterfaceException(interfaceType, nameof(interfaceType));
             if (!interfaceType.IsPublic && !interfaceType.IsNestedPublic)
                 throw new DuckTypeTypeIsNotPublicException(interfaceType, nameof(interfaceType));
         }

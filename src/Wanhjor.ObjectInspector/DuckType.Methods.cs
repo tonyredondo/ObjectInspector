@@ -8,26 +8,44 @@ namespace Wanhjor.ObjectInspector
 {
     public partial class DuckType
     {
-        private static void CreateInterfaceMethods(Type interfaceType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
+        private static List<MethodInfo> GetMethods(Type baseType)
         {
-            var interfaceMethods = new List<MethodInfo>(interfaceType.GetMethods().Where(m => !m.IsSpecialName));
-            var implementedInterfaces = interfaceType.GetInterfaces();
+            var selectedMethods = new List<MethodInfo>(GetBaseMethods(baseType));
+            var implementedInterfaces = baseType.GetInterfaces();
             foreach (var imInterface in implementedInterfaces)
             {
                 if (imInterface == typeof(IDuckType)) continue;
                 var newMethods = imInterface.GetMethods()
-                    .Where(m => !m.IsSpecialName && interfaceMethods.All(i => i.ToString() != m.ToString()));
-                interfaceMethods.AddRange(newMethods);
+                    .Where(m => !m.IsSpecialName && selectedMethods.All(i => i.ToString() != m.ToString()));
+                selectedMethods.AddRange(newMethods);
             }
-            foreach (var iMethod in interfaceMethods)
+            return selectedMethods;
+            static IEnumerable<MethodInfo> GetBaseMethods(Type baseType)
+            {
+                foreach (var method in baseType.GetMethods())
+                {
+                    if (method.IsSpecialName || method.DeclaringType == typeof(DuckType)|| method.DeclaringType == typeof(object))
+                        continue;
+                    if (baseType.IsInterface || method.IsAbstract || method.IsVirtual)
+                        yield return method;
+                }
+            }
+        }
+        
+        private static void CreateMethods(Type baseType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
+        {
+            var selectedMethods = GetMethods(baseType);
+            foreach (var iMethod in selectedMethods)
             {
                 var iMethodParameters = iMethod.GetParameters();
                 var iMethodParametersTypes = iMethodParameters.Select(p => p.ParameterType).ToArray();
 
+                var attributes = baseType.IsInterface
+                    ? MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot
+                    : MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
+                
                 var paramBuilders = new ParameterBuilder[iMethodParameters.Length];
-                var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, 
-                    MethodAttributes.Public | MethodAttributes.Virtual | 
-                    MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
+                var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, attributes,
                     iMethod.ReturnType, iMethodParametersTypes);
 
                 var iMethodGenericArguments = iMethod.GetGenericArguments();
