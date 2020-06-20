@@ -25,7 +25,7 @@ namespace Wanhjor.ObjectInspector
         {
             var parameterTypes = GetPropertyParameterTypes(iProperty, false);
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 iProperty.PropertyType, parameterTypes);
             var il = method.GetILGenerator();
@@ -147,7 +147,7 @@ namespace Wanhjor.ObjectInspector
         {
             var parameterTypes = GetPropertyParameterTypes(iProperty, true);
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 typeof(void),
                 parameterTypes);

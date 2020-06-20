@@ -42,7 +42,7 @@ namespace Wanhjor.ObjectInspector
 
                 var attributes = baseType.IsInterface
                     ? MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot
-                    : MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig;
+                    : MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
                 
                 var paramBuilders = new ParameterBuilder[iMethodParameters.Length];
                 var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, attributes,

@@ -11,7 +11,7 @@ namespace Wanhjor.ObjectInspector
             PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 iProperty.PropertyType, Type.EmptyTypes);
 
@@ -93,7 +93,7 @@ namespace Wanhjor.ObjectInspector
             PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 typeof(void),
                 new[] {iProperty.PropertyType});
