@@ -47,6 +47,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Property. Object(Float)->Float conversion", () => tObject.Number = (float) (object) 51f, () => iObj.NumberObject = 51f);
                 Runner.RunA("Set Public Property. Object(Int)->Float conversion", () => tObject.Number = (float) Convert.ChangeType(42, typeof(float)), () => iObj.NumberObject = 42);
                 Runner.RunF("Get Public Property. IList conversion", () => (IList) tObject.MyList, () => iObj.MyList);
+                Runner.RunF("Get Public Property. IList<string> conversion", () => (IList<string>) tObject.MyList, () => iObj.MyStringList);
                 Runner.RunF("Get Indexer Property", () => tObject[50], () => iObj[50]);
                 Runner.RunA("Set Indexer Property", () => tObject[51] = "next one", () => iObj[51] = "next one with duck");
                 Runner.RunF("Generic Method Call", () => tObject.GetDefault<Guid>(), () => iObj.GetDefault<Guid>());
@@ -151,6 +152,9 @@ namespace Wanhjor.ObjectInspector.Tests
         object NumberObject { get; set; }
         
         IList MyList { get; }
+        
+        [Duck(Name = "MyList")]
+        IList<string> MyStringList { get; }
         
         [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
         string PublicStaticProp { get; set; } 

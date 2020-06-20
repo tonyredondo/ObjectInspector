@@ -15,7 +15,7 @@ namespace Wanhjor.ObjectInspector.Tests
         public float Number { get; set; } = 3.225f;
         public TestEnum MyEnumValue { get; set; } = TestEnum.Second;
         public TestObject Self { get; set; }
-        public List<string> MyList { get; set; } = new List<string>();
+        public List<string> MyList { get; set; } = new List<string> { "One", "Two" };
 
         
         private static readonly string _privateStaticField = "private static field";
