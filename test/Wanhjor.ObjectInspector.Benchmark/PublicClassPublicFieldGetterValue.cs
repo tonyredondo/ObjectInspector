@@ -29,9 +29,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         [Benchmark]
         public void Direct() => _ = _testObject.ValueField;
-        [Benchmark(Baseline = true)]
-        public void DuckTypeInterface() => _ = _duckObjectInterface.ValueField;
         [Benchmark]
+        public void DuckTypeInterface() => _ = _duckObjectInterface.ValueField;
+        [Benchmark(Baseline = true)]
         public void DuckTypeAbstract() => _ = _duckObjectAbstract.ValueField;
         [Benchmark]
         public void DuckTypeVirtual() => _ = _duckObjectVirtualClass.ValueField;

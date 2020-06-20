@@ -31,9 +31,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         [Benchmark]
         public void Direct() => throw new NotImplementedException();
-        [Benchmark(Baseline = true)]
-        public void DuckTypeInterface() => _duckObjectInterface.Name = "Value";
         [Benchmark]
+        public void DuckTypeInterface() => _duckObjectInterface.Name = "Value";
+        [Benchmark(Baseline = true)]
         public void DuckTypeAbstract() => _duckObjectAbstract.Name = "Value";
         [Benchmark]
         public void DuckTypeVirtual() => _duckObjectVirtualClass.Name = "Value";

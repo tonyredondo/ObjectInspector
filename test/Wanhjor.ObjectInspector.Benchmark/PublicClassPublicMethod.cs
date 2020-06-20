@@ -30,9 +30,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         [Benchmark]
         public void Direct() => _ = _testObject.Sum(2,2);
-        [Benchmark(Baseline = true)]
-        public void DuckTypeInterface() => _ = _duckObjectInterface.Sum(2,2);
         [Benchmark]
+        public void DuckTypeInterface() => _ = _duckObjectInterface.Sum(2,2);
+        [Benchmark(Baseline = true)]
         public void DuckTypeAbstract() => _ = _duckObjectAbstract.Sum(2,2);
         [Benchmark]
         public void DuckTypeVirtual() => _ = _duckObjectVirtualClass.Sum(2,2);

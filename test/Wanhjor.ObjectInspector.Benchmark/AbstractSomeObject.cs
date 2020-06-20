@@ -1,3 +1,4 @@
+// ReSharper disable IdentifierTypo
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     public abstract class AbstractSomeObject : DuckType

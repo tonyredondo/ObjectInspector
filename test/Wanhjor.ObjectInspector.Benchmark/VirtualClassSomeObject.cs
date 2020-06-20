@@ -1,3 +1,5 @@
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable IdentifierTypo
 namespace Wanhjor.ObjectInspector.Benchmark
 {
     public class VirtualClassSomeObject : DuckType
