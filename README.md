@@ -37,6 +37,7 @@ namespace OtherAssembly
 >As you can see in the following code: [![**Execute in .NET Fiddle**](https://img.shields.io/badge/.NET%20Fiddle-Execute_with_Anonymous_object-blue?style=for-the-badge)](https://dotnetfiddle.net/cBAmGG)
 
 ### By using a Duck Typing mechanism
+Duck Typing can be done by using an Interface, Abstract class or a class with virtual members. The library will create a proxy type inheriting/implementing the base type.
 ```cs
 namespace MyAssembly
 {
