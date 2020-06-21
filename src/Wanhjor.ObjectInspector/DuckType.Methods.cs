@@ -24,7 +24,7 @@ namespace Wanhjor.ObjectInspector
             {
                 foreach (var method in baseType.GetMethods())
                 {
-                    if (method.IsSpecialName || method.DeclaringType == typeof(DuckType)|| method.DeclaringType == typeof(object))
+                    if (method.IsSpecialName || method.DeclaringType == typeof(DuckType))
                         continue;
                     if (baseType.IsInterface || method.IsAbstract || method.IsVirtual)
                         yield return method;
@@ -40,9 +40,9 @@ namespace Wanhjor.ObjectInspector
                 var iMethodParameters = iMethod.GetParameters();
                 var iMethodParametersTypes = iMethodParameters.Select(p => p.ParameterType).ToArray();
 
-                var attributes = baseType.IsInterface
-                    ? MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot
-                    : MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig;
+                var attributes = iMethod.IsAbstract || iMethod.IsVirtual 
+                    ? MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig 
+                    : MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
                 
                 var paramBuilders = new ParameterBuilder[iMethodParameters.Length];
                 var methodBuilder = typeBuilder.DefineMethod(iMethod.Name, attributes,
