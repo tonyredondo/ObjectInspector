@@ -8,7 +8,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
     public class PrivateClassPrivatePropertyGetterObject
     {
         private readonly PrivateSomeObject _testObject = new PrivateSomeObject();
-        private readonly IPrivateSomeObject _duckObject;
+        private readonly IPrivateSomeObject _duckObjectInterface;
+        private readonly AbstractPrivateSomeObject _duckObjectAbstract;
+        private readonly VirtualClassPrivateSomeObject _duckObjectVirtualClass;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly Fetcher _delegateFetcher;
@@ -16,7 +18,9 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         public PrivateClassPrivatePropertyGetterObject()
         {
-            _duckObject = _testObject.DuckAs<IPrivateSomeObject>();
+            _duckObjectInterface = _testObject.DuckAs<IPrivateSomeObject>();
+            _duckObjectAbstract = _testObject.DuckAs<AbstractPrivateSomeObject>();
+            _duckObjectVirtualClass = _testObject.DuckAs<VirtualClassPrivateSomeObject>();
             _expressionFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("Name") { FetcherType = FetcherType.Emit };
@@ -27,8 +31,12 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         [Benchmark]
         public void Direct() => throw new NotImplementedException();
+        [Benchmark]
+        public void DuckTypeInterface() => _ = _duckObjectInterface.Name;
         [Benchmark(Baseline = true)]
-        public void DuckType() => _ = _duckObject.Name;
+        public void DuckTypeAbstract() => _ = _duckObjectAbstract.Name;
+        [Benchmark]
+        public void DuckTypeVirtual() => _ = _duckObjectVirtualClass.Name;
         [Benchmark]
         public void ExpressionTreeFetcher() => _ = (string)_expressionFetcher.Fetch(_testObject);
         [Benchmark]

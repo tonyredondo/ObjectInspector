@@ -9,38 +9,38 @@ namespace Wanhjor.ObjectInspector
         /// Gets a ducktype factory for an interface and instance type
         /// </summary>
         /// <param name="instance">Object instance</param>
-        /// <typeparam name="T">Type of interface</typeparam>
+        /// <typeparam name="T">Type of Duck</typeparam>
         /// <returns>Duck Type factory</returns>
         public static IDuckTypeFactory<T> GetFactory<T>(object instance) where T:class
         {
-            var interfaceType = typeof(T);
-            EnsureArguments(interfaceType, instance);
+            var duckType = typeof(T);
+            EnsureArguments(duckType, instance);
 
             // Create Type
-            var type = GetOrCreateProxyType(interfaceType, instance.GetType());
+            var type = GetOrCreateProxyType(duckType, instance.GetType());
             return new DuckTypeFactory<T>(type);
         }
         /// <summary>
         /// Gets a ducktype factory for an interface and instance type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Object type</param>
         /// <returns>Duck type factory</returns>
-        public static IDuckTypeFactory<object> GetFactoryByTypes(Type interfaceType, Type instanceType)
+        public static IDuckTypeFactory<object> GetFactoryByTypes(Type duckType, Type instanceType)
         {
-            var type = GetOrCreateProxyType(interfaceType, instanceType);
+            var type = GetOrCreateProxyType(duckType, instanceType);
             return new DuckTypeFactory<object>(type);
         }
         /// <summary>
         /// Gets a ducktype factory for an interface and instance type
         /// </summary>
         /// <param name="instanceType">Type of instance</param>
-        /// <typeparam name="T">Type of interface</typeparam>
+        /// <typeparam name="T">Type of Duck</typeparam>
         /// <returns>Duck Type factory</returns>
         public static IDuckTypeFactory<T> GetFactoryByTypes<T>(Type instanceType) where T:class
         {
-            var interfaceType = typeof(T);
-            var type = GetOrCreateProxyType(interfaceType, instanceType);
+            var duckType = typeof(T);
+            var type = GetOrCreateProxyType(duckType, instanceType);
             return new DuckTypeFactory<T>(type);
         }
         

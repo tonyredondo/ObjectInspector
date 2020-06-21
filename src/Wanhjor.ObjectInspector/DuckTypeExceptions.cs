@@ -45,14 +45,14 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// DuckType type is not an interface exception
     /// </summary>
-    public class DuckTypeTypeIsNotAnInterfaceException : Exception
+    public class DuckTypeTypeIsNotValidException : Exception
     {
         /// <summary>
-        /// DuckType type is not an interface exception
+        /// DuckType type is not valid exception
         /// </summary>
         /// <param name="type">Type</param>
         /// <param name="argumentName">Name of the argument</param>
-        public DuckTypeTypeIsNotAnInterfaceException(Type type, string argumentName) : base($"The type '{type.FullName}' is not an interface type, argument: '{argumentName}'") {}
+        public DuckTypeTypeIsNotValidException(Type type, string argumentName) : base($"The type '{type.FullName}' is not a valid type, argument: '{argumentName}'") {}
     }
     /// <summary>
     /// DuckType type is not public exception

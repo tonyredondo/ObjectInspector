@@ -11,7 +11,7 @@ namespace Wanhjor.ObjectInspector
             PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 iProperty.PropertyType, Type.EmptyTypes);
 
@@ -23,7 +23,7 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != field.FieldType && !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(field.FieldType))
             {
                 if (field.IsStatic)
                 {
@@ -93,7 +93,7 @@ namespace Wanhjor.ObjectInspector
             PropertyInfo iProperty, FieldInfo field, FieldInfo instanceField)
         {
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 typeof(void),
                 new[] {iProperty.PropertyType});
@@ -125,7 +125,7 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != field.FieldType && iProperty.PropertyType.IsInterface && field.FieldType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != field.FieldType && !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(field.FieldType))
             {
                 if (field.IsStatic)
                 {

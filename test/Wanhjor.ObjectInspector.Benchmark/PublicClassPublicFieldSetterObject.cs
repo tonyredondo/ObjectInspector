@@ -8,14 +8,18 @@ namespace Wanhjor.ObjectInspector.Benchmark
     public class PublicClassPublicFieldSetterObject
     {
         private readonly SomeObject _testObject = new SomeObject();
-        private readonly ISomeObject _duckObject;
+        private readonly ISomeObject _duckObjectInterface;
+        private readonly AbstractSomeObject _duckObjectAbstract;
+        private readonly VirtualClassSomeObject _duckObjectVirtualClass;
         private readonly DynamicFetcher _expressionFetcher;
         private readonly DynamicFetcher _emitFetcher;
         private readonly FieldInfo _fInfo;
 
         public PublicClassPublicFieldSetterObject()
         {
-            _duckObject = _testObject.DuckAs<ISomeObject>();
+            _duckObjectInterface = _testObject.DuckAs<ISomeObject>();
+            _duckObjectAbstract = _testObject.DuckAs<AbstractSomeObject>();
+            _duckObjectVirtualClass = _testObject.DuckAs<VirtualClassSomeObject>();
             _expressionFetcher = new DynamicFetcher("NameField") { FetcherType = FetcherType.ExpressionTree };
             _expressionFetcher.Load(_testObject);
             _emitFetcher = new DynamicFetcher("NameField") { FetcherType = FetcherType.Emit };
@@ -25,8 +29,12 @@ namespace Wanhjor.ObjectInspector.Benchmark
 
         [Benchmark]
         public void Direct() => _testObject.NameField = "Value";
+        [Benchmark]
+        public void DuckTypeInterface() => _duckObjectInterface.NameField = "Value";
         [Benchmark(Baseline = true)]
-        public void DuckType() => _duckObject.NameField = "Value";
+        public void DuckTypeAbstract() => _duckObjectAbstract.NameField = "Value";
+        [Benchmark]
+        public void DuckTypeVirtual() => _duckObjectVirtualClass.NameField = "Value";
         [Benchmark]
         public void ExpressionTreeFetcher() => _expressionFetcher.Shove(_testObject, "Value");
         [Benchmark]

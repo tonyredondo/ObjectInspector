@@ -25,7 +25,7 @@ namespace Wanhjor.ObjectInspector
         {
             var parameterTypes = GetPropertyParameterTypes(iProperty, false);
             var method = typeBuilder.DefineMethod("get_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 iProperty.PropertyType, parameterTypes);
             var il = method.GetILGenerator();
@@ -45,7 +45,8 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 0 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 0 && 
+                !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(prop.PropertyType))
             {
                 if (propMethod.IsStatic)
                 {
@@ -146,7 +147,7 @@ namespace Wanhjor.ObjectInspector
         {
             var parameterTypes = GetPropertyParameterTypes(iProperty, true);
             var method = typeBuilder.DefineMethod("set_" + iProperty.Name,
-                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.Final |
                 MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 typeof(void),
                 parameterTypes);
@@ -171,7 +172,8 @@ namespace Wanhjor.ObjectInspector
             var iPropTypeInterface = iProperty.PropertyType;
             if (iPropTypeInterface.IsGenericType)
                 iPropTypeInterface = iPropTypeInterface.GetGenericTypeDefinition();
-            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && iProperty.PropertyType.IsInterface && prop.PropertyType.GetInterface(iPropTypeInterface.FullName) == null)
+            if (iProperty.PropertyType != prop.PropertyType && parameterTypes.Length == 1 && 
+                !iProperty.PropertyType.IsValueType && !iProperty.PropertyType.IsAssignableFrom(prop.PropertyType))
             {
                 if (propMethod.IsStatic)
                 {

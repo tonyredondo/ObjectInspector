@@ -72,32 +72,50 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Get or creates a proxy type implementing the interface type to access the given instance type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Proxy type</returns>
-        private static Type GetOrCreateProxyType(Type interfaceType, Type instanceType)
-            => DuckTypeCache.GetOrAdd(new VTuple<Type, Type>(interfaceType, instanceType), 
+        private static Type GetOrCreateProxyType(Type duckType, Type instanceType)
+            => DuckTypeCache.GetOrAdd(new VTuple<Type, Type>(duckType, instanceType), 
                 types => CreateProxyType(types.Item1, types.Item2));
         
         /// <summary>
         /// Creates a proxy type implementing the interface type to access the given instance type
         /// </summary>
-        /// <param name="interfaceType">Interface type</param>
+        /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Proxy type</returns>
         /// <exception cref="NullReferenceException">In case the CurrentInstance field is not found</exception>
-        private static Type CreateProxyType(Type interfaceType, Type instanceType)
+        private static Type CreateProxyType(Type duckType, Type instanceType)
         {
-            var typeSignature = $"{interfaceType.Name}-ProxyTo->{instanceType.Name}";
-                
-            //Create Type
+            var typeSignature = $"{duckType.Name}-ProxyTo->{instanceType.Name}";
+            
+            // Define parent type, interface types
+            Type parentType;
+            Type[] interfaceTypes;
+            if (duckType.IsInterface)
+            {
+                parentType = typeof(DuckType);
+                interfaceTypes = new[] {duckType};
+            }
+            else if (duckType.BaseType == typeof(DuckType))
+            {
+                parentType = duckType;
+                interfaceTypes = Type.EmptyTypes;
+            }
+            else
+            {
+                throw new DuckTypeTypeIsNotValidException(duckType, nameof(duckType));
+            }
+            
+            // Create Type
             var an = new AssemblyName(typeSignature + "Assembly");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
             var typeBuilder = moduleBuilder.DefineType(typeSignature, 
                 TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | 
-                TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
-                typeof(DuckType), new[] { interfaceType });
+                TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout | TypeAttributes.Sealed,
+                parentType, interfaceTypes);
             
             // Define .ctor
             typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
@@ -108,29 +126,46 @@ namespace Wanhjor.ObjectInspector
                 throw new NullReferenceException();
             
             // Create Members
-            CreateInterfaceProperties(interfaceType, instanceType, instanceField, typeBuilder);
-            CreateInterfaceMethods(interfaceType, instanceType, instanceField, typeBuilder);
+            CreateProperties(duckType, instanceType, instanceField, typeBuilder);
+            CreateMethods(duckType, instanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();
         }
 
-        
-        private static void CreateInterfaceProperties(Type interfaceType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
+        private static List<PropertyInfo> GetProperties(Type baseType)
         {
-            var asmVersion = instanceType.Assembly.GetName().Version;
-            var interfaceProperties = new List<PropertyInfo>(interfaceType.GetProperties());
-            var implementedInterfaces = interfaceType.GetInterfaces();
+            var selectedProperties = new List<PropertyInfo>(baseType.IsInterface ? baseType.GetProperties() : GetBaseProperties(baseType));
+            var implementedInterfaces = baseType.GetInterfaces();
             foreach (var imInterface in implementedInterfaces)
             {
                 if (imInterface == typeof(IDuckType)) continue;
-                var newProps = imInterface.GetProperties().Where(p => interfaceProperties.All(i => i.Name != p.Name));
-                interfaceProperties.AddRange(newProps);
+                var newProps = imInterface.GetProperties().Where(p => selectedProperties.All(i => i.Name != p.Name));
+                selectedProperties.AddRange(newProps);
             }
-            foreach (var iProperty in interfaceProperties)
+            return selectedProperties;
+            static IEnumerable<PropertyInfo> GetBaseProperties(Type baseType)
+            {
+                foreach (var prop in baseType.GetProperties())
+                {
+                    if (prop.DeclaringType == typeof(DuckType))
+                        continue;
+                    if (prop.CanRead && (prop.GetMethod.IsAbstract || prop.GetMethod.IsVirtual))
+                        yield return prop;
+                    else if (prop.CanWrite && (prop.SetMethod.IsAbstract || prop.SetMethod.IsVirtual))
+                        yield return prop;
+                }
+            }
+        }
+        
+        private static void CreateProperties(Type baseType, Type instanceType, FieldInfo instanceField, TypeBuilder typeBuilder)
+        {
+            var asmVersion = instanceType.Assembly.GetName().Version;
+            var selectedProperties = GetProperties(baseType);
+            foreach (var iProperty in selectedProperties)
             {
                 var propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
-
+                
                 var duckAttrs = new List<DuckAttribute>(iProperty.GetCustomAttributes<DuckAttribute>(true));
                 if (duckAttrs.Count == 0)
                     duckAttrs.Add(new DuckAttribute());

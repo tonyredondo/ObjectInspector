@@ -8,21 +8,21 @@ using Xunit;
 
 namespace Wanhjor.ObjectInspector.Tests
 {
-    public class DuckTypeTests
+    public class DuckTypeAbstractTests
     {
         [Fact]
         [MethodImpl(MethodImplOptions.NoOptimization)]
-        public void DuckTypeTest()
+        public void DuckTypeAbstractTest()
         {
             lock (Runner.Locker)
             {
                 Console.WriteLine();
 
                 var tObject = new TestObject {Name = "Tony", Value = "Redondo"};
-                var iObj = tObject.DuckAs<IDuckTestObject>();
+                var iObj = tObject.DuckAs<AbstractDuckTestObject>();
                     
                 var tTmp = Activator.CreateInstance(iObj.Type!);
-                var tObj = tTmp!.DuckAs<IDuckTestName>();
+                var tObj = tTmp!.DuckAs<AbstractDuckTestName>();
                 tObj.Name = "My new setter";
                 
                 Console.WriteLine($"Type = {iObj.Type}");
@@ -36,7 +36,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunF("Get Public Static Property", () => TestObject.PublicStaticProp, () => iObj.PublicStaticProp);
                 Runner.RunA("Set Public Static Property", () => TestObject.PublicStaticProp = "PSP", () => _ = iObj.PublicStaticProp = "PSP");
                 Runner.RunF("Get Private Static Property", null, () => iObj.PrivateStaticProp);
-                Runner.RunF("Get Self Property as DuckType", () => DuckType.Create<IDuckTestName>(tObject.Self), () => iObj.Self);
+                Runner.RunF("Get Self Property as DuckType", () => DuckType.Create<AbstractDuckTestName>(tObject.Self), () => iObj.Self);
                 Runner.RunA("Set Self Property as DuckType", () => tObject.Self = (TestObject)tObj.Instance, () => iObj.Self = tObj);
                 Runner.RunF("Get Public Property. Float->Int conversion", () => (int) tObject.Number, () => iObj.Number);
                 Runner.RunA("Set Public Property. Int->Float conversion", () => tObject.Number = (int) 42, () => iObj.Number = 42);
@@ -47,7 +47,6 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Property. Object(Float)->Float conversion", () => tObject.Number = (float) (object) 51f, () => iObj.NumberObject = 51f);
                 Runner.RunA("Set Public Property. Object(Int)->Float conversion", () => tObject.Number = (float) Convert.ChangeType(42, typeof(float)), () => iObj.NumberObject = 42);
                 Runner.RunF("Get Public Property. IList conversion", () => (IList) tObject.MyList, () => iObj.MyList);
-                Runner.RunF("Get Public Property. IList<string> conversion", () => (IList<string>) tObject.MyList, () => iObj.MyStringList);
                 Runner.RunF("Get Indexer Property", () => tObject[50], () => iObj[50]);
                 Runner.RunA("Set Indexer Property", () => tObject[51] = "next one", () => iObj[51] = "next one with duck");
                 Runner.RunF("Generic Method Call", () => tObject.GetDefault<Guid>(), () => iObj.GetDefault<Guid>());
@@ -60,7 +59,7 @@ namespace Wanhjor.ObjectInspector.Tests
                 Runner.RunA("Set Public Static Field", () => TestObject._publicStaticField = "PSP", () => _ = iObj.PublicStaticField = "PSP");
                 Runner.RunF("Get Private Field", null, () => iObj.PrivateValue);
                 Runner.RunA("Set Private Field", null, () => iObj.PrivateValue = "PrivateValue");
-                Runner.RunF("Get Self Field as DuckType", () => tObject.ValueSelf.DuckAs<IDuckTestName>(), () => iObj.ValueSelf);
+                Runner.RunF("Get Self Field as DuckType", () => tObject.ValueSelf.DuckAs<AbstractDuckTestName>(), () => iObj.ValueSelf);
                 Runner.RunA("Set Self Field as DuckType", () => tObject.ValueSelf = (TestObject)tObj.Instance, () => iObj.ValueSelf = tObj);
                 Runner.RunF("Get Private Static Field", null, () => iObj.PrivateStaticField);
                 Runner.RunF("Get Public Field. Float->Int conversion", () => (int) tObject.FieldNumber, () => iObj.FieldNumberInteger);
@@ -82,7 +81,7 @@ namespace Wanhjor.ObjectInspector.Tests
             dictio.Add("Key2", "Value2");
             dictio.Add("Key3", "Value3");
 
-            var idct = dictio.DuckAs<IDictio>();
+            var idct = dictio.DuckAs<AbstractDictio>();
             var keys = idct.Keys;
 
             idct["Key1"] = "Edited";
@@ -93,7 +92,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void FactoryTest()
         {
-            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<IDictio>();
+            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<AbstractDictio>();
 
             for (var i = 0; i < 100; i++)
             {
@@ -106,7 +105,7 @@ namespace Wanhjor.ObjectInspector.Tests
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void FactoryRentTest()
         {
-            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<IDictio>();
+            var factory = typeof(IDictionary<string, string>).DuckFactoryAs<AbstractDictio>();
 
             for (var i = 0; i < 100; i++)
             {
@@ -117,93 +116,84 @@ namespace Wanhjor.ObjectInspector.Tests
         }
     }
 
-    public interface IDictio : IDuckType
+    public abstract class AbstractDictio : DuckType
     {
-        string this[string key] { get; set; }
-        ICollection<string> Keys { get; } 
+        public abstract string this[string key] { get; set; }
+        public abstract ICollection<string> Keys { get; } 
     }
     
-    public interface IDuckTestName : IDuckType
+    public abstract class AbstractDuckTestName : DuckType
     {
-        string Name { get; set; }
+        public abstract string Name { get; set; }
     }
 
-    public interface IDuckTestObject : IDuckType
+    public abstract class AbstractDuckTestObject : DuckType
     {
-        string Name { get; set; }
+        public abstract string Name { get; set; }
         
         [Duck(Name="privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static, UpToVersion = "0.5")]
         [Duck(Name="_privateStaticProp", Flags = BindingFlags.NonPublic | BindingFlags.Static)]
-        string PrivateStaticProp { get; }
+        public abstract string PrivateStaticProp { get; }
         
         [Duck(Flags = BindingFlags.NonPublic | BindingFlags.Instance)]
-        string PrivateName { get; set; }
+        public abstract string PrivateName { get; set; }
         
-        IDuckTestName Self { get; set; }
+        public abstract AbstractDuckTestName Self { get; set; }
         
-        int Number { get; set; }
+        public abstract int Number { get; set; }
         
-        int MyEnumValue { get; set; }
+        public abstract int MyEnumValue { get; set; }
         
         [Duck(Name = "MyEnumValue")]
-        TestEnum2 MyEnumValueConverted { get; set; }
+        public abstract TestEnum2 MyEnumValueConverted { get; set; }
 
         [Duck(Name="Number")]
-        object NumberObject { get; set; }
+        public abstract object NumberObject { get; set; }
         
-        IList MyList { get; }
-        
-        [Duck(Name = "MyList")]
-        IList<string> MyStringList { get; }
+        public abstract IList MyList { get; }
         
         [Duck(Flags = BindingFlags.Public | BindingFlags.Static)]
-        string PublicStaticProp { get; set; } 
+        public abstract string PublicStaticProp { get; set; } 
         
         
         [Duck(Kind = DuckKind.Field)]
-        string Value { get; set; }
+        public abstract string Value { get; set; }
         
         [Duck(Kind = DuckKind.Field)]
-        IDuckTestName ValueSelf { get; set; }
+        public abstract AbstractDuckTestName ValueSelf { get; set; }
         
         [Duck(Name="_privateValue", Flags = BindingFlags.NonPublic | BindingFlags.Instance, Kind = DuckKind.Field)]
-        string PrivateValue { get; set; }
+        public abstract string PrivateValue { get; set; }
         
         [Duck(Name="_privateStaticField", Flags = BindingFlags.NonPublic | BindingFlags.Static, Kind = DuckKind.Field)]
-        string PrivateStaticField { get; }
+        public abstract string PrivateStaticField { get; }
         
         [Duck(Name="_publicStaticField", Flags = BindingFlags.Public | BindingFlags.Static, Kind = DuckKind.Field)]
-        string PublicStaticField { get; set; }
+        public abstract string PublicStaticField { get; set; }
         
         [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
-        int FieldNumberInteger { get; set; }
+        public abstract int FieldNumberInteger { get; set; }
         
         [Duck(Name="FieldNumber", Kind = DuckKind.Field)]
-        object FieldNumberObject { get; set; }
+        public abstract object FieldNumberObject { get; set; }
         
         [Duck(Kind = DuckKind.Field)]
-        object MyEnumFieldValue { get; set; }
+        public abstract object MyEnumFieldValue { get; set; }
         
-        int Sum(int a, int b);
-        float Sum(float a, float b);
-        double Sum(double a, double b);
-        short Sum(short a, short b);
-        TestEnum ShowEnum(TestEnum val);
+        public abstract int Sum(int a, int b);
+        public abstract float Sum(float a, float b);
+        public abstract double Sum(double a, double b);
+        public abstract short Sum(short a, short b);
+        public abstract TestEnum ShowEnum(TestEnum val);
         [Duck(Flags = BindingFlags.Instance | BindingFlags.NonPublic)]
-        object InternalSum(int a, int b);
+        public abstract object InternalSum(int a, int b);
         
         
-        string this[int idx] { get; set; }
+        public abstract string this[int idx] { get; set; }
 
-        public T GetDefault<T>();
+        public abstract T GetDefault<T>();
         
-        TaskStatus Status { get; set; }
+        public abstract TaskStatus Status { get; set; }
     }
     
-    
-    public enum TestEnum2
-    {
-        Primero,
-        Segundo
-    }
 }
