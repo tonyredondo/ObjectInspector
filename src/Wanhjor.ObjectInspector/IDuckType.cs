@@ -20,4 +20,16 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         Version? AssemblyVersion { get; }
     }
+
+    /// <summary>
+    /// Settable duck type interface
+    /// </summary>
+    public interface ISettableDuckType : IDuckType
+    {
+        /// <summary>
+        /// Sets the instance object
+        /// </summary>
+        /// <param name="instance">Object instance value</param>
+        void SetInstance(object instance);
+    }
 }

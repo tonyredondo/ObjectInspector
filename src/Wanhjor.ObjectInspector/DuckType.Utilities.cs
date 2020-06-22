@@ -30,7 +30,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="interfaceType">Interface type</param>
         /// <param name="value">Property value</param>
         /// <returns>DuckType instance</returns>
-        protected static DuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
+        protected static IDuckType GetInnerDuckType(ref DuckType field, Type interfaceType, object? value)
         {
             if (value is null)
             {
@@ -39,8 +39,8 @@ namespace Wanhjor.ObjectInspector
             }
             var valueType = value.GetType();
             if (field is null || field.Type != valueType)
-                field = Create(interfaceType, valueType);
-            field.Instance = value;
+                field = (DuckType)Create(interfaceType, valueType);
+            field.SetInstance(value);
             return field;
         }
 

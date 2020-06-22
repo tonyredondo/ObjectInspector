@@ -29,12 +29,12 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         /// <param name="instance">Object instance</param>
         /// <returns>Duck type proxy instance</returns>
-        DuckType Create(object instance);
+        IDuckType Create(object instance);
         /// <summary>
         /// Rent a duck type proxy instance
         /// </summary>
         /// <param name="instance">Object instance</param>
         /// <returns>DuckType leasing instance</returns>
-        DuckTypeLeasing<DuckType> Rent(object instance);
+        DuckTypeLeasing<IDuckType> Rent(object instance);
     }
 }

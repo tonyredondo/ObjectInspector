@@ -55,21 +55,21 @@ namespace Wanhjor.ObjectInspector
             
             public T Create(object instance)
             {
-                var inst = (DuckType) FormatterServices.GetUninitializedObject(_proxyType);
-                inst.Instance = instance;
+                var inst = (ISettableDuckType) FormatterServices.GetUninitializedObject(_proxyType);
+                inst.SetInstance(instance);
                 return (inst as T)!;
             }
             public DuckTypeLeasing<T> Rent(object instance)
                 => DuckTypeLeasing<T>.Rent(this, instance);
             
-            DuckType IDuckTypeFactory.Create(object instance)
+            IDuckType IDuckTypeFactory.Create(object instance)
             {
-                var inst = (DuckType) FormatterServices.GetUninitializedObject(_proxyType);
-                inst.Instance = instance;
+                var inst = (ISettableDuckType) FormatterServices.GetUninitializedObject(_proxyType);
+                inst.SetInstance(instance);
                 return inst;
             }
-            DuckTypeLeasing<DuckType> IDuckTypeFactory.Rent(object instance)
-                => DuckTypeLeasing<DuckType>.RentDuckType(this, instance);
+            DuckTypeLeasing<IDuckType> IDuckTypeFactory.Rent(object instance)
+                => DuckTypeLeasing<IDuckType>.RentDuckType(this, instance);
         }
     }
 }

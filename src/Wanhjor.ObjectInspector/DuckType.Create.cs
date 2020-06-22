@@ -15,7 +15,7 @@ namespace Wanhjor.ObjectInspector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Create<T>(object instance)
         {
-            return (T)(object) Create(typeof(T), instance);
+            return (T)Create(typeof(T), instance);
         }
         
         /// <summary>
@@ -24,7 +24,7 @@ namespace Wanhjor.ObjectInspector
         /// <param name="duckType">Duck type</param>
         /// <param name="instance">Instance object</param>
         /// <returns>Duck Type proxy</returns>
-        public static DuckType Create(Type duckType, object instance)
+        public static object Create(Type duckType, object instance)
         {
             EnsureArguments(duckType, instance);
 
@@ -32,8 +32,8 @@ namespace Wanhjor.ObjectInspector
             var type = GetOrCreateProxyType(duckType, instance.GetType()); 
             
             // Create instance
-            var objInstance = (DuckType)FormatterServices.GetUninitializedObject(type);
-            objInstance.Instance = instance;
+            var objInstance = (ISettableDuckType)FormatterServices.GetUninitializedObject(type);
+            objInstance.SetInstance(instance);
             return objInstance;
         }
         
@@ -43,10 +43,10 @@ namespace Wanhjor.ObjectInspector
         /// <param name="duckType">Duck type</param>
         /// <param name="instanceType">Instance type</param>
         /// <returns>Duck Type proxy</returns>
-        public static DuckType Create(Type duckType, Type instanceType)
+        public static object Create(Type duckType, Type instanceType)
         {
             var type = GetOrCreateProxyType(duckType, instanceType);
-            return (DuckType) FormatterServices.GetUninitializedObject(type);
+            return FormatterServices.GetUninitializedObject(type);
         }
     }
 }

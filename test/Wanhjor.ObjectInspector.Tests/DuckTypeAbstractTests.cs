@@ -24,6 +24,9 @@ namespace Wanhjor.ObjectInspector.Tests
                 var tTmp = Activator.CreateInstance(iObj.Type!);
                 var tObj = tTmp!.DuckAs<AbstractDuckTestName>();
                 tObj.Name = "My new setter";
+
+                var nObj = tTmp!.DuckAs<AbstractDuckTestNoInherits>();
+                
                 
                 Console.WriteLine($"Type = {iObj.Type}");
                 Console.WriteLine($"Version = {iObj.AssemblyVersion}");
@@ -123,6 +126,11 @@ namespace Wanhjor.ObjectInspector.Tests
     }
     
     public abstract class AbstractDuckTestName : DuckType
+    {
+        public abstract string Name { get; set; }
+    }
+    
+    public abstract class AbstractDuckTestNoInherits
     {
         public abstract string Name { get; set; }
     }

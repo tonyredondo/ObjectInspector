@@ -46,6 +46,6 @@ public static class DuckTypeExtensions
     /// <param name="interfaceType">Interface type</param>
     /// <returns>DuckType instance</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IDuckType DuckAs(this object instance, Type interfaceType)
+    public static object DuckAs(this object instance, Type interfaceType)
         => DuckType.Create(interfaceType, instance);
 }

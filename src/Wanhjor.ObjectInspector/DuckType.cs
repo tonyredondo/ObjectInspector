@@ -13,10 +13,9 @@ namespace Wanhjor.ObjectInspector
     /// <summary>
     /// Duck Type
     /// </summary>
-    public partial class DuckType : IDuckType
+    public partial class DuckType : ISettableDuckType
     {
         #region Fields
-        
         /// <summary>
         /// Current instance
         /// </summary>
@@ -32,7 +31,6 @@ namespace Wanhjor.ObjectInspector
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
         private Version? _version;
-        
         #endregion
 
         #region Properties
@@ -40,13 +38,7 @@ namespace Wanhjor.ObjectInspector
         /// <summary>
         /// Instance
         /// </summary>
-        public object? Instance
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => CurrentInstance;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal set => CurrentInstance = value;
-        }
+        public object? Instance => CurrentInstance;
 
         /// <summary>
         /// Instance Type
@@ -68,6 +60,16 @@ namespace Wanhjor.ObjectInspector
         protected DuckType(){}
         
         #endregion
+        
+        void ISettableDuckType.SetInstance(object? instance)
+        {
+            CurrentInstance = instance;
+        }
+
+        private void SetInstance(object? instance)
+        {
+            CurrentInstance = instance;
+        }
         
         /// <summary>
         /// Get or creates a proxy type implementing the interface type to access the given instance type
@@ -98,15 +100,16 @@ namespace Wanhjor.ObjectInspector
                 parentType = typeof(DuckType);
                 interfaceTypes = new[] {duckType};
             }
-            else if (duckType.BaseType == typeof(DuckType))
+            else
             {
                 parentType = duckType;
                 interfaceTypes = Type.EmptyTypes;
             }
-            else
-            {
-                throw new DuckTypeTypeIsNotValidException(duckType, nameof(duckType));
-            }
+            
+            // Gets the current instance field info
+            var instanceField = parentType.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
+            if (instanceField is null)
+                interfaceTypes = new[] { typeof(ISettableDuckType)};
             
             // Create Type
             var an = new AssemblyName(typeSignature + "Assembly");
@@ -119,18 +122,67 @@ namespace Wanhjor.ObjectInspector
             
             // Define .ctor
             typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
-            
-            // Gets the current instance field info
-            var instanceField = typeBuilder.BaseType!.GetField(nameof(CurrentInstance), BindingFlags.Instance | BindingFlags.NonPublic);
-            if (instanceField is null)
-                throw new NullReferenceException();
-            
+
+            // Create instance field if is null
+            instanceField ??= CreateInstanceField(typeBuilder);
+
             // Create Members
             CreateProperties(duckType, instanceType, instanceField, typeBuilder);
             CreateMethods(duckType, instanceType, instanceField, typeBuilder);
             
             // Create Type
             return typeBuilder.CreateTypeInfo()!.AsType();
+        }
+
+        private static FieldInfo CreateInstanceField(TypeBuilder typeBuilder)
+        {
+            var instanceField = typeBuilder.DefineField(nameof(CurrentInstance), typeof(object), FieldAttributes.Family);
+
+            var setInstance = typeBuilder.DefineMethod("SetInstance",
+                MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final |
+                MethodAttributes.HideBySig | MethodAttributes.NewSlot, typeof(void), new[] {typeof(object)});
+            var il = setInstance.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Stfld, instanceField);
+            il.Emit(OpCodes.Ret);
+
+            var propInstance = typeBuilder.DefineProperty("Instance", PropertyAttributes.None, typeof(object), null);
+            var getPropInstance = typeBuilder.DefineMethod("get_Instance",
+                MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final |
+                MethodAttributes.HideBySig | MethodAttributes.NewSlot, typeof(object), Type.EmptyTypes);
+            il = getPropInstance.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, instanceField);
+            il.Emit(OpCodes.Ret);
+            propInstance.SetGetMethod(getPropInstance);
+
+            var propType = typeBuilder.DefineProperty("Type", PropertyAttributes.None, typeof(Type), null);
+            var getPropType = typeBuilder.DefineMethod("get_Type",
+                MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final |
+                MethodAttributes.HideBySig | MethodAttributes.NewSlot, typeof(Type), Type.EmptyTypes);
+            il = getPropType.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, instanceField);
+            il.EmitCall(OpCodes.Callvirt, typeof(object).GetMethod("GetType"), null);
+            il.Emit(OpCodes.Ret);
+            propType.SetGetMethod(getPropType);
+
+            var propVersion = typeBuilder.DefineProperty("AssemblyVersion", PropertyAttributes.None, typeof(Version), null);
+            var getPropVersion = typeBuilder.DefineMethod("get_AssemblyVersion",
+                MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final |
+                MethodAttributes.HideBySig | MethodAttributes.NewSlot, typeof(Version), Type.EmptyTypes);
+            il = getPropVersion.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, instanceField);
+            il.EmitCall(OpCodes.Call, typeof(object).GetMethod("GetType"), null);
+            il.EmitCall(OpCodes.Callvirt, typeof(Type).GetProperty("Assembly").GetMethod, null);
+            il.EmitCall(OpCodes.Callvirt, typeof(Assembly).GetMethod("GetName", Type.EmptyTypes), null);
+            il.EmitCall(OpCodes.Callvirt, typeof(AssemblyName).GetProperty("Version").GetMethod, null);
+            il.Emit(OpCodes.Ret);
+            propVersion.SetGetMethod(getPropVersion);
+            
+            return instanceField;
         }
 
         private static List<PropertyInfo> GetProperties(Type baseType)
@@ -274,5 +326,6 @@ namespace Wanhjor.ObjectInspector
             il.Emit(OpCodes.Throw);
             return method;
         }
+
     }
 }

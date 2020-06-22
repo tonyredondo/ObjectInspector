@@ -23,7 +23,7 @@ namespace Wanhjor.ObjectInspector
             if (Instance is null) return;
             var inst = Instance;
             Instance = default!;
-            ((DuckType) (object) inst).Instance = null;
+            ((ISettableDuckType) inst).SetInstance(null!);
             Proxies.Push(inst);
         }
 
@@ -32,19 +32,19 @@ namespace Wanhjor.ObjectInspector
             if (!Proxies.TryPop(out var proxy))
                 proxy = factory.Create(instance);
             else
-                ((DuckType) (object) proxy).Instance = instance;
+                ((ISettableDuckType)proxy).SetInstance(instance);
             return new DuckTypeLeasing<TInterface>
             {
                 Instance = proxy
             };
         }
-        internal static DuckTypeLeasing<DuckType> RentDuckType(IDuckTypeFactory factory, object instance)
+        internal static DuckTypeLeasing<IDuckType> RentDuckType(IDuckTypeFactory factory, object instance)
         {
-            if (!(Proxies.TryPop(out var proxy) && proxy is DuckType dtProxy))
-                dtProxy = factory.Create(instance);
+            if (!(Proxies.TryPop(out var proxy) && proxy is ISettableDuckType dtProxy))
+                dtProxy = (ISettableDuckType) factory.Create(instance);
             else
-                dtProxy.Instance = instance;
-            return new DuckTypeLeasing<DuckType>
+                dtProxy.SetInstance(instance);
+            return new DuckTypeLeasing<IDuckType>
             {
                 Instance = dtProxy
             };
