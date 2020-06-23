@@ -208,7 +208,7 @@ namespace Wanhjor.ObjectInspector
                 if (y.Version is null) return -1;
                 return x.Version.CompareTo(y.Version);
             });
-
+            var iMethodString = iMethod.ToString();
             MethodAttributesSelector[] allMethods = null!;
             foreach (var duckAttr in duckAttrs)
             {
@@ -219,9 +219,18 @@ namespace Wanhjor.ObjectInspector
                 
                 // We select the method to call
                 var method = instanceType.GetMethod(duckAttr.Name, duckAttr.Flags, null, parametersTypes, null);
-                
+
                 if (!(method is null))
-                    return method;
+                {
+                    var attrs = method.GetCustomAttributes<DuckAttribute>().ToList();
+                    if (attrs.Count == 0)
+                        return method;
+                    foreach (var attribute in attrs)
+                    {
+                        if (attribute.Name == iMethodString)
+                            return method;
+                    }
+                }
 
                 if (allMethods is null)
                 {
@@ -232,7 +241,6 @@ namespace Wanhjor.ObjectInspector
                             new List<DuckAttribute>(methods[i].GetCustomAttributes<DuckAttribute>(true)));
                 }
                 
-                var iMethodString = iMethod.ToString();
                 var remaining = allMethods.Where(ma =>
                 {
                     if (ma.Attributes.Count == 0)
