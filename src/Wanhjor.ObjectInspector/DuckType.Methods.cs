@@ -22,9 +22,9 @@ namespace Wanhjor.ObjectInspector
             return selectedMethods;
             static IEnumerable<MethodInfo> GetBaseMethods(Type baseType)
             {
-                foreach (var method in baseType.GetMethods())
+                foreach (var method in baseType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
-                    if (method.IsSpecialName || method.DeclaringType == typeof(DuckType))
+                    if (method.IsSpecialName || method.IsFinal || method.IsPrivate || method.DeclaringType == typeof(DuckType))
                         continue;
                     if (baseType.IsInterface || method.IsAbstract || method.IsVirtual)
                         yield return method;
@@ -39,6 +39,11 @@ namespace Wanhjor.ObjectInspector
             {
                 var iMethodParameters = iMethod.GetParameters();
                 var iMethodParametersTypes = iMethodParameters.Select(p => p.ParameterType).ToArray();
+
+                // We select the method to call
+                var method = SelectMethod(instanceType, iMethod, iMethodParameters, iMethodParametersTypes);
+                if (method is null && iMethod.IsVirtual)
+                    continue;
 
                 var attributes = iMethod.IsAbstract || iMethod.IsVirtual 
                     ? MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig 
@@ -66,14 +71,11 @@ namespace Wanhjor.ObjectInspector
                 var il = methodBuilder.GetILGenerator();
                 var publicInstance = instanceType.IsPublic || instanceType.IsNestedPublic;
 
-                // We select the method to call
-                var method = SelectMethod(instanceType, iMethod, iMethodParameters, iMethodParametersTypes);
-
                 if (method is null) 
                 {
                     il.Emit(OpCodes.Newobj, typeof(NotImplementedException).GetConstructor(Type.EmptyTypes)!);
                     il.Emit(OpCodes.Throw);
-                    return;
+                    continue;
                 }
                 
                 var innerDuck = false;

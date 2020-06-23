@@ -132,6 +132,8 @@ namespace Wanhjor.ObjectInspector.Tests
             
             var name = duck.GetName();
             Assert.Equal("From Base", name);
+
+            var value = duck.GetValue();
         }
     }
 
@@ -151,7 +153,17 @@ namespace Wanhjor.ObjectInspector.Tests
         public abstract string Name { get; set; }
     }
 
-    public abstract class ReverseDuck
+    public abstract class ReverseDuckBase : IDisposable
+    {
+        public abstract string GetValue();
+
+        public void Dispose()
+        {
+            
+        }
+    }
+    
+    public abstract class ReverseDuck : ReverseDuckBase
     {
         public string Name { get; set; } = "From Base";
         
@@ -160,6 +172,11 @@ namespace Wanhjor.ObjectInspector.Tests
         public string GetValues()
         {
             return $"{Name} => {Value}";
+        }
+
+        public override string GetValue()
+        {
+            return string.Empty;
         }
 
         public abstract string GetName();
@@ -179,6 +196,11 @@ namespace Wanhjor.ObjectInspector.Tests
         {
             return _extractor.Name;
         }
+/*
+        public string GetValue()
+        {
+            return Value;
+        }*/
 
         public void SetProxyObject(object proxy)
         {
