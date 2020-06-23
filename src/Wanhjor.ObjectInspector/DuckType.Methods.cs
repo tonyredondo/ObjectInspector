@@ -224,9 +224,21 @@ namespace Wanhjor.ObjectInspector
                     return method;
                 
                 allMethods ??= instanceType.GetMethods(duckAttr.Flags);
-                        
-                // Trying to select the ones with the same parameters count
+                
+                // Trying to select the one with the same name
                 var remaining = allMethods.Where(m =>
+                {
+                    if (m.Name == duckAttr.Name) return true;
+                    return m.ToString() == duckAttr.Name;
+                }).ToList();
+                
+                if (remaining.Count == 0)
+                    continue;
+                if (remaining.Count == 1)
+                    return remaining[0];
+                
+                // Trying to select the ones with the same parameters count
+                remaining = remaining.Where(m =>
                 {
                     if (m.Name != duckAttr.Name) return false;
                     
