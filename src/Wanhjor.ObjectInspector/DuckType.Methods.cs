@@ -209,7 +209,7 @@ namespace Wanhjor.ObjectInspector
                 return x.Version.CompareTo(y.Version);
             });
 
-            MethodInfo[] allMethods = null!;
+            MethodAttributesSelector[] allMethods = null!;
             foreach (var duckAttr in duckAttrs)
             {
                 if (!(duckAttr.Version is null) && asmVersion > duckAttr.Version)
@@ -222,61 +222,68 @@ namespace Wanhjor.ObjectInspector
                 
                 if (!(method is null))
                     return method;
-                
-                allMethods ??= instanceType.GetMethods(duckAttr.Flags);
-                
-                // Trying to select the one with the same name (used by reverse proxy)
-                var iMethodString = iMethod.ToString();
-                var remaining = allMethods.Where(m =>
+
+                if (allMethods is null)
                 {
-                    foreach (var duckAttribute in m.GetCustomAttributes<DuckAttribute>(true))
+                    var methods = instanceType.GetMethods(duckAttr.Flags);
+                    allMethods = new MethodAttributesSelector[methods.Length];
+                    for (var i = 0; i < allMethods.Length; i++)
+                        allMethods[i] = new MethodAttributesSelector(methods[i], 
+                            new List<DuckAttribute>(methods[i].GetCustomAttributes<DuckAttribute>(true)));
+                }
+                
+                var iMethodString = iMethod.ToString();
+                var remaining = allMethods.Where(ma =>
+                {
+                    if (ma.Attributes.Count == 0)
                     {
-                        if (duckAttribute.Name == iMethodString)
+                        if (ma.Method.Name != duckAttr.Name) return false;
+                        
+                        // Trying to select the ones with the same parameters count
+                        var mParams = ma.Method.GetParameters();
+                        if (mParams.Length == parameters.Length)
+                            return true;
+
+                        var min = Math.Min(mParams.Length, parameters.Length);
+                        var max = Math.Max(mParams.Length, parameters.Length);
+                        for (var i = min; i < max; i++)
+                        {
+                            if (mParams.Length > i && !mParams[i].HasDefaultValue) return false;
+                            if (parameters.Length > i && !parameters[i].HasDefaultValue) return false;
+                        }
+                        return true;
+                    }
+                    // Trying to select the one with the same name (used by reverse proxy)
+                    foreach (var attribute in ma.Attributes)
+                    {
+                        if (attribute.Name == iMethodString)
                             return true;
                     }
                     return false;
-                }).ToList();
-                
-                if (remaining.Count == 1)
-                    return remaining[0];
-                
-                // Trying to select the ones with the same parameters count
-                remaining = allMethods.Where(m =>
-                {
-                    if (m.Name != duckAttr.Name) return false;
-                    
-                    var mParams = m.GetParameters();
-                    if (mParams.Length == parameters.Length)
-                        return true;
-
-                    var min = Math.Min(mParams.Length, parameters.Length);
-                    var max = Math.Max(mParams.Length, parameters.Length);
-                    for (var i = min; i < max; i++)
-                    {
-                        if (mParams.Length > i && !mParams[i].HasDefaultValue) return false;
-                        if (parameters.Length > i && !parameters[i].HasDefaultValue) return false;
-                    }
-                    return true;
                 }).ToList();
 
                 if (remaining.Count == 0)
                     continue;
                 if (remaining.Count == 1)
-                    return remaining[0];
+                    return remaining[0].Method;
+
+                var remainWithAttribute = remaining.FirstOrDefault(r => r.Attributes.Count > 0);
+                if (!(remainWithAttribute.Method is null))
+                    return remainWithAttribute.Method;
                 
                 // Trying to select the ones with the same return type
-                var sameReturnType = remaining.Where(m => m.ReturnType == iMethod.ReturnType).ToList();
+                var sameReturnType = remaining.Where(ma => ma.Method.ReturnType == iMethod.ReturnType).ToList();
                 if (sameReturnType.Count == 1)
-                    return sameReturnType[0];
+                    return sameReturnType[0].Method;
                     
                 if (sameReturnType.Count > 1)
                     remaining = sameReturnType;
 
                 if (iMethod.ReturnType.IsInterface && iMethod.ReturnType.GetInterface(iMethod.ReturnType.FullName) == null)
                 {
-                    var duckReturnType = remaining.Where(m => !m.ReturnType.IsValueType).ToList();
+                    var duckReturnType = remaining.Where(ma => !ma.Method.ReturnType.IsValueType).ToList();
                     if (duckReturnType.Count == 1)
-                        return duckReturnType[0];
+                        return duckReturnType[0].Method;
                     
                     if (duckReturnType.Count > 1)
                         remaining = duckReturnType;
@@ -285,7 +292,7 @@ namespace Wanhjor.ObjectInspector
                 // Trying to select the one with the same parameters types
                 var sameParameters = remaining.Where(m =>
                 {
-                    var mParams = m.GetParameters();
+                    var mParams = m.Method.GetParameters();
                     var min = Math.Min(mParams.Length, parameters.Length);
                     for (var i = 0; i < min; i++)
                     {
@@ -302,12 +309,25 @@ namespace Wanhjor.ObjectInspector
                 }).ToList();
                 
                 if (sameParameters.Count == 1)
-                    return sameParameters[0];
+                    return sameParameters[0].Method;
                 
-                return remaining[0];
+                return remaining[0].Method;
             }
 
             return null;
         }
+        
+        private readonly struct MethodAttributesSelector
+        {
+            public readonly MethodInfo Method;
+            public readonly List<DuckAttribute> Attributes;
+
+            public MethodAttributesSelector(MethodInfo methodInfo, List<DuckAttribute> attributes)
+            {
+                Method = methodInfo;
+                Attributes = attributes;
+            }
+        }
+
     }
 }
