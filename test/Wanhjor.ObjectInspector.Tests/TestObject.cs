@@ -59,6 +59,7 @@ namespace Wanhjor.ObjectInspector.Tests
 
         // 
         public void Add(TestObject obj) {}
+        [Duck(Name = "Void Add(System.String, System.Object)")]
         public void Add(string name, TestObject obj) { }
         public void Add(string name, int obj) { }
         public void Add(string name, string obj = "none") { }

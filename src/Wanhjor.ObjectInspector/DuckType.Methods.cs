@@ -225,20 +225,23 @@ namespace Wanhjor.ObjectInspector
                 
                 allMethods ??= instanceType.GetMethods(duckAttr.Flags);
                 
-                // Trying to select the one with the same name
+                // Trying to select the one with the same name (used by reverse proxy)
+                var iMethodString = iMethod.ToString();
                 var remaining = allMethods.Where(m =>
                 {
-                    if (m.Name == duckAttr.Name) return true;
-                    return m.ToString() == duckAttr.Name;
+                    foreach (var duckAttribute in m.GetCustomAttributes<DuckAttribute>(true))
+                    {
+                        if (duckAttribute.Name == iMethodString)
+                            return true;
+                    }
+                    return false;
                 }).ToList();
                 
-                if (remaining.Count == 0)
-                    continue;
                 if (remaining.Count == 1)
                     return remaining[0];
                 
                 // Trying to select the ones with the same parameters count
-                remaining = remaining.Where(m =>
+                remaining = allMethods.Where(m =>
                 {
                     if (m.Name != duckAttr.Name) return false;
                     
