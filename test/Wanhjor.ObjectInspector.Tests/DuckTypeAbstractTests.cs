@@ -117,6 +117,22 @@ namespace Wanhjor.ObjectInspector.Tests
                 lease.Instance["Changes"] = "Changed";
             }
         }
+
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoOptimization)]
+        public void ReverseDuckTest()
+        {
+            var obj = new ReverseObject();
+
+            var duck = obj.DuckAs<ReverseDuck>();
+            obj.SetProxyObject(duck);
+            
+            var values = duck.GetValues();
+            Assert.Equal("From Base => From Instance", values);
+            
+            var name = duck.GetName();
+            Assert.Equal("From Base", name);
+        }
     }
 
     public abstract class AbstractDictio : DuckType
@@ -135,6 +151,41 @@ namespace Wanhjor.ObjectInspector.Tests
         public abstract string Name { get; set; }
     }
 
+    public abstract class ReverseDuck
+    {
+        public string Name { get; set; } = "From Base";
+        
+        public abstract string Value { get; set; }
+        
+        public string GetValues()
+        {
+            return $"{Name} => {Value}";
+        }
+
+        public abstract string GetName();
+    }
+
+    public interface IReverseExtractor
+    {
+        string Name { get; set; }
+    }
+
+    public class ReverseObject
+    {
+        private IReverseExtractor _extractor;
+        public string Value { get; set; } = "From Instance";
+
+        public string GetName()
+        {
+            return _extractor.Name;
+        }
+
+        public void SetProxyObject(object proxy)
+        {
+            _extractor = proxy.DuckAs<IReverseExtractor>();
+        }
+    }
+    
     public abstract class AbstractDuckTestObject : DuckType
     {
         public abstract string Name { get; set; }

@@ -121,7 +121,7 @@ namespace Wanhjor.ObjectInspector
                 parentType, interfaceTypes);
             
             // Define .ctor
-            typeBuilder.DefineDefaultConstructor(MethodAttributes.Private);
+            typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
 
             // Create instance field if is null
             instanceField ??= CreateInstanceField(typeBuilder);
@@ -216,7 +216,9 @@ namespace Wanhjor.ObjectInspector
             var selectedProperties = GetProperties(baseType);
             foreach (var iProperty in selectedProperties)
             {
-                var propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
+                PropertyBuilder? propertyBuilder = null;
+                if ((iProperty.CanRead && iProperty.GetMethod.IsAbstract) || (iProperty.CanWrite && iProperty.SetMethod.IsAbstract))
+                    propertyBuilder = typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
                 
                 var duckAttrs = new List<DuckAttribute>(iProperty.GetCustomAttributes<DuckAttribute>(true));
                 if (duckAttrs.Count == 0)
@@ -242,6 +244,8 @@ namespace Wanhjor.ObjectInspector
                             if (prop is null)
                                 continue;
                     
+                            propertyBuilder ??= typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
+                            
                             if (iProperty.CanRead)
                                 propertyBuilder.SetGetMethod(GetPropertyGetMethod(instanceType, typeBuilder, iProperty, prop, instanceField));
 
@@ -254,6 +258,8 @@ namespace Wanhjor.ObjectInspector
                             var field = instanceType.GetField(duckAttr.Name, duckAttr.Flags);
                             if (field is null)
                                 continue;
+                            
+                            propertyBuilder ??= typeBuilder.DefineProperty(iProperty.Name, PropertyAttributes.None, iProperty.PropertyType, null);
 
                             if (iProperty.CanRead)
                                 propertyBuilder.SetGetMethod(GetFieldGetMethod(instanceType, typeBuilder, iProperty, field, instanceField));
@@ -267,6 +273,9 @@ namespace Wanhjor.ObjectInspector
                     break;
                 }
 
+                if (propertyBuilder is null) 
+                    continue;
+                
                 if (iProperty.CanRead && propertyBuilder.GetMethod is null)
                     propertyBuilder.SetGetMethod(GetNotFoundGetMethod(instanceType, typeBuilder, iProperty));
 

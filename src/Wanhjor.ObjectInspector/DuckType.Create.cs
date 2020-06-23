@@ -32,7 +32,7 @@ namespace Wanhjor.ObjectInspector
             var type = GetOrCreateProxyType(duckType, instance.GetType()); 
             
             // Create instance
-            var objInstance = (ISettableDuckType)FormatterServices.GetUninitializedObject(type);
+            var objInstance = (ISettableDuckType)Activator.CreateInstance(type);
             objInstance.SetInstance(instance);
             return objInstance;
         }
@@ -46,7 +46,7 @@ namespace Wanhjor.ObjectInspector
         public static object Create(Type duckType, Type instanceType)
         {
             var type = GetOrCreateProxyType(duckType, instanceType);
-            return FormatterServices.GetUninitializedObject(type);
+            return Activator.CreateInstance(type);
         }
     }
 }

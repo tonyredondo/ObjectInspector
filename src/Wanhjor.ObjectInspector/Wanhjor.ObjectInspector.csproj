@@ -6,7 +6,7 @@
     <Description>An efficient .NET object inspector/accesor to avoid reflection usage with duck typing support.</Description>
     <LangVersion>8</LangVersion>
     <Nullable>enable</Nullable>
-    <Version>0.4.0-beta.2</Version>
+    <Version>0.4.0-beta.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>ObjectInspector</Title>
     <Authors>Daniel Redondo</Authors>
