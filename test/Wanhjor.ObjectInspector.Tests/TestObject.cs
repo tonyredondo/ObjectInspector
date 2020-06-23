@@ -56,6 +56,12 @@ namespace Wanhjor.ObjectInspector.Tests
         public T GetDefault<T>() => default;
         
         public TaskStatus Status { get; set; } = TaskStatus.RanToCompletion;
+
+        // 
+        public void Add(TestObject obj) {}
+        public void Add(string name, TestObject obj) { }
+        public void Add(string name, int obj) { }
+        public void Add(string name, string obj = "none") { }
     }
     
     public enum TestEnum

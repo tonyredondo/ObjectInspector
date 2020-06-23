@@ -233,7 +233,15 @@ namespace Wanhjor.ObjectInspector
                     var mParams = m.GetParameters();
                     if (mParams.Length == parameters.Length)
                         return true;
-                    return  mParams.Count(p => p.HasDefaultValue) == parameters.Count(p => p.HasDefaultValue);
+
+                    var min = Math.Min(mParams.Length, parameters.Length);
+                    var max = Math.Max(mParams.Length, parameters.Length);
+                    for (var i = min; i < max; i++)
+                    {
+                        if (mParams.Length > i && !mParams[i].HasDefaultValue) return false;
+                        if (parameters.Length > i && !parameters[i].HasDefaultValue) return false;
+                    }
+                    return true;
                 }).ToList();
 
                 if (remaining.Count == 0)
@@ -258,7 +266,29 @@ namespace Wanhjor.ObjectInspector
                     if (duckReturnType.Count > 1)
                         remaining = duckReturnType;
                 }
-
+                
+                // Trying to select the one with the same parameters types
+                var sameParameters = remaining.Where(m =>
+                {
+                    var mParams = m.GetParameters();
+                    var min = Math.Min(mParams.Length, parameters.Length);
+                    for (var i = 0; i < min; i++)
+                    {
+                        var expectedType = mParams[i].ParameterType;
+                        var actualType = parameters[i].ParameterType;
+                        
+                        if (expectedType == actualType) continue;
+                        if (expectedType.IsAssignableFrom(actualType)) continue;
+                        if (!expectedType.IsValueType && actualType == typeof(object)) continue;
+                        if (expectedType.IsValueType && actualType.IsValueType) continue;
+                        return false;
+                    }
+                    return true;
+                }).ToList();
+                
+                if (sameParameters.Count == 1)
+                    return sameParameters[0];
+                
                 return remaining[0];
             }
 

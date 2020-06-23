@@ -198,6 +198,8 @@ namespace Wanhjor.ObjectInspector.Tests
         public T GetDefault<T>();
         
         TaskStatus Status { get; set; }
+
+        void Add(string name, object obj);
     }
     
     
